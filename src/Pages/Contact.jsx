@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import SocialLinks from "../components/SocialLinks";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import { MessageCircle, Mail, MessageSquare, Send } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 
 const ContactPage = () => {
   const [isMobile, setIsMobile] = useState(false);
@@ -135,54 +135,12 @@ const ContactPage = () => {
               </h3>
               
               <div 
-                className="flex justify-center mb-8 sm:mb-12"
+                className="flex justify-center"
                 data-aos="fade-up"
                 data-aos-duration={prefersReducedMotion ? 0 : 800}
                 data-aos-delay="600"
               >
                 <SocialLinks />
-              </div>
-
-              {/* Contact Info Card */}
-              <div 
-                className="bg-gradient-to-br from-[#6366f1]/10 to-[#a855f7]/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-[#6366f1]/20 backdrop-blur-lg"
-                data-aos="fade-up"
-                data-aos-duration={prefersReducedMotion ? 0 : 800}
-                data-aos-delay="700"
-              >
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-3">
-                  <div className="flex items-center gap-2 text-[#6366f1]">
-                    <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span className="text-white font-medium text-sm sm:text-base">Ready to Collaborate</span>
-                  </div>
-                  <Send className="w-4 h-4 text-[#a855f7] hidden sm:block" />
-                </div>
-                <p className="text-gray-300 text-xs sm:text-sm text-center">
-                  Always open to discussing new projects, creative opportunities, and design challenges
-                </p>
-              </div>
-
-              {/* Quick Action Buttons */}
-              <div 
-                className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mt-6 sm:mt-8"
-                data-aos="fade-up"
-                data-aos-duration={prefersReducedMotion ? 0 : 800}
-                data-aos-delay="800"
-              >
-                <a 
-                  href="mailto:your-email@example.com" 
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#6366f1] to-[#a855f7] text-white rounded-xl font-medium transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl mobile-touch text-sm sm:text-base"
-                >
-                  <Mail className="w-4 h-4" />
-                  Send Email
-                </a>
-                <a 
-                  href="#Portfolio" 
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-[#a855f7] text-[#a855f7] rounded-xl font-medium transition-all duration-300 hover:scale-105 active:scale-95 hover:bg-[#a855f7]/10 mobile-touch text-sm sm:text-base"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  View Work First
-                </a>
               </div>
             </div>
           </div>
