@@ -1,297 +1,314 @@
-import React, { useEffect, memo, useMemo } from "react"
-import { FileText, Code, Award, Globe, ArrowUpRight, Sparkles, UserCheck } from "lucide-react"
-import AOS from 'aos'
-import 'aos/dist/aos.css'
+import React, { useEffect, memo, useMemo, useState } from "react"
+import { Code, Award, Globe, ArrowUpRight, Sparkles, UserCheck, Download, Eye } from "lucide-react"
 
 // Memoized Components
 const Header = memo(() => (
-  <div className="text-center lg:mb-8 mb-2 px-[5%]">
-    <div className="inline-block relative group">
-      <h2 
-        className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#6366f1] to-[#a855f7]" 
-        data-aos="zoom-in-up"
-        data-aos-duration="600"
-      >
+  <div className="text-center mb-8 lg:mb-12 px-4">
+    <div className="inline-block relative group mb-4">
+      <div className="absolute -inset-4 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-full opacity-10 blur-xl group-hover:opacity-20 transition-opacity duration-500"></div>
+      <h2 className="relative text-4xl sm:text-5xl lg:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#a855f7]">
         About Me
       </h2>
     </div>
-    <p 
-      className="mt-2 text-gray-400 max-w-2xl mx-auto text-base sm:text-lg flex items-center justify-center gap-2"
-      data-aos="zoom-in-up"
-      data-aos-duration="800"
-    >
-      <Sparkles className="w-5 h-5 text-purple-400" />
-      Transforming ideas into beautiful digital experiences
-      <Sparkles className="w-5 h-5 text-purple-400" />
+    <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+      Crafting <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#6366f1] to-[#a855f7] font-semibold">digital experiences</span> that blend aesthetics with functionality
     </p>
   </div>
 ));
 
-const ProfileImage = memo(() => (
-  <div className="flex justify-end items-center sm:p-12 sm:py-0 sm:pb-0 p-0 py-2 pb-2">
-    <div 
-      className="relative group" 
-      data-aos="fade-up"
-      data-aos-duration="1000"
-    >
-      {/* Optimized gradient backgrounds with reduced complexity for mobile */}
-      <div className="absolute -inset-6 opacity-[25%] z-0 hidden sm:block">
-        <div className="absolute inset-0 bg-gradient-to-r from-violet-600 via-indigo-500 to-purple-600 rounded-full blur-2xl animate-spin-slower" />
-        <div className="absolute inset-0 bg-gradient-to-l from-fuchsia-500 via-rose-500 to-pink-600 rounded-full blur-2xl animate-pulse-slow opacity-50" />
-        <div className="absolute inset-0 bg-gradient-to-t from-blue-600 via-cyan-500 to-teal-400 rounded-full blur-2xl animate-float opacity-50" />
-      </div>
+const ProfileImage = memo(() => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
-      <div className="relative">
-        <div className="w-72 h-72 sm:w-80 sm:h-80 rounded-full overflow-hidden shadow-[0_0_40px_rgba(120,119,198,0.3)] transform transition-all duration-700 group-hover:scale-105">
-          <div className="absolute inset-0 border-4 border-white/20 rounded-full z-20 transition-all duration-700 group-hover:border-white/40 group-hover:scale-105" />
-          
-          {/* Optimized overlay effects - disabled on mobile */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 z-10 transition-opacity duration-700 group-hover:opacity-0 hidden sm:block" />
-          <div className="absolute inset-0 bg-gradient-to-t from-purple-500/20 via-transparent to-blue-500/20 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 hidden sm:block" />
-          
-          {/* Updated to use conver.png image */}
-          <img
-            src="/Cover.png"
-            alt="Profile"
-            className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:rotate-2"
-            loading="lazy"
-          />
+  return (
+    <div className="flex justify-center items-center p-4 lg:p-8">
+      <div 
+        className="relative group"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* Animated background orb */}
+        <div className="absolute -inset-8 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-full opacity-10 blur-3xl animate-pulse"></div>
+        
+        {/* Floating elements */}
+        <div className="absolute -top-4 -right-4 w-8 h-8 bg-[#6366f1] rounded-full opacity-60 animate-bounce"></div>
+        <div className="absolute -bottom-4 -left-4 w-6 h-6 bg-[#a855f7] rounded-full opacity-40 animate-bounce" style={{animationDelay: '1s'}}></div>
 
-          {/* Advanced hover effects - desktop only */}
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 z-20 hidden sm:block">
-            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-            <div className="absolute inset-0 bg-gradient-to-bl from-transparent via-white/10 to-transparent transform translate-y-full group-hover:-translate-y-full transition-transform duration-1000 delay-100" />
-            <div className="absolute inset-0 rounded-full border-8 border-white/10 scale-0 group-hover:scale-100 transition-transform duration-700 animate-pulse-slow" />
+        <div className="relative">
+          <div className="relative w-64 h-64 sm:w-72 sm:h-72 lg:w-80 lg:h-80 rounded-3xl overflow-hidden shadow-2xl transform transition-all duration-700 group-hover:scale-105">
+            {/* Gradient border */}
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#a855f7] p-1">
+              <div className="w-full h-full rounded-2xl bg-[#030014] relative overflow-hidden">
+                {/* Image */}
+                <img
+                  src="/Cover.png"
+                  alt="Koeurn - UI/UX Designer"
+                  className={`w-full h-full object-cover transform transition-all duration-700 group-hover:scale-110 ${
+                    imageLoaded ? 'opacity-100' : 'opacity-0'
+                  }`}
+                  onLoad={() => setImageLoaded(true)}
+                  loading="lazy"
+                />
+                
+                {/* Loading state */}
+                {!imageLoaded && (
+                  <div className="absolute inset-0 bg-gray-800 animate-pulse flex items-center justify-center">
+                    <UserCheck className="w-12 h-12 text-gray-600" />
+                  </div>
+                )}
+                
+                {/* Overlay effects */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#030014] via-transparent to-transparent opacity-60"></div>
+                <div className={`absolute inset-0 bg-gradient-to-br from-[#6366f1]/20 to-[#a855f7]/20 transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-0'}`}></div>
+                
+                {/* Shine effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Status badge */}
+          <div className="absolute -bottom-3 -right-3 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-2xl p-3 shadow-2xl transform transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
+            <div className="flex items-center gap-2 text-white text-sm font-medium">
+              <UserCheck className="w-4 h-4" />
+              <span>Available</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-));
+  );
+});
 
-const StatCard = memo(({ icon: Icon, color, value, label, description, animation }) => (
-  <div data-aos={animation} data-aos-duration={1300} className="relative group">
-    <div className="relative z-10 bg-gray-900/50 backdrop-blur-lg rounded-2xl p-6 border border-white/10 overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl h-full flex flex-col justify-between">
-      <div className={`absolute -z-10 inset-0 bg-gradient-to-br ${color} opacity-10 group-hover:opacity-20 transition-opacity duration-300`}></div>
-      
-      <div className="flex items-center justify-between mb-4">
-        <div className="w-16 h-16 rounded-full flex items-center justify-center bg-white/10 transition-transform group-hover:rotate-6">
-          <Icon className="w-8 h-8 text-white" />
-        </div>
-        <span 
-          className="text-4xl font-bold text-white"
-          data-aos="fade-up-left"
-          data-aos-duration="1500"
-          data-aos-anchor-placement="top-bottom"
-        >
-          {value}
-        </span>
-      </div>
+const StatCard = memo(({ icon: Icon, color, value, label, description }) => {
+  const [isHovered, setIsHovered] = useState(false);
 
-      <div>
-        <p 
-          className="text-sm uppercase tracking-wider text-gray-300 mb-2"
-          data-aos="fade-up"
-          data-aos-duration="800"
-          data-aos-anchor-placement="top-bottom"
-        >
-          {label}
-        </p>
-        <div className="flex items-center justify-between">
-          <p 
-            className="text-xs text-gray-400"
-            data-aos="fade-up"
-            data-aos-duration="1000"
-            data-aos-anchor-placement="top-bottom"
-          >
-            {description}
-          </p>
-          <ArrowUpRight className="w-4 h-4 text-white/50 group-hover:text-white transition-colors" />
+  return (
+    <div 
+      className="relative group"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="relative z-10 bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-white/10 overflow-hidden transition-all duration-500 hover:scale-105 hover:shadow-2xl h-full flex flex-col justify-between">
+        {/* Animated background */}
+        <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
+        
+        {/* Shimmer effect */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-4">
+            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center bg-gradient-to-br ${color} shadow-lg transform transition-transform duration-300 group-hover:rotate-6`}>
+              <Icon className="w-7 h-7 text-white" />
+            </div>
+            <span className="text-4xl sm:text-5xl font-bold text-white drop-shadow-lg">
+              {value}+
+            </span>
+          </div>
+
+          <div>
+            <p className="text-sm uppercase tracking-widest text-gray-300 mb-3 font-semibold">
+              {label}
+            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-400 leading-relaxed">
+                {description}
+              </p>
+              <ArrowUpRight className={`w-5 h-5 transition-colors duration-300 flex-shrink-0 ml-3 transform ${
+                isHovered ? 'text-white translate-x-1 -translate-y-1' : 'text-white/60'
+              }`} />
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-));
+  );
+});
 
 const AboutPage = () => {
-  // Memoized calculations
+  // Memoized calculations with error handling
   const { totalProjects, totalCertificates, YearExperience } = useMemo(() => {
-    const storedProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-    const storedCertificates = JSON.parse(localStorage.getItem("certificates") || "[]");
-    
-    const startDate = new Date("2021-11-06");
-    const today = new Date();
-    const experience = today.getFullYear() - startDate.getFullYear() -
-      (today < new Date(today.getFullYear(), startDate.getMonth(), startDate.getDate()) ? 1 : 0);
+    try {
+      const storedProjects = JSON.parse(localStorage.getItem("projects") || "[]");
+      const storedCertificates = JSON.parse(localStorage.getItem("certificates") || "[]");
+      
+      const startDate = new Date("2021-11-06");
+      const today = new Date();
+      const experience = today.getFullYear() - startDate.getFullYear() -
+        (today < new Date(today.getFullYear(), startDate.getMonth(), startDate.getDate()) ? 1 : 0);
 
-    return {
-      totalProjects: storedProjects.length,
-      totalCertificates: storedCertificates.length,
-      YearExperience: experience
-    };
-  }, []);
-
-  // Optimized AOS initialization
-  useEffect(() => {
-    const initAOS = () => {
-      AOS.init({
-        once: false, 
-      });
-    };
-
-    initAOS();
-    
-    // Debounced resize handler
-    let resizeTimer;
-    const handleResize = () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(initAOS, 250);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      clearTimeout(resizeTimer);
-    };
+      return {
+        totalProjects: storedProjects.length || 0,
+        totalCertificates: storedCertificates.length || 0,
+        YearExperience: experience || 0
+      };
+    } catch (error) {
+      console.error('Error calculating stats:', error);
+      return {
+        totalProjects: 0,
+        totalCertificates: 0,
+        YearExperience: 0
+      };
+    }
   }, []);
 
   // Memoized stats data
   const statsData = useMemo(() => [
     {
       icon: Code,
-      color: "from-[#6366f1] to-[#a855f7]",
+      color: "from-[#6366f1] to-[#8b5cf6]",
       value: totalProjects,
-      label: "Design Projects",
-      description: "Beautiful UI/UX designs crafted",
-      animation: "fade-right",
+      label: "Projects",
+      description: "Successful designs delivered"
     },
     {
       icon: Award,
-      color: "from-[#a855f7] to-[#6366f1]",
+      color: "from-[#a855f7] to-[#ec4899]",
       value: totalCertificates,
-      label: "Design Certificates",
-      description: "Design skills validated",
-      animation: "fade-up",
+      label: "Certificates",
+      description: "Professional achievements"
     },
     {
       icon: Globe,
-      color: "from-[#6366f1] to-[#a855f7]",
+      color: "from-[#8b5cf6] to-[#6366f1]",
       value: YearExperience,
-      label: "Years Designing",
-      description: "Creative design journey",
-      animation: "fade-left",
+      label: "Years Experience",
+      description: "Design excellence"
     },
   ], [totalProjects, totalCertificates, YearExperience]);
 
+  // Function to handle View Work button click - IMPROVED VERSION
+  const handleViewWork = () => {
+    console.log('View Work button clicked'); // Debug log
+    
+    // Method 1: Try to find Portfolio section with multiple possible IDs
+    const portfolioSection = document.getElementById('Portfolio') || 
+                            document.getElementById('portfolio') || 
+                            document.getElementById('Portofolio');
+    
+    if (portfolioSection) {
+      console.log('Portfolio section found:', portfolioSection);
+      // Smooth scroll to portfolio section
+      portfolioSection.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    } else {
+      // Method 2: Try to find by class name
+      const portfolioByClass = document.querySelector('.portfolio-section, .portfolio, [class*="portfolio"]');
+      if (portfolioByClass) {
+        console.log('Portfolio section found by class:', portfolioByClass);
+        portfolioByClass.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+        return;
+      }
+      
+      // Method 3: Use hash navigation
+      console.log('Portfolio section not found, using hash navigation');
+      window.location.href = '#Portfolio';
+      
+      // Method 4: Fallback - scroll to bottom
+      setTimeout(() => {
+        window.scrollTo({
+          top: document.body.scrollHeight,
+          behavior: 'smooth'
+        });
+      }, 100);
+    }
+  };
+
   return (
     <div
-      className="h-auto pb-[10%] text-white overflow-hidden px-[5%] sm:px-[5%] lg:px-[10%] mt-10 sm-mt-0" 
+      className="min-h-screen py-12 lg:py-24 text-white overflow-hidden bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014] relative"
       id="About"
     >
-      <Header />
-
-      <div className="w-full mx-auto pt-8 sm:pt-12 relative">
-        <div className="flex flex-col-reverse lg:grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-          <div className="space-y-6 text-center lg:text-left">
-            <h2 
-              className="text-3xl sm:text-4xl lg:text-5xl font-bold"
-              data-aos="fade-right"
-              data-aos-duration="1000"
-            >
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#6366f1] to-[#a855f7]">
-                Hello, I'm
-              </span>
-              <span 
-                className="block mt-2 text-gray-200"
-                data-aos="fade-right"
-                data-aos-duration="1300"
-              >
-                Koeurn
-              </span>
-            </h2>
-            
-            <p 
-              className="text-base sm:text-lg lg:text-xl text-gray-400 leading-relaxed text-justify pb-4 sm:pb-0"
-              data-aos="fade-right"
-              data-aos-duration="1500"
-            >
-              A passionate UI/UX Designer focused on creating beautiful, intuitive, and user-centered digital experiences. I specialize in transforming complex ideas into elegant designs that solve real problems and delight users.
-            </p>
-
-            {/* Quote Section */}
-            <div 
-              className="relative bg-gradient-to-br from-[#6366f1]/5 via-transparent to-[#a855f7]/5 border border-gradient-to-r border-[#6366f1]/30 rounded-2xl p-4 my-6 backdrop-blur-md shadow-2xl overflow-hidden"
-              data-aos="fade-up"
-              data-aos-duration="1700"
-            >
-              {/* Floating orbs background */}
-              <div className="absolute top-2 right-4 w-16 h-16 bg-gradient-to-r from-[#6366f1]/20 to-[#a855f7]/20 rounded-full blur-xl"></div>
-              <div className="absolute -bottom-4 -left-2 w-12 h-12 bg-gradient-to-r from-[#a855f7]/20 to-[#6366f1]/20 rounded-full blur-lg"></div>
-              
-              {/* Quote icon */}
-              <div className="absolute top-3 left-4 text-[#6366f1] opacity-30">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h4v10h-10z"/>
-                </svg>
-              </div>
-              
-              <blockquote className="text-gray-300 text-center lg:text-left italic font-medium text-sm relative z-10 pl-6">
-                "Good design is obvious. Great design is transparent."
-              </blockquote>
-            </div>
-
-            <div className="flex flex-col lg:flex-row items-center lg:items-start gap-4 lg:gap-4 lg:px-0 w-full">
-              <a href="https://drive.google.com/file/d/1qJ7awhiMQMHxmhZu5D8ySG3DvtQx_yLK/view?usp=drive_link" className="w-full lg:w-auto">
-                <button 
-                  data-aos="fade-up"
-                  data-aos-duration="800"
-                  className="w-full lg:w-auto sm:px-6 py-2 sm:py-3 rounded-lg bg-gradient-to-r from-[#6366f1] to-[#a855f7] text-white font-medium transition-all duration-300 hover:scale-105 flex items-center justify-center lg:justify-start gap-2 shadow-lg hover:shadow-xl "
-                >
-                  <FileText className="w-4 h-4 sm:w-5 sm:h-5" /> Portfolio
-                </button>
-              </a>
-              <a href="#Portfolio" className="w-full lg:w-auto">
-                <button 
-                  data-aos="fade-up"
-                  data-aos-duration="1000"
-                  className="w-full lg:w-auto sm:px-6 py-2 sm:py-3 rounded-lg border border-[#a855f7]/50 text-[#a855f7] font-medium transition-all duration-300 hover:scale-105 flex items-center justify-center lg:justify-start gap-2 hover:bg-[#a855f7]/10 "
-                >
-                  <Code className="w-4 h-4 sm:w-5 sm:h-5" /> View Designs
-                </button>
-              </a>
-            </div>
-          </div>
-
-          <ProfileImage />
-        </div>
-
-        <a href="#Portfolio">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 cursor-pointer">
-            {statsData.map((stat) => (
-              <StatCard key={stat.label} {...stat} />
-            ))}
-          </div>
-        </a>
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-[#6366f1] rounded-full blur-3xl opacity-10 animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#a855f7] rounded-full blur-3xl opacity-5 animate-pulse" style={{animationDelay: '2s'}}></div>
       </div>
 
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-20px); }
-        }
-        @keyframes spin-slower {
-          to { transform: rotate(360deg); }
-        }
-        .animate-bounce-slow {
-          animation: bounce 3s infinite;
-        }
-        .animate-pulse-slow {
-          animation: pulse 3s infinite;
-        }
-        .animate-spin-slower {
-          animation: spin-slower 8s linear infinite;
-        }
-      `}</style>
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header Section */}
+        <Header />
+
+        {/* Main Content - Fixed layout */}
+        <div className="w-full mx-auto">
+          <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 xl:gap-16 items-center justify-between">
+            
+            {/* Left Side - Content */}
+            <div className="w-full lg:w-1/2 space-y-6 lg:space-y-8 text-center lg:text-left order-2 lg:order-1">
+              <div>
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 block">
+                    Koeurn
+                  </span>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#a855f7] block mt-2">
+                    UI/UX Designer
+                  </span>
+                </h1>
+              </div>
+              
+              <p className="text-lg sm:text-xl text-gray-300 leading-relaxed">
+                Passionate about creating <span className="text-white font-medium">intuitive digital experiences</span> that seamlessly blend aesthetics with functionality. I transform complex challenges into elegant solutions that users love.
+              </p>
+
+              {/* Enhanced description section */}
+              <div className="bg-gray-900/40 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
+                <h3 className="text-xl font-semibold text-white mb-4 flex items-center justify-center lg:justify-start gap-2">
+                  <Sparkles className="w-5 h-5 text-[#a855f7]" />
+                  My Approach
+                </h3>
+                <p className="text-gray-300 leading-relaxed">
+                  I believe in <span className="text-white font-medium">user-centered design</span> that prioritizes both aesthetics and functionality. Every project starts with understanding user needs and ends with delivering seamless, beautiful experiences that make a difference.
+                </p>
+              </div>
+
+              {/* CTA Buttons - IMPROVED View Work button */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <a 
+                  href="https://drive.google.com/file/d/1qJ7awhiMQMHxmhZu5D8ySG3DvtQx_yLK/view?usp=drive_link" 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1"
+                >
+                  <button className="w-full px-8 py-4 rounded-2xl bg-gradient-to-r from-[#6366f1] to-[#a855f7] text-white font-semibold transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-3 shadow-2xl hover:shadow-3xl group">
+                    <Download className="w-5 h-5 group-hover:animate-bounce" />
+                    Download CV
+                  </button>
+                </a>
+                
+                {/* IMPROVED: Better button with multiple fallbacks */}
+                <div className="flex-1">
+                  <button 
+                    onClick={handleViewWork}
+                    className="w-full px-8 py-4 rounded-2xl border-2 border-[#a855f7] text-[#a855f7] font-semibold transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-3 hover:bg-[#a855f7]/10 group cursor-pointer hover:border-[#8b5cf6] hover:text-[#8b5cf6]"
+                  >
+                    <Eye className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                    View Work
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Side - Profile Image */}
+            <div className="w-full lg:w-1/2 flex justify-center order-1 lg:order-2">
+              <ProfileImage />
+            </div>
+          </div>
+
+          {/* Stats Section */}
+          <div className="mt-16 lg:mt-24">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+              {statsData.map((stat, index) => (
+                <StatCard key={index} {...stat} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

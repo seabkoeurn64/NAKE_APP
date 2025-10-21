@@ -4,70 +4,89 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EZA - Creative UI/UX Designer | Product Designer</title>
-    <meta name="description" content="Professional portfolio of Eki Zulfar Rachman - Frontend Developer specializing in React, JavaScript, and modern web technologies.">
-    
+    <title>Koeurn - Creative UI/UX Designer | Product Designer</title>
+    <meta name="description" content="Professional portfolio of Koeurn - UI/UX Designer specializing in beautiful, intuitive digital experiences and user-centered design solutions.">
+
     <!-- Preload Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap">
-    
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+
     <style>
-      /* Loading styles */
+      /* Global reset */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      /* Loading container */
       #loading-fallback {
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: #030014;
+        inset: 0;
+        background: radial-gradient(circle at center, #0f0c29, #302b63, #24243e);
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        z-index: 9999;
-        color: white;
+        color: #fff;
         font-family: 'Poppins', sans-serif;
+        z-index: 9999;
+        overflow: hidden;
+        transition: opacity 0.6s ease;
       }
-      
+
+      /* Spinner style */
       .loading-spinner {
-        width: 40px;
-        height: 40px;
-        border: 3px solid rgba(99, 102, 241, 0.3);
-        border-top: 3px solid #6366f1;
+        width: 55px;
+        height: 55px;
+        border: 4px solid rgba(255, 255, 255, 0.1);
+        border-top: 4px solid #8b5cf6;
         border-radius: 50%;
         animation: spin 1s linear infinite;
         margin-bottom: 1rem;
+        box-shadow: 0 0 15px rgba(139, 92, 246, 0.6);
       }
-      
+
       @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
       }
+
+      /* Animated text */
+      .loading-text {
+        font-size: 1rem;
+        font-weight: 500;
+        letter-spacing: 1.2px;
+        opacity: 0.9;
+        animation: fadeInUp 1.8s ease-in-out infinite alternate;
+      }
+
+      @keyframes fadeInUp {
+        0% { transform: translateY(5px); opacity: 0.7; }
+        100% { transform: translateY(-5px); opacity: 1; }
+      }
     </style>
   </head>
-  
+
   <body>
     <div id="loading-fallback">
-      <div style="text-align: center;">
-        <div class="loading-spinner"></div>
-        <p>Loading Portfolio...</p>
-      </div>
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Loading <strong>Portfolio</strong>...</p>
     </div>
-    
+
     <div id="root"></div>
-    
+
     <script type="module" src="/src/main.jsx"></script>
-    
+
     <script>
-      // Hide loading screen when app is ready
-      window.addEventListener('load', function() {
+      // Hide loading when app fully loads
+      window.addEventListener('load', () => {
+        const loader = document.getElementById('loading-fallback');
         setTimeout(() => {
-          const loader = document.getElementById('loading-fallback');
-          if (loader) {
-            loader.style.opacity = '0';
-            setTimeout(() => loader.remove(), 500);
-          }
-        }, 1000);
+          loader.style.opacity = '0';
+          setTimeout(() => loader.remove(), 600);
+        }, 800);
       });
     </script>
   </body>

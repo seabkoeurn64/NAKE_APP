@@ -119,12 +119,50 @@ export default function FullWidthTabs() {
   const [value, setValue] = useState(0);
   const [projects, setProjects] = useState([]);
   const [showAllProjects, setShowAllProjects] = useState(false);
-  const isMobile = window.innerWidth < 768;
+  const [isMobile, setIsMobile] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  // Responsive initial items count
   const initialItems = isMobile ? 4 : 6;
 
+  // Check mobile device and reduced motion
   useEffect(() => {
-    AOS.init({ once: false });
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    const checkReducedMotion = () => {
+      setPrefersReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    };
+
+    checkMobile();
+    checkReducedMotion();
+
+    window.addEventListener('resize', checkMobile);
+    
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    mediaQuery.addEventListener('change', checkReducedMotion);
+
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      mediaQuery.removeEventListener('change', checkReducedMotion);
+    };
   }, []);
+
+  // Optimized AOS initialization
+  useEffect(() => {
+    AOS.init({
+      once: true,
+      offset: isMobile ? 30 : 50,
+      duration: isMobile ? 600 : 800,
+      easing: 'ease-in-out',
+      disable: isMobile || prefersReducedMotion
+    });
+
+    return () => {
+      AOS.refresh();
+    };
+  }, [isMobile, prefersReducedMotion]);
 
   // Simple data loading with localStorage save
   const loadData = useCallback(() => {
@@ -159,6 +197,19 @@ export default function FullWidthTabs() {
 
   const displayedProjects = showAllProjects ? projects : projects.slice(0, initialItems);
 
+  // Optimized animation delays for better performance
+  const getAnimationDelay = useCallback((index) => {
+    if (prefersReducedMotion) return 0;
+    return 100 + (index * 100);
+  }, [prefersReducedMotion]);
+
+  const getAnimationType = useCallback((index) => {
+    if (prefersReducedMotion) return "fade-up";
+    
+    const types = ["fade-up-right", "fade-up", "fade-up-left"];
+    return types[index % 3];
+  }, [prefersReducedMotion]);
+
   return (
     <div className="md:px-[10%] px-[5%] w-full sm:mt-0 mt-[3rem] bg-[#030014] overflow-hidden" id="Portofolio">
       <div className="text-center pb-10" data-aos="fade-up" data-aos-duration="1000">
@@ -188,7 +239,7 @@ export default function FullWidthTabs() {
               right: 0,
               bottom: 0,
               background: "linear-gradient(180deg, rgba(139, 92, 246, 0.03) 0%, rgba(59, 130, 246, 0.03) 100%)",
-              backdropFilter: "blur(10px)",
+              backdropFilter: isMobile ? "blur(5px)" : "blur(10px)",
               zIndex: 0,
             },
           }}
@@ -207,19 +258,30 @@ export default function FullWidthTabs() {
                 fontWeight: "600",
                 color: "#94a3b8",
                 textTransform: "none",
-                transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                transition: prefersReducedMotion ? "none" : "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
                 padding: "20px 0",
                 zIndex: 1,
                 margin: "8px",
                 borderRadius: "12px",
-                "&:hover": { color: "#fff", backgroundColor: "rgba(139, 92, 246, 0.1)", transform: "translateY(-2px)" },
-                "&.Mui-selected": { color: "#fff", background: "linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2))" },
+                "&:hover": prefersReducedMotion ? {} : { 
+                  color: "#fff", 
+                  backgroundColor: "rgba(139, 92, 246, 0.1)", 
+                  transform: "translateY(-2px)" 
+                },
+                "&.Mui-selected": { 
+                  color: "#fff", 
+                  background: "linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2))" 
+                },
               },
               "& .MuiTabs-indicator": { height: 0 },
               "& .MuiTabs-flexContainer": { gap: "8px" },
             }}
           >
-            <Tab icon={<Palette className="mb-2 w-5 h-5 transition-all duration-300" />} label="Design Projects" {...a11yProps(0)} />
+            <Tab 
+              icon={<Palette className="mb-2 w-5 h-5 transition-all duration-300" />} 
+              label="Design Projects" 
+              {...a11yProps(0)} 
+            />
           </Tabs>
         </AppBar>
 
@@ -227,13 +289,19 @@ export default function FullWidthTabs() {
           slidesPerView={1}
           onSlideChange={(swiper) => setValue(swiper.activeIndex)}
           initialSlide={value}
+          speed={prefersReducedMotion ? 0 : 300}
         >
           <SwiperSlide>
             <TabPanel value={value} index={0} dir={theme.direction}>
               <div className="container mx-auto flex justify-center items-center overflow-hidden">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-5">
                   {displayedProjects.map((project, index) => (
-                    <div key={project.id || index} data-aos={index % 3 === 0 ? "fade-up-right" : index % 3 === 1 ? "fade-up" : "fade-up-left"} data-aos-duration={1000 + index * 100}>
+                    <div 
+                      key={project.id || index} 
+                      data-aos={getAnimationType(index)}
+                      data-aos-duration={prefersReducedMotion ? 0 : 800}
+                      data-aos-delay={getAnimationDelay(index)}
+                    >
                       <CardProject 
                         Img={project.Img} 
                         Title={project.Title} 
@@ -245,7 +313,12 @@ export default function FullWidthTabs() {
                 </div>
               </div>
               {projects.length > initialItems && (
-                <div className="flex justify-center mt-8">
+                <div 
+                  className="flex justify-center mt-8"
+                  data-aos="fade-up"
+                  data-aos-delay="200"
+                  data-aos-duration={prefersReducedMotion ? 0 : 600}
+                >
                   <ToggleButton onClick={toggleShowMore} isShowingMore={showAllProjects} />
                 </div>
               )}
