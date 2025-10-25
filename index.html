@@ -4,75 +4,215 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Koeurn - Creative UI/UX Designer | Product Designer</title>
-    <meta name="description" content="Professional portfolio of Koeurn - UI/UX Designer specializing in beautiful, intuitive digital experiences and user-centered design solutions.">
+    
+    <!-- Primary Meta Tags -->
+    <title>Koeurn - Creative Graphic Designer | UI/UX Designer</title>
+    <meta name="description" content="Professional portfolio of Koeurn - Creative Graphic Designer specializing in poster design, logo design, branding materials, and user-centered design solutions.">
+    <meta name="author" content="Koeurn">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.koeurn.my.id/">
+    <meta property="og:title" content="Koeurn - Creative Graphic Designer">
+    <meta property="og:description" content="Professional portfolio of Koeurn - Creative Graphic Designer specializing in beautiful, intuitive designs and user-centered solutions.">
+    <meta property="og:image" content="/og-image.jpg">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://www.koeurn.my.id/">
+    <meta property="twitter:title" content="Koeurn - Creative Graphic Designer">
+    <meta property="twitter:description" content="Professional portfolio of Koeurn - Creative Graphic Designer">
+    <meta property="twitter:image" content="/twitter-image.jpg">
 
-    <!-- Preload Fonts -->
+    <!-- Preload Critical Resources -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+    <link rel="preconnect" href="https://assets-v2.lottiefiles.com">
+    
+    <!-- Preload Fonts -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"></noscript>
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#030014">
+    <meta name="msapplication-TileColor" content="#030014">
 
     <style>
-      /* Global reset */
+      /* Critical CSS - Inlined for fastest rendering */
       * {
         box-sizing: border-box;
         margin: 0;
         padding: 0;
       }
 
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+        background: #030014;
+        color: #ffffff;
+        overflow-x: hidden;
+      }
+
       /* Loading container */
       #loading-fallback {
         position: fixed;
         inset: 0;
-        background: radial-gradient(circle at center, #0f0c29, #302b63, #24243e);
+        background: radial-gradient(ellipse at center, #0f0c29 0%, #302b63 50%, #24243e 100%);
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         color: #fff;
-        font-family: 'Poppins', sans-serif;
+        font-family: 'Poppins', system-ui, sans-serif;
         z-index: 9999;
         overflow: hidden;
-        transition: opacity 0.6s ease;
+        transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
-      /* Spinner style */
+      /* Enhanced spinner */
       .loading-spinner {
-        width: 55px;
-        height: 55px;
-        border: 4px solid rgba(255, 255, 255, 0.1);
-        border-top: 4px solid #8b5cf6;
+        width: 60px;
+        height: 60px;
+        border: 3px solid rgba(255, 255, 255, 0.1);
+        border-top: 3px solid #8b5cf6;
+        border-right: 3px solid #6366f1;
         border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin-bottom: 1rem;
-        box-shadow: 0 0 15px rgba(139, 92, 246, 0.6);
+        animation: spin 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+        margin-bottom: 1.5rem;
+        position: relative;
+        box-shadow: 
+          0 0 20px rgba(139, 92, 246, 0.4),
+          inset 0 0 20px rgba(99, 102, 241, 0.1);
+      }
+
+      .loading-spinner::after {
+        content: '';
+        position: absolute;
+        top: -3px;
+        left: -3px;
+        right: -3px;
+        bottom: -3px;
+        border-radius: 50%;
+        border: 1px solid transparent;
+        border-top: 1px solid #a855f7;
+        animation: spin 2s linear infinite reverse;
+        opacity: 0.6;
       }
 
       @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        0% { 
+          transform: rotate(0deg);
+          border-top-color: #8b5cf6;
+        }
+        50% {
+          border-top-color: #6366f1;
+        }
+        100% { 
+          transform: rotate(360deg);
+          border-top-color: #a855f7;
+        }
       }
 
-      /* Animated text */
+      /* Enhanced loading text */
       .loading-text {
-        font-size: 1rem;
+        font-size: 1.1rem;
         font-weight: 500;
-        letter-spacing: 1.2px;
-        opacity: 0.9;
-        animation: fadeInUp 1.8s ease-in-out infinite alternate;
+        letter-spacing: 1.5px;
+        background: linear-gradient(135deg, #e2e8f0, #c7d2fe);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: pulse 2s ease-in-out infinite, float 3s ease-in-out infinite;
+        text-align: center;
+        line-height: 1.6;
       }
 
-      @keyframes fadeInUp {
-        0% { transform: translateY(5px); opacity: 0.7; }
-        100% { transform: translateY(-5px); opacity: 1; }
+      .loading-subtext {
+        font-size: 0.85rem;
+        opacity: 0.7;
+        margin-top: 0.5rem;
+        animation: fadeInOut 2s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 0.8; }
+        50% { opacity: 1; }
+      }
+
+      @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-5px); }
+      }
+
+      @keyframes fadeInOut {
+        0%, 100% { opacity: 0.5; }
+        50% { opacity: 0.8; }
+      }
+
+      /* Background particles */
+      .loading-particles {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        z-index: -1;
+      }
+
+      .particle {
+        position: absolute;
+        background: radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%);
+        border-radius: 50%;
+        animation: floatParticle 6s ease-in-out infinite;
+      }
+
+      @keyframes floatParticle {
+        0%, 100% { 
+          transform: translate(0, 0) scale(1);
+          opacity: 0.3;
+        }
+        33% { 
+          transform: translate(30px, -20px) scale(1.1);
+          opacity: 0.5;
+        }
+        66% { 
+          transform: translate(-20px, 15px) scale(0.9);
+          opacity: 0.4;
+        }
+      }
+
+      /* Performance optimizations */
+      #root {
+        isolation: isolate;
+      }
+
+      /* Reduced motion support */
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+        
+        .loading-spinner {
+          animation: none;
+          border: 3px solid #8b5cf6;
+        }
       }
     </style>
   </head>
 
   <body>
+    <!-- Enhanced Loading Fallback -->
     <div id="loading-fallback">
+      <div class="loading-particles" id="particles-container"></div>
       <div class="loading-spinner"></div>
       <p class="loading-text">Loading <strong>Portfolio</strong>...</p>
+      <p class="loading-subtext">Crafted with passion</p>
     </div>
 
     <div id="root"></div>
@@ -80,14 +220,76 @@
     <script type="module" src="/src/main.jsx"></script>
 
     <script>
-      // Hide loading when app fully loads
-      window.addEventListener('load', () => {
+      // Enhanced loading handler with performance monitoring
+      (function() {
+        'use strict';
+        
         const loader = document.getElementById('loading-fallback');
-        setTimeout(() => {
-          loader.style.opacity = '0';
-          setTimeout(() => loader.remove(), 600);
-        }, 800);
-      });
+        const startTime = performance.now();
+        
+        // Create background particles
+        function createParticles() {
+          const container = document.getElementById('particles-container');
+          const particleCount = window.innerWidth < 768 ? 8 : 15;
+          
+          for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            
+            // Random properties
+            const size = Math.random() * 80 + 40;
+            const posX = Math.random() * 100;
+            const posY = Math.random() * 100;
+            const delay = Math.random() * 5;
+            
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            particle.style.left = `${posX}%`;
+            particle.style.top = `${posY}%`;
+            particle.style.animationDelay = `${delay}s`;
+            particle.style.opacity = Math.random() * 0.3 + 0.1;
+            
+            container.appendChild(particle);
+          }
+        }
+        
+        // Hide loading screen
+        function hideLoader() {
+          const loadTime = performance.now() - startTime;
+          const minDisplayTime = 1200; // Minimum 1.2 seconds for brand impression
+          const remainingTime = Math.max(0, minDisplayTime - loadTime);
+          
+          setTimeout(() => {
+            loader.style.opacity = '0';
+            setTimeout(() => {
+              loader.style.display = 'none';
+              
+              // Log performance (always log for debugging)
+              console.log(`🚀 App loaded in ${loadTime.toFixed(2)}ms`);
+            }, 800);
+          }, remainingTime);
+        }
+        
+        // Event listeners
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => {
+            createParticles();
+          });
+        } else {
+          createParticles();
+        }
+        
+        window.addEventListener('load', hideLoader);
+        
+        // Fallback: hide loader after 4 seconds max
+        setTimeout(hideLoader, 4000);
+        
+        // Handle errors gracefully
+        window.addEventListener('error', () => {
+          setTimeout(hideLoader, 1000);
+        });
+        
+      })();
     </script>
   </body>
 </html>

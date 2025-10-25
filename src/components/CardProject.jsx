@@ -1,6 +1,6 @@
-import React, { useState, useCallback, memo } from 'react';
+import React, { useState, useCallback, memo, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Eye, Sparkles, Palette, Figma, Image } from 'lucide-react';
+import { ArrowRight, Eye, Sparkles, Palette, Figma, Image, ExternalLink } from 'lucide-react';
 
 const CardProject = memo(({ 
   Img, 
@@ -9,17 +9,32 @@ const CardProject = memo(({
   id, 
   technologies = [], 
   prototypeLink, 
-  behanceLink 
+  behanceLink,
+  category = "Poster",
+  status = "available"
 }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Memoized category icons for better performance
+  const categoryIcons = useMemo(() => ({
+    Poster: Sparkles,
+    Logo: Palette,
+    Banner: Image,
+    Flyer: Figma,
+    default: Sparkles
+  }), []);
+
+  const CategoryIcon = categoryIcons[category] || categoryIcons.default;
 
   const handleDetails = useCallback((e) => {
-    if (!id) {
+    if (!id || status === "unavailable") {
       e.preventDefault();
-      alert("Project details are not available");
+      // Optional: Show toast notification instead of alert
+      console.log("Project details are not available");
     }
-  }, [id]);
+  }, [id, status]);
 
   const handleImageLoad = useCallback(() => {
     setImageLoaded(true);
@@ -34,126 +49,176 @@ const CardProject = memo(({
     e.stopPropagation();
   }, []);
 
+  const handleMouseEnter = useCallback(() => {
+    setIsHovered(true);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setIsHovered(false);
+  }, []);
+
+  // Memoized technology tags
+  const technologyTags = useMemo(() => {
+    const visibleTechs = technologies.slice(0, 3);
+    const remainingCount = technologies.length - 3;
+    
+    return {
+      visible: visibleTechs,
+      remaining: remainingCount > 0 ? remainingCount : 0
+    };
+  }, [technologies]);
+
+  const isProjectAvailable = id && status === "available";
+
   return (
-    <div className="group relative w-full cursor-pointer">
-      {/* Main Card Container - More Compact */}
-      <div className="relative overflow-hidden rounded-xl glass-morphism shadow-lg transition-all duration-300 hover:shadow-purple-500/10 border border-white/10 bg-gray-900/20">
+    <div 
+      className="group relative w-full cursor-pointer"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      {/* Enhanced Main Card Container */}
+      <div className="relative overflow-hidden rounded-xl glass-morphism shadow-lg transition-all duration-300 hover:shadow-purple-500/20 border border-white/10 bg-gray-900/20 hover:bg-gray-900/30 backdrop-blur-sm">
         
-        {/* Content Container - Reduced Padding */}
+        {/* Background Glow Effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl" />
+        
+        {/* Content Container */}
         <div className="relative p-3 sm:p-4 z-10">
           
-          {/* Image Section - Smaller for Posters */}
+          {/* Enhanced Image Section */}
           <Link
-            to={id ? `/project/${id}` : '#'}
+            to={isProjectAvailable ? `/project/${id}` : '#'}
             onClick={handleDetails}
             className="block relative overflow-hidden rounded-lg mb-3 group/image"
+            aria-label={`View ${Title} project details`}
           >
-            {/* Image Container - Square aspect for posters */}
-            <div className="relative overflow-hidden rounded-lg bg-gray-900/20 aspect-square">
-              {/* Skeleton Loader */}
-              <div className={`absolute inset-0 transition-opacity duration-300 ${imageLoaded ? 'opacity-0' : 'opacity-100'}`}>
-                <div className="skeleton w-full h-full rounded-lg" />
+            {/* Enhanced Image Container */}
+            <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-gray-800/30 to-gray-900/30 aspect-square border border-white/5">
+              {/* Enhanced Skeleton Loader */}
+              <div className={`absolute inset-0 transition-all duration-500 ${
+                imageLoaded ? 'opacity-0 scale-105' : 'opacity-100 scale-100'
+              }`}>
+                <div className="skeleton w-full h-full rounded-lg bg-gradient-to-r from-gray-700/50 to-gray-600/50 animate-pulse" />
               </div>
               
-              {/* Main Image */}
+              {/* Main Image with Enhanced Transitions */}
               {!imageError && Img && (
                 <img
                   src={Img}
-                  alt={Title}
+                  alt={`${Title} - ${category} design`}
                   loading="lazy"
                   decoding="async"
-                  className={`w-full h-full object-cover transform transition-all duration-300 ${
-                    imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
-                  } group-hover/image:scale-105`}
+                  className={`w-full h-full object-cover transition-all duration-700 ${
+                    imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-110'
+                  } ${isHovered ? 'scale-105' : 'scale-100'}`}
                   onLoad={handleImageLoad}
                   onError={handleImageError}
                 />
               )}
               
-              {/* Error State */}
+              {/* Enhanced Error State */}
               {imageError && (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-gray-800/30 rounded-lg">
-                  <Image className="w-6 h-6 text-gray-500 mb-1" />
-                  <span className="text-xs text-gray-400">No Image</span>
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gray-800/40 rounded-lg border border-white/5">
+                  <Image className="w-6 h-6 text-gray-500 mb-2 opacity-60" />
+                  <span className="text-xs text-gray-400 font-medium">Image not available</span>
                 </div>
               )}
               
-              {/* Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-60 group-hover/image:opacity-80 transition-opacity duration-300 rounded-lg" />
+              {/* Enhanced Overlay */}
+              <div className={`absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/20 to-transparent transition-all duration-500 ${
+                isHovered ? 'opacity-80' : 'opacity-60'
+              } rounded-lg`} />
             </div>
             
-            {/* Badge - Smaller */}
-            <div className="absolute top-1 left-1 z-20">
-              <div className="flex items-center gap-1 px-1.5 py-0.5 bg-black/80 backdrop-blur-md rounded-md border border-white/10 text-xs">
-                <Sparkles className="w-2 h-2 text-pink-400" />
-                <span className="text-white/90">Poster</span>
+            {/* Enhanced Badge */}
+            <div className="absolute top-2 left-2 z-20 transform transition-transform duration-300 group-hover/image:scale-110">
+              <div className="flex items-center gap-1 px-2 py-1 bg-black/90 backdrop-blur-md rounded-lg border border-white/10 text-xs shadow-lg">
+                <CategoryIcon className="w-3 h-3 text-pink-400" />
+                <span className="text-white/90 font-medium">{category}</span>
               </div>
             </div>
 
-            {/* Action Icons - Always visible but smaller */}
-            <div className="absolute top-1 right-1 z-20 opacity-70 group-hover/image:opacity-100 transition-opacity duration-300">
-              <div className="flex gap-0.5">
-                <div className="p-1 bg-black/80 backdrop-blur-md rounded-md border border-white/10">
-                  <Eye className="w-2 h-2 text-white" />
+            {/* Enhanced Action Icons */}
+            <div className={`absolute top-2 right-2 z-20 transition-all duration-300 ${
+              isHovered ? 'opacity-100 scale-100' : 'opacity-70 scale-95'
+            }`}>
+              <div className="flex gap-1">
+                <div className="p-1.5 bg-black/90 backdrop-blur-md rounded-lg border border-white/10 shadow-lg transition-transform duration-200 hover:scale-110">
+                  <Eye className="w-3 h-3 text-white" />
                 </div>
                 {prototypeLink && (
                   <a
                     href={prototypeLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-1 bg-black/80 backdrop-blur-md rounded-md border border-white/10"
+                    className="p-1.5 bg-black/90 backdrop-blur-md rounded-lg border border-white/10 shadow-lg transition-transform duration-200 hover:scale-110"
                     onClick={stopPropagation}
+                    aria-label={`Open ${Title} prototype in Figma`}
                   >
-                    <Figma className="w-2 h-2 text-white" />
+                    <Figma className="w-3 h-3 text-white" />
                   </a>
                 )}
               </div>
             </div>
+
+            {/* Hover View Indicator */}
+            <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
+              isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+            }`}>
+              <div className="bg-black/80 backdrop-blur-md rounded-full p-3 border border-white/20 transform transition-transform duration-300 group-hover/image:scale-110">
+                <ExternalLink className="w-4 h-4 text-white" />
+              </div>
+            </div>
           </Link>
           
-          {/* Content Section - More Compact */}
+          {/* Enhanced Content Section */}
           <div className="space-y-2">
             {/* Title & Description */}
-            <div className="space-y-1">
-              <h3 className="text-sm font-bold text-white line-clamp-2 leading-tight">
+            <div className="space-y-2">
+              <h3 className="text-sm font-bold text-white line-clamp-2 leading-tight transition-colors duration-200 group-hover:text-white/90">
                 {Title}
               </h3>
               
-              <p className="text-gray-300/80 text-xs leading-relaxed line-clamp-2">
+              <p className="text-gray-300/80 text-xs leading-relaxed line-clamp-2 transition-colors duration-200 group-hover:text-gray-300">
                 {Description}
               </p>
             </div>
 
-            {/* Technology Tags - Single row, compact */}
+            {/* Enhanced Technology Tags */}
             {technologies.length > 0 && (
-              <div className="flex gap-1 overflow-x-auto scrollbar-hide">
-                {technologies.slice(0, 3).map((tech, index) => (
+              <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-1">
+                {technologyTags.visible.map((tech, index) => (
                   <span
                     key={index}
-                    className="flex-shrink-0 px-1.5 py-0.5 bg-white/5 rounded text-xs text-gray-300 border border-white/5"
+                    className="flex-shrink-0 px-2 py-1 bg-white/5 rounded-lg text-xs text-gray-300 border border-white/5 transition-all duration-200 hover:bg-white/10 hover:border-white/10 hover:text-white"
+                    title={tech}
                   >
                     {tech}
                   </span>
                 ))}
-                {technologies.length > 3 && (
-                  <span className="flex-shrink-0 px-1.5 py-0.5 bg-white/5 rounded text-xs text-gray-400">
-                    +{technologies.length - 3}
+                {technologyTags.remaining > 0 && (
+                  <span 
+                    className="flex-shrink-0 px-2 py-1 bg-white/5 rounded-lg text-xs text-gray-400 border border-white/5"
+                    title={`${technologyTags.remaining} more technologies`}
+                  >
+                    +{technologyTags.remaining}
                   </span>
                 )}
               </div>
             )}
             
-            {/* Action Buttons - Compact */}
-            <div className="flex items-center justify-between gap-1 pt-1">
+            {/* Enhanced Action Buttons */}
+            <div className="flex items-center justify-between gap-2 pt-2">
               {/* External Links */}
-              <div className="flex items-center gap-0.5">
+              <div className="flex items-center gap-1">
                 {behanceLink && (
                   <a
                     href={behanceLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-1 bg-white/5 rounded border border-white/10 text-gray-400 hover:bg-white/10 transition-colors"
+                    className="p-1.5 bg-white/5 rounded-lg border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white transition-all duration-200 hover:scale-110"
                     onClick={stopPropagation}
+                    aria-label={`View ${Title} on Behance`}
                   >
                     <Palette className="w-3 h-3" />
                   </a>
@@ -163,28 +228,29 @@ const CardProject = memo(({
                     href={Img}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-1 bg-white/5 rounded border border-white/10 text-gray-400 hover:bg-white/10 transition-colors"
+                    className="p-1.5 bg-white/5 rounded-lg border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white transition-all duration-200 hover:scale-110"
                     onClick={stopPropagation}
+                    aria-label={`Open ${Title} image in new tab`}
                   >
                     <Image className="w-3 h-3" />
                   </a>
                 )}
               </div>
               
-              {/* Details Button */}
+              {/* Enhanced Details Button */}
               <div className="flex-1 flex justify-end min-w-0">
-                {id ? (
+                {isProjectAvailable ? (
                   <Link
                     to={`/project/${id}`}
                     onClick={handleDetails}
-                    className="inline-flex items-center justify-center space-x-1 px-2 py-1 rounded bg-gradient-to-r from-pink-500/10 to-purple-500/10 hover:from-pink-500/20 border border-pink-500/20 text-white/90 hover:text-white transition-all duration-200 group/button text-xs font-medium whitespace-nowrap overflow-hidden"
+                    className="inline-flex items-center justify-center space-x-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-pink-500/10 to-purple-500/10 hover:from-pink-500/20 hover:to-purple-500/20 border border-pink-500/20 hover:border-pink-500/30 text-white/90 hover:text-white transition-all duration-200 group/button text-xs font-medium whitespace-nowrap overflow-hidden shadow-lg hover:shadow-pink-500/10"
                   >
-                    <span className="truncate">View</span>
-                    <ArrowRight className="w-2 h-2 flex-shrink-0 transform group-hover/button:translate-x-0.5 transition-transform" />
+                    <span className="truncate">View Details</span>
+                    <ArrowRight className="w-3 h-3 flex-shrink-0 transform group-hover/button:translate-x-0.5 transition-transform duration-200" />
                   </Link>
                 ) : (
-                  <div className="inline-flex items-center justify-center space-x-1 px-2 py-1 rounded bg-gray-500/5 border border-gray-500/20 text-gray-500 cursor-not-allowed text-xs font-medium whitespace-nowrap">
-                    <span className="truncate">N/A</span>
+                  <div className="inline-flex items-center justify-center space-x-1.5 px-3 py-1.5 rounded-lg bg-gray-500/5 border border-gray-500/20 text-gray-500 cursor-not-allowed text-xs font-medium whitespace-nowrap">
+                    <span className="truncate">Coming Soon</span>
                   </div>
                 )}
               </div>
@@ -196,6 +262,14 @@ const CardProject = memo(({
   );
 });
 
+// Default props for better error handling
+CardProject.defaultProps = {
+  technologies: [],
+  category: "Poster",
+  status: "available"
+};
+
+// Display name for better debugging
 CardProject.displayName = 'CardProject';
 
 export default CardProject;

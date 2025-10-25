@@ -1,67 +1,125 @@
-import React, { useState, useEffect, memo } from 'react';
+import React, { useState, useEffect, memo, useMemo } from 'react';
 
-const LoadingScreen = memo(() => {
+const LoadingScreen = memo(({ onLoadingComplete, minDisplayTime = 2000 }) => {
   const [isMobile, setIsMobile] = useState(false);
   const [showLoadingText, setShowLoadingText] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
 
-  // Check mobile device
+  // Memoized particle configurations for better performance
+  const particles = useMemo(() => [
+    { size: 'w-2 h-2', color: 'bg-[#6366f1]', delay: '0s', top: '25%', left: '25%' },
+    { size: 'w-1.5 h-1.5', color: 'bg-[#a855f7]', delay: '1.5s', top: '33%', right: '25%' },
+    { size: 'w-1 h-1', color: 'bg-[#8b5cf6]', delay: '2.5s', bottom: '25%', left: '33%' },
+    { size: 'w-1.5 h-1.5', color: 'bg-[#ec4899]', delay: '0.8s', top: '40%', right: '35%' },
+    { size: 'w-2 h-2', color: 'bg-[#06b6d4]', delay: '3s', bottom: '35%', right: '30%' }
+  ], []);
+
+  // Debounced mobile detection
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
     
     checkMobile();
-    window.addEventListener('resize', checkMobile);
     
-    return () => window.removeEventListener('resize', checkMobile);
+    const debouncedResize = debounce(checkMobile, 100);
+    window.addEventListener('resize', debouncedResize);
+    
+    return () => window.removeEventListener('resize', debouncedResize);
   }, []);
 
-  // Show loading text after a short delay for better UX
+  // Enhanced loading simulation with progress
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowLoadingText(true);
-    }, 500);
+    let progressInterval;
+    let startTime = Date.now();
 
-    return () => clearTimeout(timer);
-  }, []);
+    // Show loading text after short delay
+    const textTimer = setTimeout(() => {
+      setShowLoadingText(true);
+    }, 300);
+
+    // Simulate loading progress
+    progressInterval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 95) {
+          clearInterval(progressInterval);
+          return 95;
+        }
+        return prev + Math.random() * 15;
+      });
+    }, 200);
+
+    // Complete loading after minimum display time
+    const completeTimer = setTimeout(() => {
+      const elapsed = Date.now() - startTime;
+      const remainingTime = Math.max(0, minDisplayTime - elapsed);
+      
+      setTimeout(() => {
+        setProgress(100);
+        setIsComplete(true);
+        
+        // Call completion callback after animation
+        setTimeout(() => {
+          onLoadingComplete?.();
+        }, 500);
+      }, remainingTime);
+    }, minDisplayTime);
+
+    return () => {
+      clearTimeout(textTimer);
+      clearInterval(progressInterval);
+      clearTimeout(completeTimer);
+    };
+  }, [onLoadingComplete, minDisplayTime]);
+
+  // Enhanced particle component
+  const FloatingParticle = memo(({ size, color, delay, top, left, right, bottom }) => (
+    <div 
+      className={`absolute ${size} ${color} rounded-full opacity-60 animate-float`}
+      style={{ 
+        animationDelay: delay,
+        top: top || 'auto',
+        left: left || 'auto',
+        right: right || 'auto',
+        bottom: bottom || 'auto'
+      }}
+    />
+  ));
+
+  // Debounce utility
+  const debounce = (func, wait) => {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  };
 
   return (
-    <div className="min-h-screen bg-[#030014] flex items-center justify-center overflow-hidden">
+    <div 
+      className={`fixed inset-0 bg-[#030014] flex items-center justify-center overflow-hidden z-50 transition-opacity duration-500 ${
+        isComplete ? 'opacity-0 pointer-events-none' : 'opacity-100'
+      }`}
+    >
       <div className="relative w-full max-w-sm sm:max-w-md mx-auto">
-        {/* Animated Background Effects - CENTERED */}
+        {/* Enhanced Animated Background Effects */}
         <div className="absolute -inset-8 sm:-inset-12 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-full opacity-20 blur-3xl animate-pulse-slow mx-auto left-1/2 transform -translate-x-1/2"></div>
         
-        {/* Floating Particles - CENTERED AROUND MAIN CONTENT */}
+        {/* Dynamic Floating Particles */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <div 
-            className="absolute w-2 h-2 bg-[#6366f1] rounded-full opacity-60 animate-float"
-            style={{ 
-              animationDelay: '0s',
-              top: '25%',
-              left: '25%'
-            }}
-          />
-          <div 
-            className="absolute w-1.5 h-1.5 bg-[#a855f7] rounded-full opacity-40 animate-float"
-            style={{ 
-              animationDelay: '1.5s',
-              top: '33%',
-              right: '25%'
-            }}
-          />
-          <div 
-            className="absolute w-1 h-1 bg-[#8b5cf6] rounded-full opacity-50 animate-float"
-            style={{ 
-              animationDelay: '2.5s',
-              bottom: '25%',
-              left: '33%'
-            }}
-          />
+          {particles.map((particle, index) => (
+            <FloatingParticle key={index} {...particle} />
+          ))}
         </div>
 
-        {/* Main Loading Content - PERFECTLY CENTERED */}
+        {/* Main Loading Content */}
         <div className="relative flex flex-col items-center justify-center gap-4 sm:gap-6 p-6 sm:p-8">
-          {/* Spinner Container - CENTERED */}
+          {/* Enhanced Spinner Container */}
           <div className="relative flex items-center justify-center">
             <div className="absolute -inset-3 sm:-inset-4 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-full opacity-30 blur-xl animate-ping-slow"></div>
             <div 
@@ -71,22 +129,29 @@ const LoadingScreen = memo(() => {
                   : "w-12 h-12 border-4"
               } border-[#6366f1] animate-spin-slow`}
             />
+            
+            {/* Inner spinner for depth */}
+            <div 
+              className={`absolute rounded-full border-2 border-[#a855f7] border-t-transparent ${
+                isMobile ? "w-8 h-8" : "w-10 h-10"
+              } animate-spin-slow-reverse opacity-60`}
+            />
           </div>
 
-          {/* Loading Text with Staggered Animation - CENTERED */}
+          {/* Enhanced Loading Text with Staggered Animation */}
           <div className="relative flex flex-col items-center justify-center gap-2 sm:gap-3 text-center w-full">
             <div 
-              className={`relative transition-all duration-500 ${
+              className={`relative transition-all duration-500 transform ${
                 showLoadingText ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
               }`}
             >
               <div className="absolute -inset-2 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded blur opacity-20 animate-pulse"></div>
-              <span className="relative text-gray-200 text-sm sm:text-base font-light tracking-wide">
+              <span className="relative text-gray-200 text-sm sm:text-base font-light tracking-wide bg-gradient-to-r from-gray-200 to-gray-300 bg-clip-text text-transparent">
                 Loading Portfolio...
               </span>
             </div>
             
-            {/* Optional Subtitle - CENTERED */}
+            {/* Enhanced Subtitle */}
             {showLoadingText && (
               <div 
                 className="relative transition-all duration-500 delay-200 text-center"
@@ -96,22 +161,32 @@ const LoadingScreen = memo(() => {
                 }}
               >
                 <span className="text-gray-400 text-xs sm:text-sm font-light">
-                  Preparing amazing content
+                  {progress < 50 ? 'Initializing...' : 
+                   progress < 80 ? 'Loading assets...' : 
+                   'Almost ready...'}
                 </span>
               </div>
             )}
           </div>
 
-          {/* Progress Bar (Optional) - CENTERED */}
-          <div className="w-32 sm:w-40 h-1 bg-white/10 rounded-full overflow-hidden mt-2 mx-auto">
+          {/* Enhanced Progress Bar */}
+          <div className="w-32 sm:w-40 h-1.5 bg-white/10 rounded-full overflow-hidden mt-2 mx-auto border border-white/5">
             <div 
-              className="h-full bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-full animate-progress"
+              className="h-full bg-gradient-to-r from-[#6366f1] via-[#a855f7] to-[#ec4899] rounded-full transition-all duration-300 ease-out shadow-lg shadow-purple-500/30"
+              style={{ width: `${progress}%` }}
             />
           </div>
+
+          {/* Progress Percentage */}
+          {showLoadingText && progress > 0 && (
+            <div className="text-gray-500 text-xs font-mono transition-opacity duration-300">
+              {Math.round(progress)}%
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Inline styles for custom animations */}
+      {/* Enhanced Inline Styles */}
       <style jsx>{`
         @keyframes spin-slow {
           from {
@@ -121,13 +196,21 @@ const LoadingScreen = memo(() => {
             transform: rotate(360deg);
           }
         }
+        @keyframes spin-slow-reverse {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(-360deg);
+          }
+        }
         @keyframes pulse-slow {
           0%, 100% {
-            opacity: 0.2;
+            opacity: 0.15;
             transform: scale(1);
           }
           50% {
-            opacity: 0.3;
+            opacity: 0.25;
             transform: scale(1.05);
           }
         }
@@ -137,61 +220,72 @@ const LoadingScreen = memo(() => {
             opacity: 0.3;
           }
           75%, 100% {
-            transform: scale(2);
+            transform: scale(2.5);
             opacity: 0;
           }
         }
         @keyframes float {
           0%, 100% {
-            transform: translateY(0px) translateX(0px);
+            transform: translateY(0px) translateX(0px) scale(1);
+            opacity: 0.6;
           }
-          33% {
-            transform: translateY(-10px) translateX(5px);
-          }
-          66% {
-            transform: translateY(5px) translateX(-5px);
-          }
-        }
-        @keyframes progress {
-          0% {
-            transform: translateX(-100%);
+          25% {
+            transform: translateY(-12px) translateX(8px) scale(1.1);
+            opacity: 0.8;
           }
           50% {
-            transform: translateX(0%);
+            transform: translateY(-5px) translateX(-6px) scale(0.9);
+            opacity: 0.7;
           }
-          100% {
-            transform: translateX(100%);
+          75% {
+            transform: translateY(8px) translateX(4px) scale(1.05);
+            opacity: 0.5;
           }
         }
         .animate-spin-slow {
-          animation: spin-slow 2s linear infinite;
+          animation: spin-slow 1.8s linear infinite;
+        }
+        .animate-spin-slow-reverse {
+          animation: spin-slow-reverse 2.2s linear infinite;
         }
         .animate-pulse-slow {
-          animation: pulse-slow 3s ease-in-out infinite;
+          animation: pulse-slow 4s ease-in-out infinite;
         }
         .animate-ping-slow {
-          animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+          animation: ping-slow 3s cubic-bezier(0, 0, 0.2, 1) infinite;
         }
         .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-        .animate-progress {
-          animation: progress 2s ease-in-out infinite;
+          animation: float 8s ease-in-out infinite;
         }
 
-        /* Reduced motion support */
+        /* Enhanced reduced motion support */
         @media (prefers-reduced-motion: reduce) {
           .animate-spin-slow,
+          .animate-spin-slow-reverse,
           .animate-pulse-slow,
           .animate-ping-slow,
-          .animate-float,
-          .animate-progress {
+          .animate-float {
             animation: none;
           }
+          
+          .transition-all,
+          .transform {
+            transition: none !important;
+          }
+        }
+
+        /* Smooth performance optimizations */
+        .will-change-transform {
+          will-change: transform;
         }
       `}</style>
     </div>
   );
 });
+
+// Default props
+LoadingScreen.defaultProps = {
+  minDisplayTime: 2000
+};
 
 export default LoadingScreen;

@@ -20,6 +20,36 @@ html, body {
 }
 
 /* ========================================================================== */
+/* ADD MISSING ANIMATIONS FOR COMPONENTS */
+/* ========================================================================== */
+@keyframes blink {
+  0%, 100% { 
+    opacity: 1; 
+  }
+  50% { 
+    opacity: 0; 
+  }
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* Enhanced float animation for Contact page */
+@keyframes float-enhanced {
+  0%, 100% { 
+    transform: translateY(0px) scale(1); 
+  }
+  50% { 
+    transform: translateY(-10px) scale(1.05); 
+  }
+}
+
+.animate-float-enhanced {
+  animation: float-enhanced 6s ease-in-out infinite;
+}
+
+/* ========================================================================== */
 /* BASE STYLES & RESETS */
 /* ========================================================================== */
 ::selection {
@@ -218,6 +248,14 @@ textarea:focus-visible {
   .animate-shine {
     animation: shine 2s ease-in-out infinite;
   }
+
+  .animate-blink {
+    animation: blink 1s step-end infinite;
+  }
+
+  .animate-float-enhanced {
+    animation: float-enhanced 6s ease-in-out infinite;
+  }
 }
 
 .animate-hardware-accelerated {
@@ -233,8 +271,12 @@ textarea:focus-visible {
   animation-delay: 2s;
 }
 
+.animation-delay-3000 {
+  animation-delay: 3s;
+}
+
 /* ========================================================================== */
-/* MOBILE-FIRST OPTIMIZATIONS */
+/* ENHANCED MOBILE OPTIMIZATIONS */
 /* ========================================================================== */
 @media (max-width: 768px) {
   /* Critical mobile optimizations */
@@ -250,6 +292,10 @@ textarea:focus-visible {
 
   .animate-float {
     animation: float 10s ease-in-out infinite;
+  }
+
+  .animate-float-enhanced {
+    animation: float-enhanced 8s ease-in-out infinite;
   }
 
   /* Disable heavy animations */
@@ -303,6 +349,12 @@ textarea:focus-visible {
     padding-right: 1rem;
     padding-top: 1.5rem;
     padding-bottom: 1.5rem;
+  }
+
+  /* Better backdrop blur for mobile performance */
+  .backdrop-blur-xl {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
 }
 
@@ -491,7 +543,7 @@ textarea:focus-visible {
 }
 
 /* ========================================================================== */
-/* ACCESSIBILITY & REDUCED MOTION */
+/* ENHANCED ACCESSIBILITY & REDUCED MOTION */
 /* ========================================================================== */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -505,9 +557,13 @@ textarea:focus-visible {
   
   .animate-blob,
   .animate-float,
+  .animate-float-enhanced,
   .animate-glow,
-  .animate-pulse-slow {
-    animation: none;
+  .animate-pulse-slow,
+  .animate-blink,
+  .animate-fade-in,
+  .animate-slide-in-up {
+    animation: none !important;
   }
 }
 
@@ -515,6 +571,7 @@ textarea:focus-visible {
 @media (prefers-reduced-data: reduce) {
   .animate-blob,
   .animate-float,
+  .animate-float-enhanced,
   .animate-glow {
     animation: none;
   }

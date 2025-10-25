@@ -1,16 +1,16 @@
-import React, { useEffect, memo, useMemo, useState } from "react"
-import { Code, Award, Globe, ArrowUpRight, Sparkles, UserCheck, Download, Eye } from "lucide-react"
+import React, { useEffect, memo, useMemo, useState, useCallback } from "react"
+import { Code, Award, Globe, ArrowUpRight, Sparkles, UserCheck, Download, Eye, Star, Zap, Heart, Mouse } from "lucide-react"
 
-// Memoized Components
+// Enhanced Memoized Components
 const Header = memo(() => (
-  <div className="text-center mb-8 lg:mb-12 px-4">
+  <div className="text-center mb-8 lg:mb-12 px-4" data-aos="fade-down">
     <div className="inline-block relative group mb-4">
-      <div className="absolute -inset-4 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-full opacity-10 blur-xl group-hover:opacity-20 transition-opacity duration-500"></div>
-      <h2 className="relative text-4xl sm:text-5xl lg:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#a855f7]">
+      <div className="absolute -inset-3 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-full opacity-10 blur-xl group-hover:opacity-20 transition-opacity duration-500"></div>
+      <h2 className="relative text-3xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#a855f7] font-[Poppins] tracking-tight">
         About Me
       </h2>
     </div>
-    <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+    <p className="text-lg lg:text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed font-[Inter] font-light" data-aos="fade-up" data-aos-delay="100">
       Crafting <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#6366f1] to-[#a855f7] font-semibold">digital experiences</span> that blend aesthetics with functionality
     </p>
   </div>
@@ -19,103 +19,184 @@ const Header = memo(() => (
 const ProfileImage = memo(() => {
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  const handleMouseEnter = useCallback(() => setIsHovered(true), []);
+  const handleMouseLeave = useCallback(() => setIsHovered(false), []);
+  const handleImageLoad = useCallback(() => setImageLoaded(true), []);
+  const handleImageError = useCallback(() => setImageError(true), []);
 
   return (
-    <div className="flex justify-center items-center p-4 lg:p-8">
+    <div className="flex justify-center items-center p-4 lg:p-8" data-aos="zoom-in" data-aos-delay="200">
       <div 
-        className="relative group"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        className="relative group cursor-pointer"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
-        {/* Animated background orb */}
-        <div className="absolute -inset-8 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-full opacity-10 blur-3xl animate-pulse"></div>
-        
-        {/* Floating elements */}
-        <div className="absolute -top-4 -right-4 w-8 h-8 bg-[#6366f1] rounded-full opacity-60 animate-bounce"></div>
-        <div className="absolute -bottom-4 -left-4 w-6 h-6 bg-[#a855f7] rounded-full opacity-40 animate-bounce" style={{animationDelay: '1s'}}></div>
+        {/* Floating animation */}
+        <div className="absolute -inset-6 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-full opacity-10 blur-2xl about-float-slow"></div>
+
+        {/* Animated stars */}
+        <div className="absolute -top-4 -right-4 animate-bounce">
+          <Star className="w-5 h-5 text-yellow-400 fill-current" />
+        </div>
+        <div className="absolute -bottom-4 -left-4 animate-pulse">
+          <Zap className="w-4 h-4 text-blue-400" />
+        </div>
 
         <div className="relative">
-          <div className="relative w-64 h-64 sm:w-72 sm:h-72 lg:w-80 lg:h-80 rounded-3xl overflow-hidden shadow-2xl transform transition-all duration-700 group-hover:scale-105">
-            {/* Gradient border */}
-            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#a855f7] p-1">
+          <div className="relative w-64 h-64 lg:w-80 lg:h-80 xl:w-96 xl:h-96 rounded-2xl overflow-hidden shadow-2xl transform transition-all duration-700 group-hover:scale-105 group-hover:rotate-1">
+            {/* Gradient border with animation */}
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#a855f7] p-1 about-gradient-slow">
               <div className="w-full h-full rounded-2xl bg-[#030014] relative overflow-hidden">
-                {/* Image */}
-                <img
-                  src="/Cover.png"
-                  alt="Koeurn - Graphic Designer"
-                  className={`w-full h-full object-cover transform transition-all duration-700 group-hover:scale-110 ${
-                    imageLoaded ? 'opacity-100' : 'opacity-0'
-                  }`}
-                  onLoad={() => setImageLoaded(true)}
-                  loading="lazy"
-                />
-                
-                {/* Loading state */}
-                {!imageLoaded && (
-                  <div className="absolute inset-0 bg-gray-800 animate-pulse flex items-center justify-center">
-                    <UserCheck className="w-12 h-12 text-gray-600" />
+                {/* Image with enhanced hover effects and error handling */}
+                {!imageError ? (
+                  <img
+                    src="/Cover.png"
+                    alt="Koeurn - Graphic Designer"
+                    className={`w-full h-full object-cover transform transition-all duration-700 group-hover:scale-110 ${
+                      imageLoaded ? 'opacity-100' : 'opacity-0'
+                    }`}
+                    onLoad={handleImageLoad}
+                    onError={handleImageError}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                    <div className="text-center p-6">
+                      <UserCheck className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                      <p className="text-gray-300 text-base">Profile Image</p>
+                      <p className="text-gray-500 text-sm">Koeurn - Graphic Designer</p>
+                    </div>
                   </div>
                 )}
                 
-                {/* Overlay effects */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#030014] via-transparent to-transparent opacity-60"></div>
-                <div className={`absolute inset-0 bg-gradient-to-br from-[#6366f1]/20 to-[#a855f7]/20 transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-0'}`}></div>
+                {/* Loading state */}
+                {!imageLoaded && !imageError && (
+                  <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 animate-pulse flex items-center justify-center">
+                    <div className="relative">
+                      <UserCheck className="w-12 h-12 text-gray-600 animate-ping" />
+                      <UserCheck className="w-12 h-12 text-gray-400 absolute top-0" />
+                    </div>
+                  </div>
+                )}
                 
-                {/* Shine effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+                {/* Enhanced overlay effects */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#030014] via-transparent to-transparent opacity-70"></div>
+                <div className={`absolute inset-0 bg-gradient-to-br from-[#6366f1]/30 to-[#a855f7]/30 transition-all duration-500 ${
+                  isHovered ? 'opacity-100 backdrop-blur-sm' : 'opacity-0'
+                }`}></div>
+                
+                {/* Shine effect on hover */}
+                <div className={`absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 transition-all duration-1000 ${
+                  isHovered ? 'translate-x-full' : '-translate-x-full'
+                }`}></div>
               </div>
             </div>
           </div>
           
-          {/* Status badge */}
-          <div className="absolute -bottom-3 -right-3 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-2xl p-3 shadow-2xl transform transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
-            <div className="flex items-center gap-2 text-white text-sm font-medium">
-              <UserCheck className="w-4 h-4" />
+          {/* Enhanced status badge */}
+          <div className="absolute -bottom-3 -right-3 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-xl p-3 shadow-2xl transform transition-all duration-300 group-hover:scale-110 group-hover:rotate-6" style={{
+            boxShadow: '0 0 20px rgba(168, 85, 247, 0.5)'
+          }}>
+            <div className="flex items-center gap-2 text-white text-sm font-semibold font-[Inter]">
+              <div className="relative">
+                <UserCheck className="w-4 h-4 animate-pulse" />
+                <div className="absolute top-0 left-0 w-1.5 h-1.5 bg-green-400 rounded-full animate-ping"></div>
+              </div>
               <span>Available</span>
             </div>
           </div>
+
+          {/* Floating elements */}
+          <div className="absolute -top-1 -left-1 w-3 h-3 bg-purple-500 rounded-full opacity-60 animate-bounce"></div>
+          <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-pink-500 rounded-full opacity-60 animate-bounce delay-300"></div>
         </div>
       </div>
     </div>
   );
 });
 
-const StatCard = memo(({ icon: Icon, color, value, label, description }) => {
+const StatCard = memo(({ icon: Icon, color, value, label, description, index }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [count, setCount] = useState(0);
+  const [localMounted, setLocalMounted] = useState(false);
+
+  useEffect(() => {
+    setLocalMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (localMounted) {
+      const timer = setTimeout(() => {
+        // Animate counting up
+        let start = 0;
+        const duration = 2000;
+        const increment = value / (duration / 16);
+        
+        const updateCount = () => {
+          start += increment;
+          if (start < value) {
+            setCount(Math.ceil(start));
+            requestAnimationFrame(updateCount);
+          } else {
+            setCount(value);
+          }
+        };
+        updateCount();
+      }, index * 300);
+      return () => clearTimeout(timer);
+    }
+  }, [value, index, localMounted]);
+
+  const handleMouseEnter = useCallback(() => setIsHovered(true), []);
+  const handleMouseLeave = useCallback(() => setIsHovered(false), []);
 
   return (
     <div 
-      className="relative group"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className="relative group cursor-pointer"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      data-aos="fade-up"
+      data-aos-delay={index * 100}
     >
-      <div className="relative z-10 bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-white/10 overflow-hidden transition-all duration-500 hover:scale-105 hover:shadow-2xl h-full flex flex-col justify-between">
+      {/* Hover glow effect */}
+      <div className={`absolute -inset-1 bg-gradient-to-br ${color} rounded-xl blur opacity-0 group-hover:opacity-30 transition-all duration-500`}></div>
+      
+      <div className="relative z-10 bg-gray-900/80 backdrop-blur-2xl rounded-xl p-6 border border-white/10 overflow-hidden transition-all duration-500 hover:scale-105 h-full flex flex-col justify-between group-hover:border-white/20">
         {/* Animated background */}
         <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
-        
-        {/* Shimmer effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+
+        {/* Floating particles */}
+        <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-white rounded-full opacity-0 group-hover:opacity-40 animate-ping"></div>
 
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
-            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center bg-gradient-to-br ${color} shadow-lg transform transition-transform duration-300 group-hover:rotate-6`}>
-              <Icon className="w-7 h-7 text-white" />
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br ${color} shadow-xl transform transition-all duration-300 group-hover:rotate-12 group-hover:scale-110 relative overflow-hidden`}>
+              <Icon className="w-6 h-6 text-white relative z-10" />
+              {/* Icon shine effect */}
+              <div className={`absolute inset-0 bg-white/20 transform -skew-x-12 transition-all duration-1000 ${
+                isHovered ? 'translate-x-full' : '-translate-x-full'
+              }`}></div>
             </div>
-            <span className="text-4xl sm:text-5xl font-bold text-white drop-shadow-lg">
-              {value}+
+            <span className="text-2xl lg:text-3xl font-bold text-white drop-shadow-lg font-[Poppins] bg-gradient-to-br from-white to-gray-300 bg-clip-text text-transparent">
+              {count}+
             </span>
           </div>
 
           <div>
-            <p className="text-sm uppercase tracking-widest text-gray-300 mb-3 font-semibold">
+            <p className="text-sm uppercase tracking-widest text-gray-300 mb-3 font-semibold font-[Inter]" style={{
+              letterSpacing: '0.1em'
+            }}>
               {label}
             </p>
             <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-400 leading-relaxed">
+              <p className="text-base text-gray-400 leading-relaxed font-[Inter] font-light">
                 {description}
               </p>
-              <ArrowUpRight className={`w-5 h-5 transition-colors duration-300 flex-shrink-0 ml-3 transform ${
-                isHovered ? 'text-white translate-x-1 -translate-y-1' : 'text-white/60'
+              <ArrowUpRight className={`w-5 h-5 transition-all duration-300 flex-shrink-0 ml-3 transform ${
+                isHovered ? 'text-white translate-x-0.5 -translate-y-0.5 scale-110' : 'text-white/60'
               }`} />
             </div>
           </div>
@@ -125,32 +206,85 @@ const StatCard = memo(({ icon: Icon, color, value, label, description }) => {
   );
 });
 
+const ScrollIndicator = memo(() => (
+  <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-20 animate-bounce" data-aos="fade-up" data-aos-delay="1000">
+    <div className="flex flex-col items-center gap-1">
+      <Mouse className="w-5 h-5 text-gray-400" />
+      <div className="w-px h-6 bg-gradient-to-b from-[#6366f1] to-transparent"></div>
+      <span className="text-xs text-gray-400 font-[Inter]">Scroll to explore</span>
+    </div>
+  </div>
+));
+
+const LoadingSpinner = memo(() => (
+  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014]">
+    <div className="text-center">
+      <div className="relative">
+        <div className="w-12 h-12 border-3 border-[#6366f1] border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <div className="absolute top-0 left-0 w-12 h-12 border-3 border-[#a855f7] border-b-transparent rounded-full animate-spin mx-auto opacity-50"></div>
+      </div>
+      <p className="mt-3 text-gray-300 text-sm font-[Inter]">Loading portfolio...</p>
+    </div>
+  </div>
+));
+
 const AboutPage = () => {
-  // Memoized calculations with error handling
+  const [mounted, setMounted] = useState(false);
+  const [activeSection, setActiveSection] = useState('about');
+
+  useEffect(() => {
+    setMounted(true);
+    
+    // Add scroll listener for section tracking
+    const handleScroll = () => {
+      const sections = ['About', 'Portfolio', 'Portofolio'];
+      const scrollPosition = window.scrollY + 100;
+
+      for (const section of sections) {
+        const element = document.getElementById(section);
+        if (element && scrollPosition >= element.offsetTop) {
+          setActiveSection(section.toLowerCase());
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Memoized calculations with improved experience calculation
   const { totalProjects, totalCertificates, YearExperience } = useMemo(() => {
+    if (!mounted) return { totalProjects: 0, totalCertificates: 0, YearExperience: 0 };
+    
     try {
       const storedProjects = JSON.parse(localStorage.getItem("projects") || "[]");
       const storedCertificates = JSON.parse(localStorage.getItem("certificates") || "[]");
       
+      // Improved experience calculation
       const startDate = new Date("2024-11-06");
       const today = new Date();
-      const experience = today.getFullYear() - startDate.getFullYear() -
-        (today < new Date(today.getFullYear(), startDate.getMonth(), startDate.getDate()) ? 1 : 0);
+      let experience = today.getFullYear() - startDate.getFullYear();
+      
+      // Adjust if current month/day is before start month/day
+      if (today.getMonth() < startDate.getMonth() || 
+          (today.getMonth() === startDate.getMonth() && today.getDate() < startDate.getDate())) {
+        experience--;
+      }
 
       return {
         totalProjects: storedProjects.length || 0,
         totalCertificates: storedCertificates.length || 0,
-        YearExperience: experience || 0
+        YearExperience: Math.max(experience, 0) // Ensure non-negative
       };
     } catch (error) {
-      console.error('Error calculating stats:', error);
+      console.error("Error calculating stats:", error);
       return {
         totalProjects: 0,
         totalCertificates: 0,
         YearExperience: 0
       };
     }
-  }, []);
+  }, [mounted]);
 
   // Memoized stats data
   const statsData = useMemo(() => [
@@ -159,140 +293,129 @@ const AboutPage = () => {
       color: "from-[#6366f1] to-[#8b5cf6]",
       value: totalProjects,
       label: "Projects",
-      description: "Successful designs delivered"
+      description: "Successful designs"
     },
     {
       icon: Award,
       color: "from-[#a855f7] to-[#ec4899]",
       value: totalCertificates,
       label: "Certificates",
-      description: "Professional achievements"
+      description: "Achievements earned"
     },
     {
       icon: Globe,
       color: "from-[#8b5cf6] to-[#6366f1]",
       value: YearExperience,
-      label: "Years Experience",
+      label: "Years Exp",
       description: "Design excellence"
     },
   ], [totalProjects, totalCertificates, YearExperience]);
 
-  // Function to handle View Work button click - IMPROVED VERSION
-  const handleViewWork = () => {
-    console.log('View Work button clicked'); // Debug log
-    
-    // Method 1: Try to find Portfolio section with multiple possible IDs
-    const portfolioSection = document.getElementById('Portfolio') || 
-                            document.getElementById('portfolio') || 
-                            document.getElementById('Portofolio');
-    
+  const handleViewWork = useCallback(() => {
+    const portfolioSection = document.getElementById('Portfolio') || document.getElementById('Portofolio');
     if (portfolioSection) {
-      console.log('Portfolio section found:', portfolioSection);
-      // Smooth scroll to portfolio section
       portfolioSection.scrollIntoView({ 
         behavior: 'smooth',
         block: 'start'
       });
-    } else {
-      // Method 2: Try to find by class name
-      const portfolioByClass = document.querySelector('.portfolio-section, .portfolio, [class*="portfolio"]');
-      if (portfolioByClass) {
-        console.log('Portfolio section found by class:', portfolioByClass);
-        portfolioByClass.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'start'
-        });
-        return;
-      }
-      
-      // Method 3: Use hash navigation
-      console.log('Portfolio section not found, using hash navigation');
-      window.location.href = '#Portfolio';
-      
-      // Method 4: Fallback - scroll to bottom
-      setTimeout(() => {
-        window.scrollTo({
-          top: document.body.scrollHeight,
-          behavior: 'smooth'
-        });
-      }, 100);
     }
-  };
+  }, []);
+
+  const handleDownloadCV = useCallback((e) => {
+    e.preventDefault();
+    // Add download tracking
+    console.log('CV download initiated');
+    window.open("https://drive.google.com/file/d/1qJ7awhiMQMHxmhZu5D8ySG3DvtQx_yLK/view?usp=drive_link", '_blank');
+  }, []);
+
+  if (!mounted) {
+    return <LoadingSpinner />;
+  }
 
   return (
-    <div
-      className="min-h-screen py-12 lg:py-24 text-white overflow-hidden bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014] relative"
-      id="About"
-    >
-      {/* Background decoration */}
+    <div className="min-h-screen py-8 lg:py-16 text-white overflow-hidden bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014] relative" id="About">
+      {/* Enhanced background decoration */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-[#6366f1] rounded-full blur-3xl opacity-10 animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#a855f7] rounded-full blur-3xl opacity-5 animate-pulse" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-[#6366f1] rounded-full blur-3xl opacity-10 animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#a855f7] rounded-full blur-3xl opacity-5 animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 w-56 h-56 bg-[#8b5cf6] rounded-full blur-2xl opacity-5 animate-pulse delay-500"></div>
+        
+        {/* Animated grid background */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="w-full h-full about-grid-move"></div>
+        </div>
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 container mx-auto px-4 lg:px-8 xl:px-16">
         {/* Header Section */}
         <Header />
 
-        {/* Main Content - Fixed layout */}
-        <div className="w-full mx-auto">
+        {/* Main Content */}
+        <div className="w-full max-w-6xl mx-auto">
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 xl:gap-16 items-center justify-between">
             
             {/* Left Side - Content */}
             <div className="w-full lg:w-1/2 space-y-6 lg:space-y-8 text-center lg:text-left order-2 lg:order-1">
-              <div>
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4">
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 block">
+              <div data-aos="fade-right" data-aos-delay="200">
+                <h1 className="text-3xl lg:text-5xl xl:text-6xl font-bold mb-4 font-[Poppins] tracking-tight">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 block leading-tight">
                     Koeurn
                   </span>
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#a855f7] block mt-2">
-                    graphic design
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#a855f7] block mt-2 leading-tight text-2xl lg:text-4xl xl:text-5xl">
+                    Graphic Designer
                   </span>
                 </h1>
               </div>
               
-              <p className="text-lg sm:text-xl text-gray-300 leading-relaxed">
-                Passionate about creating <span className="text-white font-medium">user-centered graphic design</span> that seamlessly blends aesthetics with functionality. 
-  I transform complex design challenges into elegant visual solutions that users love.
+              <p className="text-lg lg:text-xl text-gray-300 leading-relaxed font-[Inter] font-light" data-aos="fade-right" data-aos-delay="300">
+                Passionate about creating <span className="text-white font-semibold bg-gradient-to-r from-[#6366f1] to-[#a855f7] bg-clip-text text-transparent">user-centered designs</span> that blend aesthetics with functionality.
               </p>
 
-              {/* Enhanced description section */}
-              <div className="bg-gray-900/40 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
-                <h3 className="text-xl font-semibold text-white mb-4 flex items-center justify-center lg:justify-start gap-2">
-                  <Sparkles className="w-5 h-5 text-[#a855f7]" />
+              {/* Description section */}
+              <div className="bg-gray-900/60 backdrop-blur-2xl rounded-xl p-6 border border-white/10 hover:border-white/20 transition-all duration-500 hover:shadow-xl group cursor-pointer" data-aos="fade-right" data-aos-delay="400">
+                <h3 className="text-xl font-semibold text-white mb-4 flex items-center justify-center lg:justify-start gap-2 font-[Poppins]">
+                  <Sparkles className="w-5 h-5 text-[#a855f7] animate-pulse group-hover:rotate-180 transition-transform duration-500" />
                   My Approach
                 </h3>
-                <p className="text-gray-300 leading-relaxed">
-                 I craft <span className="text-white font-medium">user-focused graphic designs</span> that captivate and communicate. 
-                 Every project is a journey from understanding user needs to delivering clean, impactful visuals. 
-                 I turn complex ideas into designs that are not only beautiful but intuitive, memorable, and effective.
+                <p className="text-base text-gray-300 leading-relaxed font-[Inter] font-light">
+                  I craft <span className="text-white font-medium">user-focused designs</span> that captivate and communicate effectively. With attention to detail and creative problem-solving, I transform ideas into visually compelling experiences.
                 </p>
               </div>
 
-              {/* CTA Buttons - IMPROVED View Work button */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                <a 
-                  href="https://drive.google.com/file/d/1qJ7awhiMQMHxmhZu5D8ySG3DvtQx_yLK/view?usp=drive_link" 
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1"
+              {/* Enhanced CTA Buttons - Beautiful & Responsive */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full" data-aos="fade-up" data-aos-delay="500">
+                {/* Download CV Button */}
+                <button 
+                  onClick={handleDownloadCV}
+                  className="group relative px-5 py-3.5 rounded-xl bg-gradient-to-r from-[#6366f1] to-[#a855f7] text-white font-semibold text-base transition-all duration-500 hover:scale-105 active:scale-95 flex items-center justify-center gap-3 shadow-xl overflow-hidden hover:shadow-2xl w-full sm:w-auto sm:flex-1"
+                  style={{
+                    boxShadow: '0 0 20px rgba(168, 85, 247, 0.5)'
+                  }}
                 >
-                  <button className="w-full px-8 py-4 rounded-2xl bg-gradient-to-r from-[#6366f1] to-[#a855f7] text-white font-semibold transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-3 shadow-2xl hover:shadow-3xl group">
-                    <Download className="w-5 h-5 group-hover:animate-bounce" />
-                    Download CV
-                  </button>
-                </a>
+                  {/* Button shine effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 transition-all duration-1000 group-hover:translate-x-full"></div>
+                  
+                  <Download className="w-4 h-4 sm:w-5 sm:h-5 group-hover:animate-bounce relative z-10 flex-shrink-0" />
+                  <span className="relative z-10 font-[Inter] font-semibold whitespace-nowrap">Download CV</span>
+                  
+                  {/* Floating hearts */}
+                  <Heart className="absolute -top-1 -right-1 w-2 h-2 sm:w-3 sm:h-3 text-pink-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-bounce" />
+                </button>
                 
-                {/* IMPROVED: Better button with multiple fallbacks */}
-                <div className="flex-1">
-                  <button 
-                    onClick={handleViewWork}
-                    className="w-full px-8 py-4 rounded-2xl border-2 border-[#a855f7] text-[#a855f7] font-semibold transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-3 hover:bg-[#a855f7]/10 group cursor-pointer hover:border-[#8b5cf6] hover:text-[#8b5cf6]"
-                  >
-                    <Eye className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                    View Work
-                  </button>
-                </div>
+                {/* View Work Button */}
+                <button 
+                  onClick={handleViewWork}
+                  className="group relative px-5 py-3.5 rounded-xl border-2 border-[#a855f7] text-[#a855f7] font-semibold text-base transition-all duration-500 hover:scale-105 active:scale-95 flex items-center justify-center gap-3 hover:bg-[#a855f7]/10 overflow-hidden cursor-pointer hover:shadow-xl w-full sm:w-auto sm:flex-1"
+                >
+                  {/* Hover background */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#a855f7] to-[#ec4899] opacity-0 group-hover:opacity-10 transition-opacity duration-500"></div>
+                  
+                  <Eye className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform duration-300 relative z-10 flex-shrink-0" />
+                  <span className="relative z-10 font-[Inter] font-semibold whitespace-nowrap">View Work</span>
+                  
+                  {/* Border animation */}
+                  <div className="absolute inset-0 rounded-xl border-2 border-transparent bg-gradient-to-r from-[#6366f1] via-[#a855f7] to-[#ec4899] bg-clip-border opacity-0 group-hover:opacity-100 transition-opacity duration-500 -m-0.5"></div>
+                </button>
               </div>
             </div>
 
@@ -303,15 +426,100 @@ const AboutPage = () => {
           </div>
 
           {/* Stats Section */}
-          <div className="mt-16 lg:mt-24">
+          <div className="mt-16 lg:mt-20">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
               {statsData.map((stat, index) => (
-                <StatCard key={index} {...stat} />
+                <StatCard 
+                  key={index} 
+                  icon={stat.icon}
+                  color={stat.color}
+                  value={stat.value}
+                  label={stat.label}
+                  description={stat.description}
+                  index={index}
+                />
               ))}
+            </div>
+          </div>
+
+          {/* Additional Info Section */}
+          <div className="mt-16 lg:mt-20 grid grid-cols-1 xl:grid-cols-2 gap-8" data-aos="fade-up" data-aos-delay="600">
+            <div className="bg-gray-900/60 backdrop-blur-2xl rounded-xl p-6 border border-white/10 hover:border-white/20 transition-all duration-500 hover:shadow-xl group cursor-pointer">
+              <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2 font-[Poppins]">
+                <Sparkles className="w-5 h-5 text-[#6366f1] group-hover:rotate-180 transition-transform duration-500" />
+                Design Philosophy
+              </h3>
+              <p className="text-base text-gray-300 leading-relaxed font-[Inter] font-light">
+                I believe in creating designs that not only look beautiful but also serve a purpose. Every element should have intention, and every design should tell a story.
+              </p>
+            </div>
+            
+            <div className="bg-gray-900/60 backdrop-blur-2xl rounded-xl p-6 border border-white/10 hover:border-white/20 transition-all duration-500 hover:shadow-xl group cursor-pointer">
+              <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2 font-[Poppins]">
+                <Sparkles className="w-5 h-5 text-[#a855f7] group-hover:scale-110 transition-transform duration-500" />
+                What I Offer
+              </h3>
+              <p className="text-base text-gray-300 leading-relaxed font-[Inter] font-light">
+                From branding and visual identity to digital graphics, I deliver comprehensive design solutions that elevate brands and engage target audiences.
+              </p>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Scroll Indicator */}
+      <ScrollIndicator />
+
+      {/* Enhanced CSS Animations */}
+      <style>{`
+        .about-float-slow {
+          animation: aboutFloat 6s ease-in-out infinite;
+        }
+        
+        .about-gradient-slow {
+          background-size: 200% 200%;
+          animation: aboutGradient 3s ease infinite;
+        }
+        
+        .about-grid-move {
+          background-image: linear-gradient(#6366f1 1px, transparent 1px), linear-gradient(90deg, #6366f1 1px, transparent 1px);
+          background-size: 40px 40px;
+          animation: aboutGridMove 20s linear infinite;
+        }
+        
+        @keyframes aboutFloat {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-15px) rotate(180deg); }
+        }
+        
+        @keyframes aboutGradient {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        
+        @keyframes aboutGridMove {
+          0% { transform: translate(0, 0); }
+          100% { transform: translate(40px, 40px); }
+        }
+        
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+          .about-float-slow,
+          .about-gradient-slow,
+          .about-grid-move,
+          .animate-pulse,
+          .animate-bounce,
+          .animate-ping,
+          .animate-spin {
+            animation: none !important;
+          }
+          
+          .transition-all,
+          .transform {
+            transition: none !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };

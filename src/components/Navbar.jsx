@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, memo } from "react";
+import React, { useState, useEffect, useCallback, memo, useMemo } from "react";
 import { Menu, X } from "lucide-react";
 
 const Navbar = () => {
@@ -7,92 +7,105 @@ const Navbar = () => {
     const [activeSection, setActiveSection] = useState("Home");
     const [isMobile, setIsMobile] = useState(false);
     
-    const navItems = [
+    // Memoized nav items to prevent unnecessary re-renders
+    const navItems = useMemo(() => [
         { href: "#Home", label: "Home" },
         { href: "#About", label: "About" },
         { href: "#Portofolio", label: "Portofolio" },
         { href: "#Contact", label: "Contact" },
-    ];
+    ], []);
 
-    // Check mobile device
+    // Debounced mobile detection
     useEffect(() => {
         const checkMobile = () => {
             setIsMobile(window.innerWidth < 768);
         };
         
         checkMobile();
-        window.addEventListener('resize', checkMobile);
         
-        return () => window.removeEventListener('resize', checkMobile);
+        const debouncedResize = debounce(checkMobile, 100);
+        window.addEventListener('resize', debouncedResize);
+        
+        return () => window.removeEventListener('resize', debouncedResize);
     }, []);
 
-    // Handle scroll effect
+    // Enhanced scroll handling with Intersection Observer
     useEffect(() => {
         const handleScroll = () => {
             setScrolled(window.scrollY > 20);
-            
-            const sections = navItems.map(item => {
-                const section = document.querySelector(item.href);
-                if (section) {
-                    return {
-                        id: item.href.replace("#", ""),
-                        offset: section.offsetTop - (isMobile ? 400 : 550),
-                        height: section.offsetHeight
-                    };
-                }
-                return null;
-            }).filter(Boolean);
-
-            const currentPosition = window.scrollY;
-            const active = sections.find(section => 
-                currentPosition >= section.offset && 
-                currentPosition < section.offset + section.height
-            );
-
-            if (active) {
-                setActiveSection(active.id);
-            }
         };
+
+        // Use Intersection Observer for better performance
+        const observerOptions = {
+            root: null,
+            rootMargin: isMobile ? '-20% 0px -70% 0px' : '-25% 0px -65% 0px',
+            threshold: 0
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    setActiveSection(entry.target.id);
+                }
+            });
+        }, observerOptions);
+
+        // Observe all sections
+        navItems.forEach(item => {
+            const section = document.querySelector(item.href);
+            if (section) {
+                observer.observe(section);
+            }
+        });
 
         window.addEventListener("scroll", handleScroll, { passive: true });
         handleScroll();
         
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, [isMobile]);
+        return () => {
+            window.removeEventListener("scroll", handleScroll);
+            observer.disconnect();
+        };
+    }, [isMobile, navItems]);
 
     // Handle body overflow when menu is open
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
+            document.body.style.touchAction = 'none';
         } else {
             document.body.style.overflow = 'unset';
+            document.body.style.touchAction = 'unset';
         }
 
         return () => {
             document.body.style.overflow = 'unset';
+            document.body.style.touchAction = 'unset';
         };
     }, [isOpen]);
 
-    // Scroll to section with callback
+    // Enhanced scroll to section with offset calculation
     const scrollToSection = useCallback((e, href) => {
         e.preventDefault();
         const section = document.querySelector(href);
         if (section) {
-            const top = section.offsetTop - (isMobile ? 80 : 100);
+            const headerHeight = isMobile ? 80 : 100;
+            const sectionTop = section.getBoundingClientRect().top + window.pageYOffset;
+            const offsetPosition = sectionTop - headerHeight;
+
             window.scrollTo({
-                top: top,
+                top: offsetPosition,
                 behavior: "smooth"
             });
         }
         setIsOpen(false);
     }, [isMobile]);
 
-    // Toggle mobile menu
+    // Toggle mobile menu with animation
     const toggleMenu = useCallback(() => {
         setIsOpen(prev => !prev);
     }, []);
 
-    // Close menu on escape key
+    // Close menu on escape key and outside click
     useEffect(() => {
         const handleEscape = (e) => {
             if (e.key === 'Escape' && isOpen) {
@@ -100,31 +113,43 @@ const Navbar = () => {
             }
         };
 
+        const handleClickOutside = (e) => {
+            if (isOpen && !e.target.closest('nav') && !e.target.closest('button[aria-expanded]')) {
+                setIsOpen(false);
+            }
+        };
+
         document.addEventListener('keydown', handleEscape);
-        return () => document.removeEventListener('keydown', handleEscape);
+        document.addEventListener('click', handleClickOutside);
+        
+        return () => {
+            document.removeEventListener('keydown', handleEscape);
+            document.removeEventListener('click', handleClickOutside);
+        };
     }, [isOpen]);
 
-    // Memoized NavItem component for desktop
+    // Memoized Desktop NavItem component
     const DesktopNavItem = memo(({ item, isActive }) => (
         <a
             href={item.href}
             onClick={(e) => scrollToSection(e, item.href)}
-            className="group relative px-1 py-2 text-sm font-medium touch-manipulation"
+            className="group relative px-1 py-2 text-sm font-medium touch-manipulation transition-all duration-300 active:scale-95"
+            aria-current={isActive ? "page" : undefined}
         >
             <span
-                className={`relative z-10 transition-colors duration-300 ${
+                className={`relative z-10 transition-all duration-300 ${
                     isActive
                         ? "bg-gradient-to-r from-[#6366f1] to-[#a855f7] bg-clip-text text-transparent font-semibold"
-                        : "text-[#e2d3fd] group-hover:text-white"
+                        : "text-[#e2d3fd] group-hover:text-white group-hover:scale-105"
                 }`}
             >
                 {item.label}
             </span>
             <span
-                className={`absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-[#6366f1] to-[#a855f7] transform origin-left transition-transform duration-300 ${
+                className={`absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-[#6366f1] to-[#a855f7] transform origin-left transition-all duration-300 ${
                     isActive
-                        ? "scale-x-100"
-                        : "scale-x-0 group-hover:scale-x-100"
+                        ? "scale-x-100 opacity-100"
+                        : "scale-x-0 opacity-0 group-hover:scale-x-100 group-hover:opacity-100"
                 }`}
             />
         </a>
@@ -135,30 +160,46 @@ const Navbar = () => {
         <a
             href={item.href}
             onClick={(e) => scrollToSection(e, item.href)}
-            className={`block px-4 py-3 text-base font-medium transition-all duration-300 ease-in-out touch-manipulation active:scale-95 ${
+            className={`block px-4 py-3 text-base font-medium transition-all duration-300 ease-out touch-manipulation active:scale-95 border-l-2 ${
                 isActive
-                    ? "bg-gradient-to-r from-[#6366f1] to-[#a855f7] bg-clip-text text-transparent font-semibold"
-                    : "text-[#e2d3fd] hover:text-white"
+                    ? "bg-gradient-to-r from-[#6366f1] to-[#a855f7] bg-clip-text text-transparent font-semibold border-[#6366f1]"
+                    : "text-[#e2d3fd] hover:text-white border-transparent hover:border-[#6366f1]/50"
             }`}
             style={{
-                transitionDelay: isOpen ? `${index * 100}ms` : '0ms',
-                transform: isOpen ? "translateX(0)" : "translateX(50px)",
+                transitionDelay: isOpen ? `${index * 80}ms` : '0ms',
+                transform: isOpen ? "translateX(0)" : "translateX(-20px)",
                 opacity: isOpen ? 1 : 0,
             }}
+            aria-current={isActive ? "page" : undefined}
         >
             {item.label}
         </a>
     ));
 
+    // Debounce helper function
+    const debounce = (func, wait) => {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    };
+
     return (
         <nav
             className={`fixed w-full top-0 z-50 transition-all duration-500 ${
                 isOpen
-                    ? "bg-[#030014] backdrop-blur-xl"
+                    ? "bg-[#030014] backdrop-blur-xl shadow-2xl"
                     : scrolled
-                    ? "bg-[#030014]/80 backdrop-blur-xl"
+                    ? "bg-[#030014]/90 backdrop-blur-xl shadow-lg"
                     : "bg-transparent"
             }`}
+            role="navigation"
+            aria-label="Main navigation"
         >
             <div className="mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
@@ -167,7 +208,8 @@ const Navbar = () => {
                         <a
                             href="#Home"
                             onClick={(e) => scrollToSection(e, "#Home")}
-                            className="text-xl font-bold bg-gradient-to-r from-[#a855f7] to-[#6366f1] bg-clip-text text-transparent touch-manipulation"
+                            className="text-xl font-bold bg-gradient-to-r from-[#a855f7] to-[#6366f1] bg-clip-text text-transparent touch-manipulation transition-all duration-300 hover:scale-105 active:scale-95"
+                            aria-label="Go to homepage"
                         >
                             EZA
                         </a>
@@ -175,7 +217,7 @@ const Navbar = () => {
         
                     {/* Desktop Navigation */}
                     <div className="hidden md:block">
-                        <div className="ml-8 flex items-center space-x-6 lg:space-x-8">
+                        <div className="ml-8 flex items-center space-x-6 lg:space-x-8" role="menubar">
                             {navItems.map((item) => (
                                 <DesktopNavItem 
                                     key={item.label} 
@@ -190,16 +232,19 @@ const Navbar = () => {
                     <div className="md:hidden">
                         <button
                             onClick={toggleMenu}
-                            className={`relative p-2 text-[#e2d3fd] hover:text-white transition-all duration-300 ease-in-out touch-manipulation active:scale-95 ${
-                                isOpen ? "rotate-90 scale-110" : "rotate-0 scale-100"
+                            className={`relative p-2 rounded-lg text-[#e2d3fd] hover:text-white transition-all duration-300 ease-in-out touch-manipulation active:scale-95 ${
+                                isOpen 
+                                    ? "bg-[#6366f1]/10 rotate-90 scale-110" 
+                                    : "bg-transparent rotate-0 scale-100 hover:bg-white/5"
                             }`}
                             aria-label={isOpen ? "Close menu" : "Open menu"}
                             aria-expanded={isOpen}
+                            aria-controls="mobile-menu"
                         >
                             {isOpen ? (
-                                <X className="w-5 h-5" />
+                                <X className="w-5 h-5 transition-transform duration-300" />
                             ) : (
-                                <Menu className="w-5 h-5" />
+                                <Menu className="w-5 h-5 transition-transform duration-300" />
                             )}
                         </button>
                     </div>
@@ -209,20 +254,24 @@ const Navbar = () => {
             {/* Mobile Menu Overlay */}
             {isOpen && (
                 <div 
-                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
                     onClick={() => setIsOpen(false)}
+                    aria-hidden="true"
                 />
             )}
         
             {/* Mobile Menu */}
             <div
-                className={`md:hidden fixed top-16 left-0 right-0 bg-[#030014] backdrop-blur-xl border-t border-white/10 transition-all duration-300 ease-in-out z-50 ${
+                id="mobile-menu"
+                className={`md:hidden fixed top-16 left-0 right-0 bg-[#030014]/95 backdrop-blur-xl border-t border-white/10 shadow-2xl transition-all duration-300 ease-out z-50 ${
                     isOpen
                         ? "max-h-screen opacity-100 translate-y-0"
-                        : "max-h-0 opacity-0 -translate-y-4"
+                        : "max-h-0 opacity-0 -translate-y-4 pointer-events-none"
                 }`}
+                role="menu"
+                aria-hidden={!isOpen}
             >
-                <div className="px-4 py-4 space-y-1">
+                <div className="px-2 py-3 space-y-1">
                     {navItems.map((item, index) => (
                         <MobileNavItem 
                             key={item.label} 
