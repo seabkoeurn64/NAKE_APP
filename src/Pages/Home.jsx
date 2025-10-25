@@ -25,7 +25,7 @@ const MainTitle = memo(() => (
       <span className="relative inline-block">
         <span className="absolute -inset-1 bg-gradient-to-r from-[#6366f1] to-[#a855f7] blur-lg sm:blur-xl opacity-20"></span>
         <span className="relative bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
-          UI/UX
+          Graphic
         </span>
       </span>
       <br />
@@ -86,8 +86,16 @@ const MobileSocialLinks = memo(() => (
 const TYPING_SPEED = 80;
 const ERASING_SPEED = 40;
 const PAUSE_DURATION = 1500;
-const WORDS = ["UI/UX Designer", "Product Designer", "Creative Thinker"];
-const TECH_STACK = ["Figma", "Adobe XD", "Photoshop", "Illustrator"];
+const WORDS = [
+  "Poster Design",
+  "Logo Design",
+  "Banner Design",
+  "Name Card Design",
+  "Flyer Design",
+  "Social Media Graphics",
+  "Branding Materials"
+];
+const TECH_STACK = ["Figma", "Adobe XD", "Photoshop", "Illustrator","Corel"];
 const SOCIAL_LINKS = [
   { icon: Github, link: "https://github.com/seabkoeurn" },
   { icon: Linkedin, link: "https://www.linkedin.com/in/koeurn64" },
@@ -276,7 +284,8 @@ const Home = () => {
                   data-aos="fade-up"
                   data-aos-delay="500"
                 >
-                  Creating beautiful, intuitive, and user-centered digital experiences that solve real problems.
+                 Creating visually compelling, intuitive, and user-centered graphic designs that solve real-world problems.
+
                 </p>
 
                 {/* Tech Stack */}

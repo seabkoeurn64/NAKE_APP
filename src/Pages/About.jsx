@@ -42,7 +42,7 @@ const ProfileImage = memo(() => {
                 {/* Image */}
                 <img
                   src="/Cover.png"
-                  alt="Koeurn - UI/UX Designer"
+                  alt="Koeurn - Graphic Designer"
                   className={`w-full h-full object-cover transform transition-all duration-700 group-hover:scale-110 ${
                     imageLoaded ? 'opacity-100' : 'opacity-0'
                   }`}
@@ -132,7 +132,7 @@ const AboutPage = () => {
       const storedProjects = JSON.parse(localStorage.getItem("projects") || "[]");
       const storedCertificates = JSON.parse(localStorage.getItem("certificates") || "[]");
       
-      const startDate = new Date("2021-11-06");
+      const startDate = new Date("2024-11-06");
       const today = new Date();
       const experience = today.getFullYear() - startDate.getFullYear() -
         (today < new Date(today.getFullYear(), startDate.getMonth(), startDate.getDate()) ? 1 : 0);
@@ -246,13 +246,14 @@ const AboutPage = () => {
                     Koeurn
                   </span>
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#a855f7] block mt-2">
-                    UI/UX Designer
+                    graphic design
                   </span>
                 </h1>
               </div>
               
               <p className="text-lg sm:text-xl text-gray-300 leading-relaxed">
-                Passionate about creating <span className="text-white font-medium">intuitive digital experiences</span> that seamlessly blend aesthetics with functionality. I transform complex challenges into elegant solutions that users love.
+                Passionate about creating <span className="text-white font-medium">user-centered graphic design</span> that seamlessly blends aesthetics with functionality. 
+  I transform complex design challenges into elegant visual solutions that users love.
               </p>
 
               {/* Enhanced description section */}
@@ -262,7 +263,9 @@ const AboutPage = () => {
                   My Approach
                 </h3>
                 <p className="text-gray-300 leading-relaxed">
-                  I believe in <span className="text-white font-medium">user-centered design</span> that prioritizes both aesthetics and functionality. Every project starts with understanding user needs and ends with delivering seamless, beautiful experiences that make a difference.
+                 I craft <span className="text-white font-medium">user-focused graphic designs</span> that captivate and communicate. 
+                 Every project is a journey from understanding user needs to delivering clean, impactful visuals. 
+                 I turn complex ideas into designs that are not only beautiful but intuitive, memorable, and effective.
                 </p>
               </div>
 
