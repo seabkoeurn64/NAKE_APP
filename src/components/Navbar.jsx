@@ -29,43 +29,67 @@ const Navbar = () => {
         return () => window.removeEventListener('resize', debouncedResize);
     }, []);
 
-    // Enhanced scroll handling with Intersection Observer
+    // FIXED: Enhanced scroll handling with proper section detection
     useEffect(() => {
         const handleScroll = () => {
             setScrolled(window.scrollY > 20);
-        };
-
-        // Use Intersection Observer for better performance
-        const observerOptions = {
-            root: null,
-            rootMargin: isMobile ? '-20% 0px -70% 0px' : '-25% 0px -65% 0px',
-            threshold: 0
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    setActiveSection(entry.target.id);
+            
+            // Simple scroll-based section detection (more reliable)
+            const scrollPosition = window.scrollY + 100;
+            
+            // Get all sections
+            const sections = navItems.map(item => ({
+                id: item.href.substring(1),
+                element: document.getElementById(item.href.substring(1)),
+                href: item.href
+            })).filter(section => section.element);
+            
+            // Find current active section
+            let currentActive = "Home";
+            
+            for (const section of sections) {
+                const element = section.element;
+                if (element) {
+                    const offsetTop = element.offsetTop;
+                    const offsetHeight = element.offsetHeight;
+                    
+                    if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+                        currentActive = section.id;
+                        break;
+                    }
                 }
-            });
-        }, observerOptions);
-
-        // Observe all sections
-        navItems.forEach(item => {
-            const section = document.querySelector(item.href);
-            if (section) {
-                observer.observe(section);
             }
-        });
+            
+            // Fallback: Find the section closest to the viewport
+            if (currentActive === "Home") {
+                let closestSection = "Home";
+                let closestDistance = Infinity;
+                
+                for (const section of sections) {
+                    const element = section.element;
+                    if (element) {
+                        const rect = element.getBoundingClientRect();
+                        const distance = Math.abs(rect.top);
+                        
+                        if (distance < closestDistance) {
+                            closestDistance = distance;
+                            closestSection = section.id;
+                        }
+                    }
+                }
+                setActiveSection(closestSection);
+            } else {
+                setActiveSection(currentActive);
+            }
+        };
 
         window.addEventListener("scroll", handleScroll, { passive: true });
-        handleScroll();
+        handleScroll(); // Initial check
         
         return () => {
             window.removeEventListener("scroll", handleScroll);
-            observer.disconnect();
         };
-    }, [isMobile, navItems]);
+    }, [navItems]);
 
     // Handle body overflow when menu is open
     useEffect(() => {
@@ -86,16 +110,21 @@ const Navbar = () => {
     // Enhanced scroll to section with offset calculation
     const scrollToSection = useCallback((e, href) => {
         e.preventDefault();
-        const section = document.querySelector(href);
+        const sectionId = href.substring(1);
+        const section = document.getElementById(sectionId);
+        
         if (section) {
-            const headerHeight = isMobile ? 80 : 100;
-            const sectionTop = section.getBoundingClientRect().top + window.pageYOffset;
+            const headerHeight = isMobile ? 70 : 80;
+            const sectionTop = section.offsetTop;
             const offsetPosition = sectionTop - headerHeight;
 
             window.scrollTo({
                 top: offsetPosition,
                 behavior: "smooth"
             });
+            
+            // Update active section immediately
+            setActiveSection(sectionId);
         }
         setIsOpen(false);
     }, [isMobile]);
@@ -211,7 +240,7 @@ const Navbar = () => {
                             className="text-xl font-bold bg-gradient-to-r from-[#a855f7] to-[#6366f1] bg-clip-text text-transparent touch-manipulation transition-all duration-300 hover:scale-105 active:scale-95"
                             aria-label="Go to homepage"
                         >
-                            EZA
+                            Portfolio
                         </a>
                     </div>
         

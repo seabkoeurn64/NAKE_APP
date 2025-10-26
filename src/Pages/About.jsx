@@ -1,7 +1,7 @@
 import React, { useEffect, memo, useMemo, useState, useCallback } from "react"
 import { Code, Award, Globe, ArrowUpRight, Sparkles, UserCheck, Download, Eye, Star, Zap, Heart, Mouse } from "lucide-react"
 
-// Enhanced Memoized Components
+// Enhanced Memoized Components with error boundaries
 const Header = memo(() => (
   <div className="text-center mb-8 lg:mb-12 px-4" data-aos="fade-down">
     <div className="inline-block relative group mb-4">
@@ -25,6 +25,14 @@ const ProfileImage = memo(() => {
   const handleMouseLeave = useCallback(() => setIsHovered(false), []);
   const handleImageLoad = useCallback(() => setImageLoaded(true), []);
   const handleImageError = useCallback(() => setImageError(true), []);
+
+  // Preload image for better performance
+  useEffect(() => {
+    const img = new Image();
+    img.src = "/Cover.png";
+    img.onload = handleImageLoad;
+    img.onerror = handleImageError;
+  }, [handleImageLoad, handleImageError]);
 
   return (
     <div className="flex justify-center items-center p-4 lg:p-8" data-aos="zoom-in" data-aos-delay="200">
@@ -61,6 +69,8 @@ const ProfileImage = memo(() => {
                     onError={handleImageError}
                     loading="lazy"
                     decoding="async"
+                    width={384}
+                    height={384}
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
@@ -128,24 +138,31 @@ const StatCard = memo(({ icon: Icon, color, value, label, description, index }) 
   }, []);
 
   useEffect(() => {
-    if (localMounted) {
+    if (localMounted && value > 0) {
       const timer = setTimeout(() => {
-        // Animate counting up
-        let start = 0;
-        const duration = 2000;
-        const increment = value / (duration / 16);
+        // Optimized counting animation
+        const duration = 1500; // Reduced from 2000ms
+        const steps = 60;
+        const stepDuration = duration / steps;
+        let currentStep = 0;
         
         const updateCount = () => {
-          start += increment;
-          if (start < value) {
-            setCount(Math.ceil(start));
-            requestAnimationFrame(updateCount);
+          currentStep++;
+          const progress = currentStep / steps;
+          // Ease-out function for smooth ending
+          const easedProgress = 1 - Math.pow(1 - progress, 3);
+          setCount(Math.floor(value * easedProgress));
+          
+          if (currentStep < steps) {
+            setTimeout(updateCount, stepDuration);
           } else {
             setCount(value);
           }
         };
+        
         updateCount();
-      }, index * 300);
+      }, index * 200); // Reduced delay between cards
+      
       return () => clearTimeout(timer);
     }
   }, [value, index, localMounted]);
@@ -231,9 +248,14 @@ const LoadingSpinner = memo(() => (
 const AboutPage = () => {
   const [mounted, setMounted] = useState(false);
   const [activeSection, setActiveSection] = useState('about');
+  const [isReducedMotion, setIsReducedMotion] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    
+    // Check for reduced motion preference
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setIsReducedMotion(mediaQuery.matches);
     
     // Add scroll listener for section tracking
     const handleScroll = () => {
@@ -252,7 +274,7 @@ const AboutPage = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Memoized calculations with improved experience calculation
+  // Memoized calculations with improved experience calculation and error handling
   const { totalProjects, totalCertificates, YearExperience } = useMemo(() => {
     if (!mounted) return { totalProjects: 0, totalCertificates: 0, YearExperience: 0 };
     
@@ -260,20 +282,26 @@ const AboutPage = () => {
       const storedProjects = JSON.parse(localStorage.getItem("projects") || "[]");
       const storedCertificates = JSON.parse(localStorage.getItem("certificates") || "[]");
       
-      // Improved experience calculation
-      const startDate = new Date("2024-11-06");
-      const today = new Date();
-      let experience = today.getFullYear() - startDate.getFullYear();
-      
-      // Adjust if current month/day is before start month/day
-      if (today.getMonth() < startDate.getMonth() || 
-          (today.getMonth() === startDate.getMonth() && today.getDate() < startDate.getDate())) {
-        experience--;
+      // Improved experience calculation with fallback
+      let experience = 0;
+      try {
+        const startDate = new Date("2024-11-06");
+        const today = new Date();
+        experience = today.getFullYear() - startDate.getFullYear();
+        
+        // Adjust if current month/day is before start month/day
+        if (today.getMonth() < startDate.getMonth() || 
+            (today.getMonth() === startDate.getMonth() && today.getDate() < startDate.getDate())) {
+          experience--;
+        }
+      } catch (dateError) {
+        console.warn("Date calculation failed, using fallback experience:", dateError);
+        experience = 1; // Fallback experience
       }
 
       return {
-        totalProjects: storedProjects.length || 0,
-        totalCertificates: storedCertificates.length || 0,
+        totalProjects: storedProjects?.length || 0,
+        totalCertificates: storedCertificates?.length || 0,
         YearExperience: Math.max(experience, 0) // Ensure non-negative
       };
     } catch (error) {
@@ -286,26 +314,26 @@ const AboutPage = () => {
     }
   }, [mounted]);
 
-  // Memoized stats data
+  // Memoized stats data with fallback values
   const statsData = useMemo(() => [
     {
       icon: Code,
       color: "from-[#6366f1] to-[#8b5cf6]",
-      value: totalProjects,
+      value: totalProjects || 0,
       label: "Projects",
       description: "Successful designs"
     },
     {
       icon: Award,
       color: "from-[#a855f7] to-[#ec4899]",
-      value: totalCertificates,
+      value: totalCertificates || 0,
       label: "Certificates",
       description: "Achievements earned"
     },
     {
       icon: Globe,
       color: "from-[#8b5cf6] to-[#6366f1]",
-      value: YearExperience,
+      value: YearExperience || 0,
       label: "Years Exp",
       description: "Design excellence"
     },
@@ -318,14 +346,21 @@ const AboutPage = () => {
         behavior: 'smooth',
         block: 'start'
       });
+    } else {
+      // Fallback: scroll to top if section not found
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, []);
 
   const handleDownloadCV = useCallback((e) => {
     e.preventDefault();
-    // Add download tracking
-    console.log('CV download initiated');
-    window.open("https://drive.google.com/file/d/1qJ7awhiMQMHxmhZu5D8ySG3DvtQx_yLK/view?usp=drive_link", '_blank');
+    // Add download tracking with error handling
+    try {
+      console.log('CV download initiated');
+      window.open("https://drive.google.com/file/d/1qJ7awhiMQMHxmhZu5D8ySG3DvtQx_yLK/view?usp=drive_link", '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      console.error('Failed to open CV link:', error);
+    }
   }, []);
 
   if (!mounted) {
@@ -334,15 +369,15 @@ const AboutPage = () => {
 
   return (
     <div className="min-h-screen py-8 lg:py-16 text-white overflow-hidden bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014] relative" id="About">
-      {/* Enhanced background decoration */}
+      {/* Enhanced background decoration with reduced motion support */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-[#6366f1] rounded-full blur-3xl opacity-10 animate-pulse"></div>
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#a855f7] rounded-full blur-3xl opacity-5 animate-pulse delay-1000"></div>
         <div className="absolute top-1/2 left-1/2 w-56 h-56 bg-[#8b5cf6] rounded-full blur-2xl opacity-5 animate-pulse delay-500"></div>
         
-        {/* Animated grid background */}
+        {/* Animated grid background with reduced motion support */}
         <div className="absolute inset-0 opacity-10">
-          <div className="w-full h-full about-grid-move"></div>
+          <div className={`w-full h-full ${!isReducedMotion ? 'about-grid-move' : ''}`}></div>
         </div>
       </div>
 
@@ -356,7 +391,7 @@ const AboutPage = () => {
             
             {/* Left Side - Content */}
             <div className="w-full lg:w-1/2 space-y-6 lg:space-y-8 text-center lg:text-left order-2 lg:order-1">
-              <div data-aos="fade-right" data-aos-delay="200">
+              <div data-aos={!isReducedMotion ? "fade-right" : undefined} data-aos-delay={!isReducedMotion ? "200" : undefined}>
                 <h1 className="text-3xl lg:text-5xl xl:text-6xl font-bold mb-4 font-[Poppins] tracking-tight">
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 block leading-tight">
                     Koeurn
@@ -367,14 +402,14 @@ const AboutPage = () => {
                 </h1>
               </div>
               
-              <p className="text-lg lg:text-xl text-gray-300 leading-relaxed font-[Inter] font-light" data-aos="fade-right" data-aos-delay="300">
+              <p className="text-lg lg:text-xl text-gray-300 leading-relaxed font-[Inter] font-light" data-aos={!isReducedMotion ? "fade-right" : undefined} data-aos-delay={!isReducedMotion ? "300" : undefined}>
                 Passionate about creating <span className="text-white font-semibold bg-gradient-to-r from-[#6366f1] to-[#a855f7] bg-clip-text text-transparent">user-centered designs</span> that blend aesthetics with functionality.
               </p>
 
               {/* Description section */}
-              <div className="bg-gray-900/60 backdrop-blur-2xl rounded-xl p-6 border border-white/10 hover:border-white/20 transition-all duration-500 hover:shadow-xl group cursor-pointer" data-aos="fade-right" data-aos-delay="400">
+              <div className="bg-gray-900/60 backdrop-blur-2xl rounded-xl p-6 border border-white/10 hover:border-white/20 transition-all duration-500 hover:shadow-xl group cursor-pointer" data-aos={!isReducedMotion ? "fade-right" : undefined} data-aos-delay={!isReducedMotion ? "400" : undefined}>
                 <h3 className="text-xl font-semibold text-white mb-4 flex items-center justify-center lg:justify-start gap-2 font-[Poppins]">
-                  <Sparkles className="w-5 h-5 text-[#a855f7] animate-pulse group-hover:rotate-180 transition-transform duration-500" />
+                  <Sparkles className="w-5 h-5 text-[#a855f7] group-hover:rotate-180 transition-transform duration-500" />
                   My Approach
                 </h3>
                 <p className="text-base text-gray-300 leading-relaxed font-[Inter] font-light">
@@ -383,7 +418,7 @@ const AboutPage = () => {
               </div>
 
               {/* Enhanced CTA Buttons - Beautiful & Responsive */}
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full" data-aos="fade-up" data-aos-delay="500">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full" data-aos={!isReducedMotion ? "fade-up" : undefined} data-aos-delay={!isReducedMotion ? "500" : undefined}>
                 {/* Download CV Button */}
                 <button 
                   onClick={handleDownloadCV}
@@ -430,12 +465,8 @@ const AboutPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
               {statsData.map((stat, index) => (
                 <StatCard 
-                  key={index} 
-                  icon={stat.icon}
-                  color={stat.color}
-                  value={stat.value}
-                  label={stat.label}
-                  description={stat.description}
+                  key={`stat-${index}`} 
+                  {...stat}
                   index={index}
                 />
               ))}
@@ -443,7 +474,7 @@ const AboutPage = () => {
           </div>
 
           {/* Additional Info Section */}
-          <div className="mt-16 lg:mt-20 grid grid-cols-1 xl:grid-cols-2 gap-8" data-aos="fade-up" data-aos-delay="600">
+          <div className="mt-16 lg:mt-20 grid grid-cols-1 xl:grid-cols-2 gap-8" data-aos={!isReducedMotion ? "fade-up" : undefined} data-aos-delay={!isReducedMotion ? "600" : undefined}>
             <div className="bg-gray-900/60 backdrop-blur-2xl rounded-xl p-6 border border-white/10 hover:border-white/20 transition-all duration-500 hover:shadow-xl group cursor-pointer">
               <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2 font-[Poppins]">
                 <Sparkles className="w-5 h-5 text-[#6366f1] group-hover:rotate-180 transition-transform duration-500" />
@@ -468,9 +499,9 @@ const AboutPage = () => {
       </div>
 
       {/* Scroll Indicator */}
-      <ScrollIndicator />
+      {!isReducedMotion && <ScrollIndicator />}
 
-      {/* Enhanced CSS Animations */}
+      {/* Enhanced CSS Animations with reduced motion support */}
       <style>{`
         .about-float-slow {
           animation: aboutFloat 6s ease-in-out infinite;
@@ -517,6 +548,13 @@ const AboutPage = () => {
           .transition-all,
           .transform {
             transition: none !important;
+          }
+          
+          .group-hover\\:scale-105:hover,
+          .group-hover\\:rotate-12:hover,
+          .group-hover\\:rotate-180:hover,
+          .group-hover\\:scale-110:hover {
+            transform: none !important;
           }
         }
       `}</style>

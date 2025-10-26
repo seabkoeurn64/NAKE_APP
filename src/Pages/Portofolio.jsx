@@ -15,29 +15,28 @@ import { Palette, ArrowRight, Eye, Sparkles, Figma, Image, X, ExternalLink } fro
 import AOS from "aos";
 import "aos/dist/aos.css";
 
-// Portfolio Theme Constants
-const PORTFOLIO_THEME = {
-  colors: {
-    primary: '#8b5cf6',
-    secondary: '#ec4899',
-    background: '#030014',
-    text: {
-      primary: '#ffffff',
-      secondary: '#cbd5e1',
-      tertiary: '#94a3b8'
-    }
-  },
-  breakpoints: {
-    mobile: '768px',
-    tablet: '1024px'
-  },
-  animations: {
-    duration: {
-      fast: '300ms',
-      normal: '500ms',
-      slow: '800ms'
-    }
-  }
+// SVG Placeholder Generator - Works offline
+const generateSVGPlaceholder = (title, color) => {
+  const colors = {
+    purple: '#8b5cf6',
+    pink: '#ec4899',
+    blue: '#3b82f6', 
+    green: '#10b981',
+    amber: '#f59e0b',
+    indigo: '#6366f1'
+  };
+
+  const selectedColor = colors[color] || colors.purple;
+  
+  return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+    <rect width="800" height="600" fill="${selectedColor}" opacity="0.1"/>
+    <rect x="50" y="50" width="700" height="500" fill="${selectedColor}" opacity="0.2" rx="20"/>
+    <text x="400" y="280" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="${selectedColor}" opacity="0.8">${title}</text>
+    <text x="400" y="330" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="${selectedColor}" opacity="0.6">Design Project</text>
+    <rect x="300" y="400" width="200" height="8" fill="${selectedColor}" opacity="0.4" rx="4"/>
+    <rect x="250" y="420" width="300" height="6" fill="${selectedColor}" opacity="0.3" rx="3"/>
+    <rect x="280" y="440" width="240" height="6" fill="${selectedColor}" opacity="0.3" rx="3"/>
+  </svg>`;
 };
 
 // Custom Hooks
@@ -59,6 +58,7 @@ const useInView = (options = {}) => {
       setIsInView(entry.isIntersecting);
     }, {
       threshold: 0.1,
+      rootMargin: '50px',
       ...options
     });
     
@@ -81,16 +81,15 @@ const useProjects = () => {
         setLoading(true);
         setError(null);
         
-        const cachedProjects = localStorage.getItem("projects");
-        if (cachedProjects) {
-          setProjects(JSON.parse(cachedProjects));
-        } else {
-          localStorage.setItem("projects", JSON.stringify(sampleProjects));
-          setProjects(sampleProjects);
-        }
+        // Use sample projects with SVG placeholders
+        setProjects(sampleProjects);
+        
+        // Cache in localStorage for persistence
+        localStorage.setItem("projects", JSON.stringify(sampleProjects));
       } catch (e) {
         console.error("Error loading projects:", e);
         setError("Failed to load projects");
+        // Fallback to sample projects
         setProjects(sampleProjects);
       } finally {
         setLoading(false);
@@ -168,7 +167,7 @@ class PortfolioErrorBoundary extends React.Component {
   }
 }
 
-// Sub-Components
+// Enhanced ProjectImage Component with SVG placeholders
 const ProjectImage = memo(({ 
   src, 
   alt, 
@@ -178,54 +177,64 @@ const ProjectImage = memo(({
   imageLoaded,
   className = "" 
 }) => {
-  const [imageSrc, setImageSrc] = useState(src);
-  const [hasError, setHasError] = useState(false);
-  const [naturalAspectRatio, setNaturalAspectRatio] = useState(4/3);
-  
+  const [imageState, setImageState] = useState({
+    src: src,
+    hasError: false,
+    naturalAspectRatio: 4/3
+  });
+
   const handleError = useCallback((e) => {
-    console.error(`Failed to load image: ${src}`);
-    setHasError(true);
-    setImageSrc('/images/fallback-project.jpg');
+    console.warn(`Failed to load image: ${src}`);
+    // Generate SVG placeholder as fallback
+    const placeholder = generateSVGPlaceholder(alt, 'purple');
+    setImageState(prev => ({
+      ...prev,
+      hasError: true,
+      src: placeholder
+    }));
     onError?.(e);
-  }, [src, onError]);
+  }, [src, alt, onError]);
 
   const handleLoad = useCallback((e) => {
     const img = e.target;
     if (img.naturalWidth && img.naturalHeight) {
-      setNaturalAspectRatio(img.naturalWidth / img.naturalHeight);
+      setImageState(prev => ({
+        ...prev,
+        naturalAspectRatio: img.naturalWidth / img.naturalHeight,
+        hasError: false
+      }));
     }
-    setHasError(false);
     onLoad?.(e);
   }, [onLoad]);
 
-  if (hasError) {
+  if (imageState.hasError) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-gray-800/40 rounded-t-3xl">
         <Image className="w-12 h-12 text-gray-500 mb-2" />
-        <span className="text-gray-400 text-sm">Image not available</span>
+        <span className="text-gray-400 text-sm">Project Preview</span>
       </div>
     );
   }
 
   return (
     <div 
-      className="w-full h-full flex items-center justify-center bg-gray-900/20"
-      style={{ paddingBottom: `${(1 / naturalAspectRatio) * 100}%` }}
+      className="w-full h-full flex items-center justify-center bg-gray-900/20 relative"
+      style={{ paddingBottom: `${(1 / imageState.naturalAspectRatio) * 100}%` }}
     >
       <div className="absolute inset-0 flex items-center justify-center">
         <img
-          src={imageSrc}
+          src={imageState.src}
           alt={alt}
           loading="lazy"
           decoding="async"
           className={`w-full h-full object-contain transform transition-all duration-700 ${className} ${
             imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-110'
-          } ${isHovered ? 'scale-110' : 'scale-100'}`}
+          } ${isHovered ? 'scale-105' : 'scale-100'}`}
           onLoad={handleLoad}
           onError={handleError}
         />
         
-        {!imageLoaded && (
+        {!imageLoaded && !imageState.hasError && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-800/40 rounded-t-3xl">
             <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-500 border-t-transparent"></div>
           </div>
@@ -237,29 +246,18 @@ const ProjectImage = memo(({
 
 ProjectImage.displayName = 'ProjectImage';
 
-ProjectImage.propTypes = {
-  src: PropTypes.string,
-  alt: PropTypes.string.isRequired,
-  onLoad: PropTypes.func,
-  onError: PropTypes.func,
-  isHovered: PropTypes.bool,
-  imageLoaded: PropTypes.bool,
-  className: PropTypes.string
-};
-
+// Rest of the components remain the same as previous working version...
 const TechnologyTags = memo(({ 
   technologies, 
   visibleCount = 4, 
   variant = "default",
   className = "" 
 }) => {
-  const visibleTechnologies = useMemo(() => 
-    technologies.slice(0, visibleCount), [technologies, visibleCount]
-  );
-
-  const remainingTechCount = useMemo(() => 
-    Math.max(0, technologies.length - visibleCount), [technologies, visibleCount]
-  );
+  const [visibleTechnologies, remainingTechCount] = useMemo(() => {
+    const visible = technologies.slice(0, visibleCount);
+    const remaining = Math.max(0, technologies.length - visibleCount);
+    return [visible, remaining];
+  }, [technologies, visibleCount]);
 
   const tagClasses = {
     default: "px-3 py-1.5 bg-black/80 backdrop-blur-lg rounded-full text-xs text-white/90 border border-white/10 font-medium shadow-lg",
@@ -286,13 +284,6 @@ const TechnologyTags = memo(({
 });
 
 TechnologyTags.displayName = 'TechnologyTags';
-
-TechnologyTags.propTypes = {
-  technologies: PropTypes.arrayOf(PropTypes.string).isRequired,
-  visibleCount: PropTypes.number,
-  variant: PropTypes.oneOf(['default', 'minimal']),
-  className: PropTypes.string
-};
 
 const FullImageModal = memo(({ 
   image, 
@@ -394,15 +385,7 @@ const FullImageModal = memo(({
 
 FullImageModal.displayName = 'FullImageModal';
 
-FullImageModal.propTypes = {
-  image: PropTypes.string,
-  title: PropTypes.string.isRequired,
-  onClose: PropTypes.func.isRequired,
-  imageLoaded: PropTypes.bool,
-  onImageLoad: PropTypes.func
-};
-
-// Enhanced CardProject Component
+// Enhanced CardProject Component without buttons
 const CardProject = memo(({ 
   Img, 
   Title, 
@@ -415,20 +398,16 @@ const CardProject = memo(({
   onViewPosterClick
 }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageError, setImageError] = useState(false);
   const [showFullImage, setShowFullImage] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const [hasScrolled, setHasScrolled] = useState(false);
   const [ref, isInView] = useInView();
 
   const handleImageLoad = useCallback(() => {
     setImageLoaded(true);
-    setImageError(false);
   }, []);
 
   const handleImageError = useCallback(() => {
-    setImageError(true);
-    setImageLoaded(true);
+    setImageLoaded(true); // Still mark as loaded to hide spinner
   }, []);
 
   const stopPropagation = useCallback((e) => {
@@ -449,27 +428,12 @@ const CardProject = memo(({
   const handleMouseEnter = useCallback(() => setIsHovered(true), []);
   const handleMouseLeave = useCallback(() => setIsHovered(false), []);
 
-  const handleViewPosterClick = useCallback((e) => {
+  // Direct click on image opens full view
+  const handleImageClick = useCallback((e) => {
     e?.preventDefault();
     e?.stopPropagation();
-    
-    if (hasScrolled) {
-      handleViewFullImage();
-      return;
-    }
-
-    if (scrollTargetId && onViewPosterClick) {
-      setHasScrolled(true);
-      onViewPosterClick(scrollTargetId);
-    } else {
-      handleViewFullImage();
-    }
-  }, [hasScrolled, scrollTargetId, onViewPosterClick, handleViewFullImage]);
-
-  // Debug image loading
-  useEffect(() => {
-    console.log(`Image for ${Title}:`, Img, `Loaded: ${imageLoaded}`, `Error: ${imageError}`);
-  }, [Img, Title, imageLoaded, imageError]);
+    handleViewFullImage();
+  }, [handleViewFullImage]);
 
   return (
     <>
@@ -491,8 +455,11 @@ const CardProject = memo(({
       >
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-gray-900/50 to-gray-800/30 shadow-2xl transition-all duration-500 hover:shadow-purple-500/20 border border-white/10 backdrop-blur-sm">
           
-          {/* Image Container with Dynamic Aspect Ratio */}
-          <div className="relative overflow-hidden rounded-t-3xl bg-gray-900/20">
+          {/* Image Container - Clickable to open full view */}
+          <div 
+            className="relative overflow-hidden rounded-t-3xl bg-gray-900/20 cursor-pointer"
+            onClick={handleImageClick}
+          >
             <ProjectImage
               src={Img}
               alt={Title}
@@ -515,23 +482,16 @@ const CardProject = memo(({
             <div className="absolute top-3 left-3 z-20 transform transition-transform duration-300 hover:scale-105">
               <div className="flex items-center gap-2 px-3 py-1.5 bg-black/90 backdrop-blur-md rounded-full border border-purple-500/30 text-sm font-medium shadow-lg">
                 <Sparkles className="w-3 h-3 text-purple-400 animate-pulse" />
-                <span className="text-white/95">Poster Design</span>
+                <span className="text-white/95">Design Project</span>
               </div>
             </div>
 
-            {/* Action Buttons */}
+            {/* Action Buttons - Only external links remain */}
             <div className={`absolute top-3 right-3 z-20 transform transition-all duration-500 ${
               isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
             }`}>
               <div className="flex gap-2">
-                <button
-                  onClick={handleViewPosterClick}
-                  className="p-2.5 bg-black/90 backdrop-blur-md rounded-xl border border-white/20 text-white hover:bg-purple-600 hover:scale-110 hover:border-purple-400 transition-all duration-300 shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-                  title="View full poster"
-                  aria-label="View full poster image"
-                >
-                  <Eye className="w-4 h-4" />
-                </button>
+                {/* Eye button removed */}
                 
                 {prototypeLink && (
                   <a
@@ -573,7 +533,7 @@ const CardProject = memo(({
             )}
           </div>
           
-          {/* Card Content */}
+          {/* Card Content - Button section removed */}
           <div className="p-5 space-y-4">
             <div className="space-y-3">
               <h3 className="text-xl font-bold text-white leading-tight line-clamp-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-400 transition-all duration-500">
@@ -589,6 +549,7 @@ const CardProject = memo(({
               <TechnologyTags technologies={technologies} variant="minimal" />
             )}
             
+            {/* Removed button section completely */}
             <div className="flex items-center justify-between pt-2">
               <div className="flex items-center gap-2">
                 {behanceLink && (
@@ -606,18 +567,8 @@ const CardProject = memo(({
                 )}
               </div>
               
-              <div className="flex-1 flex justify-end">
-                <button
-                  onClick={handleViewPosterClick}
-                  className="inline-flex items-center justify-center space-x-3 px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-600/20 to-pink-600/20 hover:from-purple-600/40 hover:to-pink-600/40 border border-purple-500/30 hover:border-purple-400/50 text-white/95 hover:text-white transition-all duration-500 group/button text-sm font-semibold backdrop-blur-sm hover:scale-105 hover:shadow-lg hover:shadow-purple-500/25 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-                  aria-label={`View ${Title} poster`}
-                >
-                  <span className="truncate">
-                    {hasScrolled ? "View Full Image" : "View Poster"}
-                  </span>
-                  <ArrowRight className="w-4 h-4 flex-shrink-0 transform group-hover/button:translate-x-1 transition-transform duration-300" />
-                </button>
-              </div>
+              {/* Empty space where button used to be */}
+              <div className="flex-1"></div>
             </div>
           </div>
         </div>
@@ -626,21 +577,6 @@ const CardProject = memo(({
   );
 });
 
-CardProject.displayName = 'CardProject';
-
-CardProject.propTypes = {
-  Img: PropTypes.string,
-  Title: PropTypes.string.isRequired,
-  Description: PropTypes.string.isRequired,
-  id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  technologies: PropTypes.arrayOf(PropTypes.string),
-  prototypeLink: PropTypes.string,
-  behanceLink: PropTypes.string,
-  scrollTargetId: PropTypes.string,
-  onViewPosterClick: PropTypes.func
-};
-
-// ToggleButton Component
 const ToggleButton = memo(({ onClick, isShowingMore, loading = false }) => (
   <button
     onClick={onClick}
@@ -680,13 +616,6 @@ const ToggleButton = memo(({ onClick, isShowingMore, loading = false }) => (
 
 ToggleButton.displayName = 'ToggleButton';
 
-ToggleButton.propTypes = {
-  onClick: PropTypes.func.isRequired,
-  isShowingMore: PropTypes.bool.isRequired,
-  loading: PropTypes.bool
-};
-
-// TabPanel Component
 function TabPanel({ children, value, index, ...other }) {
   return (
     <div
@@ -718,35 +647,6 @@ function a11yProps(index) {
   };
 }
 
-// Scroll target section component
-const ScrollTargetSection = memo(({ id, title, description }) => (
-  <section 
-    id={id}
-    className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900/20 via-pink-900/20 to-purple-900/20 py-20"
-  >
-    <div className="text-center max-w-4xl mx-auto px-4">
-      <h2 className="text-4xl md:text-6xl font-bold text-white mb-6">
-        {title}
-      </h2>
-      <p className="text-xl text-gray-300 mb-8">
-        {description}
-      </p>
-      <div className="animate-bounce mt-8">
-        <div className="w-6 h-6 border-2 border-white rounded-full animate-ping"></div>
-      </div>
-    </div>
-  </section>
-));
-
-ScrollTargetSection.displayName = 'ScrollTargetSection';
-
-ScrollTargetSection.propTypes = {
-  id: PropTypes.string.isRequired,
-  title: PropTypes.string.isRequired,
-  description: PropTypes.string.isRequired
-};
-
-// Loading Component
 const PortfolioLoading = memo(() => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014]">
     <div className="text-center">
@@ -758,67 +658,57 @@ const PortfolioLoading = memo(() => (
 
 PortfolioLoading.displayName = 'PortfolioLoading';
 
-// Sample Projects Data with working images
+  // Sample Projects Data with proper image paths
 const sampleProjects = [
   {
     id: 1,
-    Img: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=800&h=600&fit=crop",
-    Title: "Creative Poster Design",
-    Description: "Modern and intuitive poster design with user-centered approach",
-    technologies: ["Photoshop", "Illustrator", "Typography"],
-    scrollTargetId: "poster-detail-1"
+    Img: "/images/project1.png", // or .png
+    Title: "Brand Identity Design",
+    Description: "Complete brand identity design including logo, color palette, and typography for a modern tech startup.",
+    technologies: ["Photoshop", "Illustrator", "Typography", "Branding"],
+    scrollTargetId: "project-detail-1"
   },
   {
     id: 2,
-    Img: "https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=800&h=600&fit=crop",
-    Title: "Website Redesign", 
-    Description: "Complete website redesign with improved user experience",
-    technologies: ["Figma", "UI Design", "Prototyping"],
-    scrollTargetId: "poster-detail-2"
+    Img: "/images/project2.png", // or .png
+    Title: "Mobile App UI/UX", 
+    Description: "User interface and experience design for a fitness tracking mobile application with intuitive navigation.",
+    technologies: ["Figma", "UI Design", "Prototyping", "Wireframing"],
+    scrollTargetId: "project-detail-2"
   },
   {
     id: 3,
-    Img: "https://images.unsplash.com/photo-1634942537034-2531766767d1?w=800&h=600&fit=crop",
-    Title: "Brand Identity",
-    Description: "Comprehensive brand identity design including logo and visual guidelines",
-    technologies: ["Illustrator", "Branding", "Typography"],
-    scrollTargetId: "poster-detail-3"
+    Img: "/images/project3.jpg", // or .png
+    Title: "Marketing Campaign",
+    Description: "Complete marketing campaign design including social media graphics, banners, and promotional materials.",
+    technologies: ["Illustrator", "Photoshop", "Marketing", "Social Media"],
+    scrollTargetId: "project-detail-3"
   },
   {
     id: 4,
-    Img: "https://images.unsplash.com/photo-1586339949216-35c2747cc36d?w=800&h=600&fit=crop",
-    Title: "Poster Design",
-    Description: "Clean and functional poster design with data visualization", 
-    technologies: ["Photoshop", "Layout", "Color Theory"],
-    scrollTargetId: "poster-detail-4"
+    Img: "/images/project4.jpg", // or .png
+    Title: "Website Redesign", 
+    Description: "Modern website redesign focusing on improved user experience and responsive design across all devices.",
+    technologies: ["Figma", "Web Design", "Responsive", "UI/UX"],
+    scrollTargetId: "project-detail-4"
   },
   {
     id: 5,
-    Img: "https://images.unsplash.com/photo-1649180556628-9ba7041153c2?w=800&h=600&fit=crop",
-    Title: "Logo Design",
-    Description: "Seamless logo design with intuitive navigation and visual flow",
-    technologies: ["Illustrator", "Logo Design", "Vector"],
-    scrollTargetId: "poster-detail-5"
+    Img: "/images/project5.jpg", // or .png
+    Title: "Product Packaging",
+    Description: "Sustainable product packaging design that combines aesthetics with environmental consciousness.",
+    technologies: ["Illustrator", "Packaging", "3D Mockup", "Print"],
+    scrollTargetId: "project-detail-5"
   },
   {
     id: 6,
-    Img: "https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=800&h=600&fit=crop",
-    Title: "Product Poster", 
-    Description: "Creative product poster design showcasing design work and case studies",
-    technologies: ["Photoshop", "Product Design", "Marketing"],
-    scrollTargetId: "poster-detail-6"
+    Img: "/images/project6.jpg", // or .png
+    Title: "Social Media Kit", 
+    Description: "Comprehensive social media design kit with templates for posts, stories, and cover images.",
+    technologies: ["Photoshop", "Social Media", "Templates", "Graphics"],
+    scrollTargetId: "project-detail-6"
   }
-];
-
-// Scroll target data
-const scrollTargets = [
-  { id: "poster-detail-1", title: "Creative Poster Design", description: "Explore the creative process behind this modern poster design" },
-  { id: "poster-detail-2", title: "Website Redesign", description: "Discover the journey of transforming user experience" },
-  { id: "poster-detail-3", title: "Brand Identity", description: "Building a comprehensive visual identity system" },
-  { id: "poster-detail-4", title: "Poster Design", description: "Data visualization meets creative design" },
-  { id: "poster-detail-5", title: "Logo Design", description: "Crafting memorable brand symbols" },
-  { id: "poster-detail-6", title: "Product Poster", description: "Showcasing products through compelling visuals" }
-];
+];;
 
 // Main Portfolio Component
 const FullWidthTabs = memo(() => {
@@ -945,7 +835,6 @@ const FullWidthTabs = memo(() => {
   return (
     <PortfolioErrorBoundary>
       <div className="min-h-screen py-8 lg:py-16 text-white overflow-hidden bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014] relative" id="Portofolio">
-        {/* Background elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-[#6366f1] rounded-full blur-3xl opacity-10 animate-pulse"></div>
           <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#a855f7] rounded-full blur-3xl opacity-5 animate-pulse delay-1000"></div>
@@ -962,7 +851,7 @@ const FullWidthTabs = memo(() => {
               Design Portfolio
             </h2>
             <p className="text-gray-300 max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
-              Explore my design journey through carefully crafted UI/UX projects. Each project showcases my passion for creating beautiful and functional digital experiences.
+              Explore my design journey through carefully crafted projects. Each project showcases my passion for creating beautiful and functional design experiences.
             </p>
           </div>
 
@@ -1083,17 +972,6 @@ const FullWidthTabs = memo(() => {
           </Box>
         </div>
 
-        {/* Scroll Target Sections */}
-        {scrollTargets.map((target, index) => (
-          <ScrollTargetSection
-            key={target.id}
-            id={target.id}
-            title={target.title}
-            description={target.description}
-          />
-        ))}
-
-        {/* Portfolio Animations CSS */}
         <style>{`
           .portfolio-fade-in {
             animation: portfolioFadeIn 0.3s ease-out;

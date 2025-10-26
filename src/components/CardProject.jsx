@@ -1,6 +1,28 @@
-import React, { useState, useCallback, memo, useMemo } from 'react';
+import React, { useState, useCallback, memo, useMemo, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Eye, Sparkles, Palette, Figma, Image, ExternalLink } from 'lucide-react';
+import PropTypes from 'prop-types';
+
+// Custom hook for intersection observer
+const useInView = (options = {}) => {
+  const [isInView, setIsInView] = useState(false);
+  const ref = useRef();
+  
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      setIsInView(entry.isIntersecting);
+    }, {
+      threshold: 0.1,
+      ...options
+    });
+    
+    if (ref.current) observer.observe(ref.current);
+    
+    return () => observer.disconnect();
+  }, [options]);
+  
+  return [ref, isInView];
+};
 
 const CardProject = memo(({ 
   Img, 
@@ -10,19 +32,32 @@ const CardProject = memo(({
   technologies = [], 
   prototypeLink, 
   behanceLink,
-  category = "Poster",
-  status = "available"
+  category = "Design",
+  status = "available",
+  priority = false,
+  index = 0
 }) => {
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageError, setImageError] = useState(false);
+  const [imageState, setImageState] = useState({
+    loaded: false,
+    error: false,
+    naturalAspectRatio: 4/3 // Keep original aspect ratio
+  });
   const [isHovered, setIsHovered] = useState(false);
+  const [ref, isInView] = useInView({ threshold: 0.1 });
+  const imgRef = useRef(null);
 
-  // Memoized category icons for better performance
+  // Determine loading strategy
+  const loadingStrategy = useMemo(() => {
+    if (priority || index < 3) return 'eager';
+    return 'lazy';
+  }, [priority, index]);
+
+  // Memoized category icons
   const categoryIcons = useMemo(() => ({
-    Poster: Sparkles,
-    Logo: Palette,
-    Banner: Image,
-    Flyer: Figma,
+    Design: Sparkles,
+    Web: Palette,
+    Brand: Image,
+    Print: Figma,
     default: Sparkles
   }), []);
 
@@ -31,18 +66,33 @@ const CardProject = memo(({
   const handleDetails = useCallback((e) => {
     if (!id || status === "unavailable") {
       e.preventDefault();
-      // Optional: Show toast notification instead of alert
-      console.log("Project details are not available");
     }
   }, [id, status]);
 
-  const handleImageLoad = useCallback(() => {
-    setImageLoaded(true);
+  const handleImageLoad = useCallback((e) => {
+    const img = e.target;
+    if (img.naturalWidth && img.naturalHeight) {
+      setImageState(prev => ({
+        ...prev,
+        loaded: true,
+        error: false,
+        naturalAspectRatio: img.naturalWidth / img.naturalHeight
+      }));
+    } else {
+      setImageState(prev => ({
+        ...prev,
+        loaded: true,
+        error: false
+      }));
+    }
   }, []);
 
   const handleImageError = useCallback(() => {
-    setImageError(true);
-    setImageLoaded(true);
+    setImageState(prev => ({
+      ...prev,
+      loaded: true,
+      error: true
+    }));
   }, []);
 
   const stopPropagation = useCallback((e) => {
@@ -68,69 +118,78 @@ const CardProject = memo(({
     };
   }, [technologies]);
 
+  // Generate fallback image
+  const fallbackImage = useMemo(() => {
+    const colors = {
+      Design: '8b5cf6',
+      Web: 'ec4899', 
+      Brand: 'f59e0b',
+      Print: '10b981',
+      default: '6b7280'
+    };
+    const color = colors[category] || colors.default;
+    const text = encodeURIComponent(Title);
+    return `https://via.placeholder.com/600x400/${color}/ffffff?text=${text}`;
+  }, [Title, category]);
+
   const isProjectAvailable = id && status === "available";
+  const imageSource = imageState.error ? fallbackImage : Img;
 
   return (
     <div 
+      ref={ref}
       className="group relative w-full cursor-pointer"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* Enhanced Main Card Container */}
       <div className="relative overflow-hidden rounded-xl glass-morphism shadow-lg transition-all duration-300 hover:shadow-purple-500/20 border border-white/10 bg-gray-900/20 hover:bg-gray-900/30 backdrop-blur-sm">
         
-        {/* Background Glow Effect */}
         <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl" />
         
-        {/* Content Container */}
         <div className="relative p-3 sm:p-4 z-10">
           
-          {/* Enhanced Image Section */}
+          {/* Image Section with Dynamic Aspect Ratio */}
           <Link
             to={isProjectAvailable ? `/project/${id}` : '#'}
             onClick={handleDetails}
             className="block relative overflow-hidden rounded-lg mb-3 group/image"
             aria-label={`View ${Title} project details`}
           >
-            {/* Enhanced Image Container */}
-            <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-gray-800/30 to-gray-900/30 aspect-square border border-white/5">
-              {/* Enhanced Skeleton Loader */}
+            <div 
+              className="relative overflow-hidden rounded-lg bg-gradient-to-br from-gray-800/30 to-gray-900/30 border border-white/5"
+              style={{ paddingBottom: `${(1 / imageState.naturalAspectRatio) * 100}%` }}
+            >
+              {/* Skeleton Loader */}
               <div className={`absolute inset-0 transition-all duration-500 ${
-                imageLoaded ? 'opacity-0 scale-105' : 'opacity-100 scale-100'
+                imageState.loaded ? 'opacity-0 scale-105' : 'opacity-100 scale-100'
               }`}>
                 <div className="skeleton w-full h-full rounded-lg bg-gradient-to-r from-gray-700/50 to-gray-600/50 animate-pulse" />
               </div>
               
-              {/* Main Image with Enhanced Transitions */}
-              {!imageError && Img && (
-                <img
-                  src={Img}
-                  alt={`${Title} - ${category} design`}
-                  loading="lazy"
-                  decoding="async"
-                  className={`w-full h-full object-cover transition-all duration-700 ${
-                    imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-110'
-                  } ${isHovered ? 'scale-105' : 'scale-100'}`}
-                  onLoad={handleImageLoad}
-                  onError={handleImageError}
-                />
-              )}
-              
-              {/* Enhanced Error State */}
-              {imageError && (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-gray-800/40 rounded-lg border border-white/5">
-                  <Image className="w-6 h-6 text-gray-500 mb-2 opacity-60" />
-                  <span className="text-xs text-gray-400 font-medium">Image not available</span>
+              {/* Main Image - Preserve Original Aspect Ratio */}
+              {isInView && imageSource && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <img
+                    ref={imgRef}
+                    src={imageSource}
+                    alt={`${Title} - ${category} project`}
+                    loading={loadingStrategy}
+                    decoding="async"
+                    className={`max-w-full max-h-full object-contain transition-all duration-700 ${
+                      imageState.loaded ? 'opacity-100 scale-100' : 'opacity-0 scale-110'
+                    } ${isHovered ? 'scale-105' : 'scale-100'}`}
+                    onLoad={handleImageLoad}
+                    onError={handleImageError}
+                  />
                 </div>
               )}
               
-              {/* Enhanced Overlay */}
               <div className={`absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/20 to-transparent transition-all duration-500 ${
                 isHovered ? 'opacity-80' : 'opacity-60'
               } rounded-lg`} />
             </div>
             
-            {/* Enhanced Badge */}
+            {/* Badge */}
             <div className="absolute top-2 left-2 z-20 transform transition-transform duration-300 group-hover/image:scale-110">
               <div className="flex items-center gap-1 px-2 py-1 bg-black/90 backdrop-blur-md rounded-lg border border-white/10 text-xs shadow-lg">
                 <CategoryIcon className="w-3 h-3 text-pink-400" />
@@ -138,7 +197,7 @@ const CardProject = memo(({
               </div>
             </div>
 
-            {/* Enhanced Action Icons */}
+            {/* Action Icons */}
             <div className={`absolute top-2 right-2 z-20 transition-all duration-300 ${
               isHovered ? 'opacity-100 scale-100' : 'opacity-70 scale-95'
             }`}>
@@ -153,7 +212,7 @@ const CardProject = memo(({
                     rel="noopener noreferrer"
                     className="p-1.5 bg-black/90 backdrop-blur-md rounded-lg border border-white/10 shadow-lg transition-transform duration-200 hover:scale-110"
                     onClick={stopPropagation}
-                    aria-label={`Open ${Title} prototype in Figma`}
+                    aria-label={`Open ${Title} prototype`}
                   >
                     <Figma className="w-3 h-3 text-white" />
                   </a>
@@ -161,7 +220,7 @@ const CardProject = memo(({
               </div>
             </div>
 
-            {/* Hover View Indicator */}
+            {/* Hover Indicator */}
             <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
               isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
             }`}>
@@ -171,9 +230,8 @@ const CardProject = memo(({
             </div>
           </Link>
           
-          {/* Enhanced Content Section */}
+          {/* Content Section */}
           <div className="space-y-2">
-            {/* Title & Description */}
             <div className="space-y-2">
               <h3 className="text-sm font-bold text-white line-clamp-2 leading-tight transition-colors duration-200 group-hover:text-white/90">
                 {Title}
@@ -184,12 +242,11 @@ const CardProject = memo(({
               </p>
             </div>
 
-            {/* Enhanced Technology Tags */}
             {technologies.length > 0 && (
               <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-1">
                 {technologyTags.visible.map((tech, index) => (
                   <span
-                    key={index}
+                    key={`${tech}-${index}`}
                     className="flex-shrink-0 px-2 py-1 bg-white/5 rounded-lg text-xs text-gray-300 border border-white/5 transition-all duration-200 hover:bg-white/10 hover:border-white/10 hover:text-white"
                     title={tech}
                   >
@@ -207,9 +264,7 @@ const CardProject = memo(({
               </div>
             )}
             
-            {/* Enhanced Action Buttons */}
             <div className="flex items-center justify-between gap-2 pt-2">
-              {/* External Links */}
               <div className="flex items-center gap-1">
                 {behanceLink && (
                   <a
@@ -223,21 +278,18 @@ const CardProject = memo(({
                     <Palette className="w-3 h-3" />
                   </a>
                 )}
-                {Img && (
-                  <a
-                    href={Img}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-1.5 bg-white/5 rounded-lg border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white transition-all duration-200 hover:scale-110"
-                    onClick={stopPropagation}
-                    aria-label={`Open ${Title} image in new tab`}
-                  >
-                    <Image className="w-3 h-3" />
-                  </a>
-                )}
+                <a
+                  href={imageSource}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1.5 bg-white/5 rounded-lg border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white transition-all duration-200 hover:scale-110"
+                  onClick={stopPropagation}
+                  aria-label={`Open ${Title} image in new tab`}
+                >
+                  <Image className="w-3 h-3" />
+                </a>
               </div>
               
-              {/* Enhanced Details Button */}
               <div className="flex-1 flex justify-end min-w-0">
                 {isProjectAvailable ? (
                   <Link
@@ -258,18 +310,42 @@ const CardProject = memo(({
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 });
 
-// Default props for better error handling
-CardProject.defaultProps = {
-  technologies: [],
-  category: "Poster",
-  status: "available"
+CardProject.propTypes = {
+  Img: PropTypes.string,
+  Title: PropTypes.string.isRequired,
+  Description: PropTypes.string.isRequired,
+  id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  technologies: PropTypes.arrayOf(PropTypes.string),
+  prototypeLink: PropTypes.string,
+  behanceLink: PropTypes.string,
+  category: PropTypes.oneOf(['Design', 'Web', 'Brand', 'Print']),
+  status: PropTypes.oneOf(['available', 'unavailable']),
+  priority: PropTypes.bool,
+  index: PropTypes.number
 };
 
-// Display name for better debugging
+CardProject.defaultProps = {
+  technologies: [],
+  category: "Design",
+  status: "available",
+  priority: false,
+  index: 0
+};
+
 CardProject.displayName = 'CardProject';
 
 export default CardProject;
