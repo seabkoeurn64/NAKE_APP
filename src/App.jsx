@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import React, { useState, useEffect, useCallback, lazy, Suspense, startTransition } from "react";
 import "./index.css";
 import Navbar from "./components/Navbar";
 import WelcomeScreen from "./Pages/WelcomeScreen";
 import { AnimatePresence, motion } from "framer-motion";
 
-// Enhanced ErrorBoundary
+// Enhanced ErrorBoundary with performance optimization
 class ErrorBoundary extends React.Component {
   state = { hasError: false, error: null };
   
@@ -40,53 +40,92 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-// Lazy load pages
-const Home = lazy(() => import("./Pages/Home"));
-const About = lazy(() => import("./Pages/About"));
-const Portofolio = lazy(() => import("./Pages/Portofolio"));
-const ContactPage = lazy(() => import("./Pages/Contact"));
+// Preload strategy for lazy components
+const preloadComponent = (importFn) => {
+  const preloadPromise = importFn();
+  return () => preloadPromise;
+};
 
-// Loading components
-const LoadingFallback = () => (
+// Lazy load pages with preloading
+const Home = lazy(() => import(/* webpackPrefetch: true */ "./Pages/Home"));
+const About = lazy(() => import(/* webpackPrefetch: true */ "./Pages/About"));
+const Portofolio = lazy(() => import(/* webpackPrefetch: true */ "./Pages/Portofolio"));
+const ContactPage = lazy(() => import(/* webpackPrefetch: true */ "./Pages/Contact"));
+
+// Preload components after welcome screen
+const preloadPages = () => {
+  startTransition(() => {
+    import("./Pages/Home");
+    import("./Pages/About"); 
+    import("./Pages/Portofolio");
+    import("./Pages/Contact");
+  });
+};
+
+// Optimized loading components with reduced motion support
+const LoadingFallback = React.memo(() => (
   <div className="min-h-screen bg-[#030014] flex items-center justify-center">
     <div className="text-center">
       <div className="w-12 h-12 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
       <p className="text-gray-400 text-sm">Loading...</p>
     </div>
   </div>
-);
+));
 
-const SectionLoader = () => (
+const SectionLoader = React.memo(() => (
   <div className="min-h-[50vh] flex items-center justify-center">
     <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
   </div>
-);
+));
 
+// Main App component with performance optimizations
 function App() {
   const [showWelcome, setShowWelcome] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
+  const [shouldPreload, setShouldPreload] = useState(false);
 
   const handleLoadingComplete = useCallback(() => {
-    setShowWelcome(false);
+    startTransition(() => {
+      setShowWelcome(false);
+    });
   }, []);
 
+  // Preload pages after mount
   useEffect(() => {
-    let isMounted = true;
+    if (shouldPreload) {
+      preloadPages();
+    }
+  }, [shouldPreload]);
+
+  useEffect(() => {
+    let mounted = true;
     
-    const timer = setTimeout(() => {
-      if (isMounted) {
-        setShowWelcome(false);
+    // Start preloading after a short delay
+    const preloadTimer = setTimeout(() => {
+      if (mounted) {
+        setShouldPreload(true);
       }
-    }, 3000);
+    }, 1000);
+
+    // Auto-hide welcome screen
+    const welcomeTimer = setTimeout(() => {
+      if (mounted) {
+        startTransition(() => {
+          setShowWelcome(false);
+        });
+      }
+    }, 2500); // Reduced from 3000ms
 
     setIsMounted(true);
 
     return () => {
-      isMounted = false;
-      clearTimeout(timer);
+      mounted = false;
+      clearTimeout(preloadTimer);
+      clearTimeout(welcomeTimer);
     };
   }, []);
 
+  // Early return before mount
   if (!isMounted) {
     return <LoadingFallback />;
   }
@@ -110,7 +149,7 @@ function App() {
               key="main-content"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.3 }} // Reduced duration
             >
               <div className="min-h-screen">
                 <Navbar />

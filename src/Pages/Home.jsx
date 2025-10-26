@@ -1,19 +1,19 @@
-import React, { useState, useEffect, useCallback, memo, useMemo } from "react"
+import React, { useState, useEffect, useCallback, memo, useMemo, useRef, startTransition } from "react"
 import { Github, Linkedin, Mail, ExternalLink, Instagram, Sparkles } from "lucide-react"
 import { DotLottieReact } from '@lottiefiles/dotlottie-react'
 import AOS from 'aos'
 import 'aos/dist/aos.css'
 
-// Constants
-const ANIMATION_CONFIG = {
+// Constants - Optimized with Object.freeze
+const ANIMATION_CONFIG = Object.freeze({
   TYPING_SPEED: 80,
   ERASING_SPEED: 40,
   PAUSE_DURATION: 1500,
   AOS_OFFSET: 50,
   AOS_DURATION: 400
-};
+});
 
-const WORDS = [
+const WORDS = Object.freeze([
   "Poster Design",
   "Logo Design", 
   "Banner Design",
@@ -21,11 +21,11 @@ const WORDS = [
   "Flyer Design",
   "Social Media Graphics",
   "Branding Materials"
-];
+]);
 
-const TECH_STACK = ["Figma", "Adobe XD", "Photoshop", "Illustrator", "Corel"];
+const TECH_STACK = Object.freeze(["Figma", "Adobe XD", "Photoshop", "Illustrator", "Corel"]);
 
-const SOCIAL_LINKS = [
+const SOCIAL_LINKS = Object.freeze([
   { 
     icon: Github, 
     link: "https://github.com/seabkoeurn",
@@ -41,9 +41,9 @@ const SOCIAL_LINKS = [
     link: "https://www.instagram.com/koeurn.64._/?hl=id",
     label: "Visit Instagram profile" 
   }
-];
+]);
 
-// Custom hook for media queries
+// Optimized custom hook for media queries with throttling
 const useMediaQueries = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
@@ -52,7 +52,9 @@ const useMediaQueries = () => {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const checkBreakpoint = () => {
+    let animationFrameId;
+
+    const updateBreakpoint = () => {
       const width = window.innerWidth;
       setIsMobile(width < 768);
       
@@ -64,84 +66,79 @@ const useMediaQueries = () => {
     const checkReducedMotion = () => 
       setPrefersReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
     
-    checkBreakpoint();
-    checkReducedMotion();
-    
-    const debounce = (func, wait) => {
-      let timeout;
-      return function executedFunction(...args) {
-        const later = () => {
-          clearTimeout(timeout);
-          func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-      };
+    const throttledResize = () => {
+      if (animationFrameId) return;
+      animationFrameId = requestAnimationFrame(() => {
+        updateBreakpoint();
+        animationFrameId = null;
+      });
     };
     
-    const debouncedResize = debounce(checkBreakpoint, 100);
-    window.addEventListener('resize', debouncedResize);
+    updateBreakpoint();
+    checkReducedMotion();
+    
+    window.addEventListener('resize', throttledResize, { passive: true });
     
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     mediaQuery.addEventListener('change', checkReducedMotion);
     
     return () => {
-      window.removeEventListener('resize', debouncedResize);
+      window.removeEventListener('resize', throttledResize);
       mediaQuery.removeEventListener('change', checkReducedMotion);
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
     };
   }, []);
 
   return { isMobile, prefersReducedMotion, breakpoint };
 };
 
-// Custom hook for typing effect
-const useTypingEffect = (words, typingSpeed, erasingSpeed, pauseDuration, isMobile, prefersReducedMotion) => {
+// Optimized typing effect with requestAnimationFrame
+const useTypingEffect = (words, typingSpeed, erasingSpeed, pauseDuration) => {
   const [text, setText] = useState("");
   const [isTyping, setIsTyping] = useState(true);
   const [wordIndex, setWordIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
+  const animationRef = useRef();
 
-  // Return static text on mobile with reduced motion
-  if ((isMobile && prefersReducedMotion) || !words || !words.length) {
-    return words && words.length ? words[0] : "Design Services";
-  }
-
-  const handleTyping = useCallback(() => {
-    if (!words || !words.length) return;
-    
+  const animate = useCallback(() => {
     if (isTyping) {
       if (charIndex < words[wordIndex].length) {
         setText(prev => prev + words[wordIndex][charIndex]);
         setCharIndex(prev => prev + 1);
+        animationRef.current = setTimeout(() => requestAnimationFrame(animate), typingSpeed);
       } else {
-        setTimeout(() => setIsTyping(false), pauseDuration);
+        animationRef.current = setTimeout(() => {
+          setIsTyping(false);
+          requestAnimationFrame(animate);
+        }, pauseDuration);
       }
     } else {
       if (charIndex > 0) {
         setText(prev => prev.slice(0, -1));
         setCharIndex(prev => prev - 1);
+        animationRef.current = setTimeout(() => requestAnimationFrame(animate), erasingSpeed);
       } else {
         setWordIndex(prev => (prev + 1) % words.length);
         setIsTyping(true);
+        requestAnimationFrame(animate);
       }
     }
-  }, [charIndex, isTyping, wordIndex, words, pauseDuration]);
+  }, [charIndex, isTyping, wordIndex, words, pauseDuration, typingSpeed, erasingSpeed]);
 
   useEffect(() => {
-    if (!words || !words.length) return;
-    
-    const timeout = setTimeout(
-      handleTyping,
-      isTyping ? typingSpeed : erasingSpeed
-    );
-    return () => clearTimeout(timeout);
-  }, [handleTyping, isTyping, typingSpeed, erasingSpeed, words]);
+    requestAnimationFrame(animate);
+    return () => {
+      if (animationRef.current) {
+        clearTimeout(animationRef.current);
+      }
+    };
+  }, [animate]);
 
   return text;
 };
 
-// Memoized Components
-const StatusBadge = memo(({ isMobile }) => (
+// Memoized Components with display names
+const StatusBadge = memo(() => (
   <div className="inline-block animate-float mx-auto lg:mx-0" data-aos="zoom-in" data-aos-delay="200">
     <div className="relative group">
       <div className="absolute -inset-0.5 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-full blur opacity-20 group-hover:opacity-30 transition duration-500"></div>
@@ -154,6 +151,7 @@ const StatusBadge = memo(({ isMobile }) => (
     </div>
   </div>
 ));
+StatusBadge.displayName = 'StatusBadge';
 
 const MainTitle = memo(() => (
   <div className="space-y-2 text-center lg:text-left" data-aos="fade-up" data-aos-delay="300">
@@ -174,48 +172,34 @@ const MainTitle = memo(() => (
     </h1>
   </div>
 ));
+MainTitle.displayName = 'MainTitle';
 
 const TechStack = memo(({ tech }) => (
   <div className="px-2 py-1 sm:px-3 sm:py-1.5 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 text-xs text-gray-300 hover:bg-white/10 transition-colors mobile-touch active:scale-95">
     {tech}
   </div>
 ));
+TechStack.displayName = 'TechStack';
 
-// FIXED: Corrected CTAButton with proper section IDs
-const CTAButton = memo(({ href, text, icon: Icon }) => {
-  const handleClick = useCallback((e) => {
-    e.preventDefault();
-    const targetElement = document.getElementById(href.replace('#', ''));
-    if (targetElement) {
-      const offset = 80;
-      const targetPosition = targetElement.offsetTop - offset;
-      
-      window.scrollTo({
-        top: targetPosition,
-        behavior: 'smooth'
-      });
-    }
-  }, [href]);
-
-  return (
-    <a href={href} className="block" onClick={handleClick}>
-      <button className="group relative w-[120px] sm:w-[140px] mobile-touch active:scale-95">
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-[#4f52c9] to-[#8644c5] rounded-lg sm:rounded-xl opacity-40 blur group-hover:opacity-70 transition-all duration-500"></div>
-        <div className="relative h-9 sm:h-10 bg-[#030014] backdrop-blur-xl rounded-lg border border-white/10 leading-none overflow-hidden">
-          <div className="absolute inset-0 scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300 bg-gradient-to-r from-[#4f52c9]/20 to-[#8644c5]/20"></div>
-          <span className="absolute inset-0 flex items-center justify-center gap-1 sm:gap-1.5 text-xs group-hover:gap-1.5 sm:group-hover:gap-2 transition-all duration-200">
-            <span className="bg-gradient-to-r from-gray-200 to-white bg-clip-text text-transparent font-medium z-10">
-              {text}
-            </span>
-            <Icon className={`w-3 h-3 text-gray-200 ${text === 'Contact' ? 'group-hover:translate-x-0.5' : 'group-hover:rotate-45'} transform transition-all duration-200 z-10`} />
+const CTAButton = memo(({ href, text, icon: Icon }) => (
+  <a href={href} className="block">
+    <button className="group relative w-[120px] sm:w-[140px] mobile-touch active:scale-95">
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-[#4f52c9] to-[#8644c5] rounded-lg sm:rounded-xl opacity-40 blur group-hover:opacity-70 transition-all duration-500"></div>
+      <div className="relative h-9 sm:h-10 bg-[#030014] backdrop-blur-xl rounded-lg border border-white/10 leading-none overflow-hidden">
+        <div className="absolute inset-0 scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300 bg-gradient-to-r from-[#4f52c9]/20 to-[#8644c5]/20"></div>
+        <span className="absolute inset-0 flex items-center justify-center gap-1 sm:gap-1.5 text-xs group-hover:gap-1.5 sm:group-hover:gap-2 transition-all duration-200">
+          <span className="bg-gradient-to-r from-gray-200 to-white bg-clip-text text-transparent font-medium z-10">
+            {text}
           </span>
-        </div>
-      </button>
-    </a>
-  );
-});
+          <Icon className={`w-3 h-3 text-gray-200 ${text === 'Contact' ? 'group-hover:translate-x-0.5' : 'group-hover:rotate-45'} transform transition-all duration-200 z-10`} />
+        </span>
+      </div>
+    </button>
+  </a>
+));
+CTAButton.displayName = 'CTAButton';
 
-const SocialLink = memo(({ icon: Icon, link, label, shouldAnimate = true }) => (
+const SocialLink = memo(({ icon: Icon, link, label }) => (
   <a href={link} target="_blank" rel="noopener noreferrer" aria-label={label} className="block">
     <button className="group relative p-1.5 sm:p-2 mobile-touch active:scale-95">
       <div className="absolute inset-0 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-lg sm:rounded-xl blur opacity-15 group-hover:opacity-25 transition duration-200"></div>
@@ -225,35 +209,51 @@ const SocialLink = memo(({ icon: Icon, link, label, shouldAnimate = true }) => (
     </button>
   </a>
 ));
+SocialLink.displayName = 'SocialLink';
 
 // Mobile Social Links
-const MobileSocialLinks = memo(({ isMobile }) => (
+const MobileSocialLinks = memo(() => (
   <div className="flex sm:hidden gap-2 justify-center" data-aos="fade-up" data-aos-delay="800">
     {SOCIAL_LINKS.map((social, index) => (
-      <SocialLink key={`mobile-social-${index}`} {...social} shouldAnimate={!isMobile} />
+      <SocialLink key={`mobile-social-${index}`} {...social} />
     ))}
   </div>
 ));
+MobileSocialLinks.displayName = 'MobileSocialLinks';
 
-// Lottie Component
+// Optimized Lottie Component with Intersection Observer
 const LottieComponent = memo(({ 
   config, 
   className, 
   onLoad, 
-  onError,
-  isMobile 
+  onError 
 }) => {
   const [lottieError, setLottieError] = useState(false);
+  const [isInView, setIsInView] = useState(false);
+  const containerRef = useRef();
 
   const handleError = useCallback(() => {
     setLottieError(true);
     onError?.();
   }, [onError]);
 
-  const cleanConfig = useMemo(() => {
-    const { rendererSettings, ...restConfig } = config;
-    return restConfig;
-  }, [config]);
+  // Lazy load Lottie when in viewport
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   if (lottieError) {
     return (
@@ -267,14 +267,18 @@ const LottieComponent = memo(({
   }
 
   return (
-    <DotLottieReact
-      {...cleanConfig}
-      className={`${className} ${isMobile ? 'lottie-mobile' : 'lottie-desktop'}`}
-      onLoad={onLoad}
-      onError={handleError}
-    />
+    <div ref={containerRef} className={className}>
+      {isInView && (
+        <DotLottieReact
+          {...config}
+          onLoad={onLoad}
+          onError={handleError}
+        />
+      )}
+    </div>
   );
 });
+LottieComponent.displayName = 'LottieComponent';
 
 const Home = () => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -288,16 +292,16 @@ const Home = () => {
     WORDS, 
     ANIMATION_CONFIG.TYPING_SPEED, 
     ANIMATION_CONFIG.ERASING_SPEED, 
-    ANIMATION_CONFIG.PAUSE_DURATION,
-    isMobile,
-    prefersReducedMotion
+    ANIMATION_CONFIG.PAUSE_DURATION
   );
   
   const shouldAnimate = !isMobile && !prefersReducedMotion;
 
-  // AOS initialization
+  // Optimized AOS initialization with debounce
   useEffect(() => {
     if (prefersReducedMotion) return;
+
+    let timeoutId;
 
     const initAOS = () => {
       AOS.init({
@@ -309,22 +313,26 @@ const Home = () => {
       });
     };
 
-    const timer = setTimeout(initAOS, 50);
+    timeoutId = setTimeout(initAOS, 50);
+    
     return () => {
-      clearTimeout(timer);
+      clearTimeout(timeoutId);
       AOS.refreshHard();
     };
   }, [isMobile, prefersReducedMotion]);
 
   useEffect(() => {
-    setIsLoaded(true);
+    startTransition(() => {
+      setIsLoaded(true);
+    });
   }, []);
 
-  const lottieConfig = useMemo(() => ({
+  // Memoized configurations with useRef for stable references
+  const lottieConfig = useRef({
     src: "https://assets-v2.lottiefiles.com/a/a48f1c1e-1181-11ee-8323-1fd18ac98420/CefN62GDJc.lottie",
     autoplay: true,
     loop: true,
-  }), []);
+  }).current;
 
   const lottieClassName = useMemo(() => {
     const baseScale = breakpoint === 'mobile' ? "scale-110" : 
@@ -332,32 +340,31 @@ const Home = () => {
     
     const hoverScale = shouldAnimate ? "scale-[130%] sm:scale-[140%] md:scale-[130%] rotate-1" : baseScale;
     
-    return `w-full h-full transition-all duration-300 mobile-accelerate ${
+    return `w-full h-full transition-all duration-300 ${
       isHovering ? hoverScale : baseScale
     }`;
   }, [isHovering, breakpoint, shouldAnimate]);
 
   const gradientClasses = useMemo(() => 
-    `absolute inset-0 bg-gradient-to-r from-[#6366f1]/10 to-[#a855f7]/10 rounded-2xl sm:rounded-3xl ${
-      isMobile ? 'blur-lg' : 'blur-xl sm:blur-2xl'
-    } transition-all duration-500 ease-in-out ${
+    `absolute inset-0 bg-gradient-to-r from-[#6366f1]/10 to-[#a855f7]/10 rounded-2xl sm:rounded-3xl blur-xl sm:blur-2xl transition-all duration-500 ease-in-out ${
       isHovering && shouldAnimate ? "opacity-40 scale-102" : "opacity-20 scale-100"
     }`,
-    [isHovering, shouldAnimate, isMobile]
+    [isHovering, shouldAnimate]
   );
 
   const animationContainerClass = useMemo(() => 
-    `relative lg:left-4 xl:left-6 z-10 w-full h-full opacity-90 transform transition-transform duration-300 performance-optimized mobile-accelerate ${
+    `relative lg:left-4 xl:left-6 z-10 w-full h-full opacity-90 transform transition-transform duration-300 ${
       isHovering && shouldAnimate ? "scale-102" : "scale-100"
     }`,
     [isHovering, shouldAnimate]
   );
 
+  // Pre-memoized arrays to avoid recreation
   const renderedSocialLinks = useMemo(() => 
     SOCIAL_LINKS.map((social, index) => (
-      <SocialLink key={`social-${index}`} {...social} shouldAnimate={!isMobile} />
+      <SocialLink key={`social-${index}`} {...social} />
     )),
-    [isMobile]
+    []
   );
 
   const renderedTechStack = useMemo(() => 
@@ -375,40 +382,39 @@ const Home = () => {
     if (shouldAnimate) setIsHovering(false);
   }, [shouldAnimate]);
 
-  const handleTouchStart = useCallback((e) => {
-    if (isMobile) {
-      e.preventDefault();
-      setIsHovering(true);
-    }
+  const handleTouchStart = useCallback(() => {
+    if (isMobile) setIsHovering(true);
   }, [isMobile]);
 
-  const handleTouchEnd = useCallback((e) => {
-    if (isMobile) {
-      e.preventDefault();
-      setIsHovering(false);
-    }
+  const handleTouchEnd = useCallback(() => {
+    if (isMobile) setIsHovering(false);
   }, [isMobile]);
 
   const handleLottieError = useCallback(() => {
     setLottieError(true);
   }, []);
 
+  // Optimized background elements with useMemo
+  const backgroundElements = useMemo(() => (
+    <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-[#6366f1] rounded-full blur-3xl opacity-10 animate-pulse"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#a855f7] rounded-full blur-3xl opacity-5 animate-pulse delay-1000"></div>
+      <div className="absolute top-1/2 left-1/2 w-56 h-56 bg-[#8b5cf6] rounded-full blur-2xl opacity-5 animate-pulse delay-500"></div>
+      
+      {/* Optimized grid background */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="w-full h-full" style={{
+          backgroundImage: `linear-gradient(#6366f1 1px, transparent 1px), linear-gradient(90deg, #6366f1 1px, transparent 1px)`,
+          backgroundSize: '40px 40px',
+          animation: shouldAnimate ? 'grid-move 20s linear infinite' : 'none'
+        }}></div>
+      </div>
+    </div>
+  ), [shouldAnimate]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014] overflow-hidden relative" id="Home">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-[#6366f1] rounded-full blur-3xl opacity-10 animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#a855f7] rounded-full blur-3xl opacity-5 animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 w-56 h-56 bg-[#8b5cf6] rounded-full blur-2xl opacity-5 animate-pulse delay-500"></div>
-        
-        <div className="absolute inset-0 opacity-10">
-          <div className="w-full h-full" style={{
-            backgroundImage: `linear-gradient(#6366f1 1px, transparent 1px), linear-gradient(90deg, #6366f1 1px, transparent 1px)`,
-            backgroundSize: isMobile ? '60px 60px' : '40px 40px',
-            animation: shouldAnimate && !isMobile ? 'grid-move 20s linear infinite' : 'none'
-          }}></div>
-        </div>
-      </div>
+      {backgroundElements}
 
       <div className={`relative z-10 transition-all duration-500 ${isLoaded ? "opacity-100" : "opacity-0"}`}>
         <div className="container mx-auto min-h-screen flex items-center justify-center px-4 sm:px-[5%] lg:px-[10%]">
@@ -422,17 +428,15 @@ const Home = () => {
               data-aos-delay="100"
             >
               <div className="space-y-3 sm:space-y-4">
-                <StatusBadge isMobile={isMobile} />
+                <StatusBadge />
                 <MainTitle />
 
                 {/* Typing Effect */}
                 <div className="h-6 sm:h-7 flex items-center justify-center lg:justify-start" data-aos="fade-up" data-aos-duration={prefersReducedMotion ? 0 : 800} data-aos-delay="400">
                   <span className="text-base sm:text-lg md:text-xl bg-gradient-to-r from-gray-100 to-gray-300 bg-clip-text text-transparent font-light">
-                    {typedText || "Design Services"}
+                    {typedText}
                   </span>
-                  {!isMobile && !prefersReducedMotion && (
-                    <span className="w-[2px] h-4 sm:h-5 bg-gradient-to-t from-[#6366f1] to-[#a855f7] ml-1 animate-blink"></span>
-                  )}
+                  <span className="w-[2px] h-4 sm:h-5 bg-gradient-to-t from-[#6366f1] to-[#a855f7] ml-1 animate-blink"></span>
                 </div>
 
                 {/* Description */}
@@ -455,14 +459,14 @@ const Home = () => {
                   {renderedTechStack}
                 </div>
 
-                {/* FIXED: CTA Buttons with correct section IDs */}
+                {/* CTA Buttons */}
                 <div 
                   className="flex flex-row gap-2 sm:gap-3 justify-center lg:justify-start" 
                   data-aos="fade-up"
                   data-aos-duration={prefersReducedMotion ? 0 : 800}
                   data-aos-delay="700"
                 >
-                  <CTAButton href="#Portofolio" text="Projects" icon={ExternalLink} />
+                  <CTAButton href="#Portfolio" text="Projects" icon={ExternalLink} />
                   <CTAButton href="#Contact" text="Contact" icon={Mail} />
                 </div>
 
@@ -477,7 +481,7 @@ const Home = () => {
                 </div>
 
                 {/* Mobile Social Links */}
-                <MobileSocialLinks isMobile={isMobile} />
+                <MobileSocialLinks />
               </div>
             </div>
 
@@ -496,14 +500,21 @@ const Home = () => {
                 <div className={gradientClasses} />
                 
                 <div className={animationContainerClass}>
-                  <div className={lottieClassName}>
-                    <LottieComponent
-                      config={lottieConfig}
-                      className="w-full h-full"
-                      onLoad={() => setLottieLoaded(true)}
-                      onError={handleLottieError}
-                      isMobile={isMobile}
-                    />
+                  {/* Lottie Animation with Loading State */}
+                  <div className="relative w-full h-full">
+                    {!lottieLoaded && !lottieError && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    )}
+                    <div className={lottieClassName}>
+                      <LottieComponent
+                        config={lottieConfig}
+                        className="w-full h-full"
+                        onLoad={() => setLottieLoaded(true)}
+                        onError={handleLottieError}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -511,9 +522,7 @@ const Home = () => {
                 <div className={`absolute inset-0 pointer-events-none transition-all duration-500 ${
                   isHovering && shouldAnimate ? "opacity-40" : "opacity-20"
                 }`}>
-                  <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180px] h-[180px] sm:w-[280px] sm:h-[280px] lg:w-[320px] lg:h-[320px] bg-gradient-to-br from-indigo-500/10 to-purple-500/10 ${
-                    isMobile ? 'blur-lg' : 'blur-xl sm:blur-2xl'
-                  } ${
+                  <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180px] h-[180px] sm:w-[280px] sm:h-[280px] lg:w-[320px] lg:h-[320px] bg-gradient-to-br from-indigo-500/10 to-purple-500/10 blur-xl sm:blur-2xl ${
                     shouldAnimate ? 'animate-pulse-slow' : ''
                   } transition-all duration-500 ${
                     isHovering && shouldAnimate ? "scale-105" : "scale-100"
@@ -525,7 +534,7 @@ const Home = () => {
         </div>
       </div>
 
-      {/* CSS animations */}
+      {/* Optimized CSS animations */}
       <style dangerouslySetInnerHTML={{
         __html: `
           @keyframes float {
@@ -554,23 +563,9 @@ const Home = () => {
             transform: scale(0.95);
           }
           .performance-optimized {
-            -webkit-transform: translateZ(0);
-            -webkit-backface-visibility: hidden;
-            -webkit-perspective: 1000;
-          }
-          .mobile-accelerate {
             transform: translateZ(0);
             backface-visibility: hidden;
-            perspective: 1000;
-            will-change: transform, opacity;
-          }
-          @media (max-width: 768px) {
-            .animate-float {
-              animation: float 6s ease-in-out infinite;
-            }
-            .lottie-mobile {
-              transform: scale(0.8);
-            }
+            perspective: 1000px;
           }
         `
       }} />

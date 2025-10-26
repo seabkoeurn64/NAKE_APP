@@ -1,7 +1,29 @@
-import React, { useEffect, memo, useMemo, useState, useCallback } from "react"
+import React, { useEffect, memo, useMemo, useState, useCallback, useRef, startTransition } from "react"
 import { Code, Award, Globe, ArrowUpRight, Sparkles, UserCheck, Download, Eye, Star, Zap, Heart, Mouse } from "lucide-react"
 
-// Enhanced Memoized Components with error boundaries
+// Constants with Object.freeze for better performance
+const STATS_CONFIG = Object.freeze({
+  COUNT_DURATION: 1500,
+  COUNT_STEPS: 60,
+  DELAY_BETWEEN_CARDS: 200,
+  ANIMATION_DELAYS: {
+    HEADER: 100,
+    PROFILE: 200,
+    CONTENT: 300,
+    BUTTONS: 500,
+    STATS: 600
+  }
+});
+
+// Preload critical images
+const preloadImage = (src) => {
+  if (typeof window !== 'undefined') {
+    const img = new Image();
+    img.src = src;
+  }
+};
+
+// Enhanced Memoized Components with error boundaries and display names
 const Header = memo(() => (
   <div className="text-center mb-8 lg:mb-12 px-4" data-aos="fade-down">
     <div className="inline-block relative group mb-4">
@@ -15,24 +37,37 @@ const Header = memo(() => (
     </p>
   </div>
 ));
+Header.displayName = 'Header';
 
 const ProfileImage = memo(() => {
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const imageRef = useRef();
 
   const handleMouseEnter = useCallback(() => setIsHovered(true), []);
   const handleMouseLeave = useCallback(() => setIsHovered(false), []);
   const handleImageLoad = useCallback(() => setImageLoaded(true), []);
   const handleImageError = useCallback(() => setImageError(true), []);
 
-  // Preload image for better performance
+  // Preload image with Intersection Observer for lazy loading
   useEffect(() => {
-    const img = new Image();
-    img.src = "/Cover.png";
-    img.onload = handleImageLoad;
-    img.onerror = handleImageError;
-  }, [handleImageLoad, handleImageError]);
+    const img = imageRef.current;
+    if (!img) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !imageLoaded && !imageError) {
+          img.src = "/Cover.png";
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1, rootMargin: '50px' }
+    );
+
+    observer.observe(img);
+    return () => observer.disconnect();
+  }, [imageLoaded, imageError]);
 
   return (
     <div className="flex justify-center items-center p-4 lg:p-8" data-aos="zoom-in" data-aos-delay="200">
@@ -60,7 +95,7 @@ const ProfileImage = memo(() => {
                 {/* Image with enhanced hover effects and error handling */}
                 {!imageError ? (
                   <img
-                    src="/Cover.png"
+                    ref={imageRef}
                     alt="Koeurn - Graphic Designer"
                     className={`w-full h-full object-cover transform transition-all duration-700 group-hover:scale-110 ${
                       imageLoaded ? 'opacity-100' : 'opacity-0'
@@ -127,11 +162,13 @@ const ProfileImage = memo(() => {
     </div>
   );
 });
+ProfileImage.displayName = 'ProfileImage';
 
 const StatCard = memo(({ icon: Icon, color, value, label, description, index }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [count, setCount] = useState(0);
   const [localMounted, setLocalMounted] = useState(false);
+  const animationRef = useRef();
 
   useEffect(() => {
     setLocalMounted(true);
@@ -140,30 +177,35 @@ const StatCard = memo(({ icon: Icon, color, value, label, description, index }) 
   useEffect(() => {
     if (localMounted && value > 0) {
       const timer = setTimeout(() => {
-        // Optimized counting animation
-        const duration = 1500; // Reduced from 2000ms
-        const steps = 60;
-        const stepDuration = duration / steps;
-        let currentStep = 0;
+        // Optimized counting animation with requestAnimationFrame
+        let startTime = null;
+        const duration = STATS_CONFIG.COUNT_DURATION;
         
-        const updateCount = () => {
-          currentStep++;
-          const progress = currentStep / steps;
+        const animateCount = (currentTime) => {
+          if (!startTime) startTime = currentTime;
+          const elapsed = currentTime - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          
           // Ease-out function for smooth ending
           const easedProgress = 1 - Math.pow(1 - progress, 3);
           setCount(Math.floor(value * easedProgress));
           
-          if (currentStep < steps) {
-            setTimeout(updateCount, stepDuration);
+          if (progress < 1) {
+            animationRef.current = requestAnimationFrame(animateCount);
           } else {
             setCount(value);
           }
         };
         
-        updateCount();
-      }, index * 200); // Reduced delay between cards
+        animationRef.current = requestAnimationFrame(animateCount);
+      }, index * STATS_CONFIG.DELAY_BETWEEN_CARDS);
       
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+        }
+      };
     }
   }, [value, index, localMounted]);
 
@@ -222,6 +264,7 @@ const StatCard = memo(({ icon: Icon, color, value, label, description, index }) 
     </div>
   );
 });
+StatCard.displayName = 'StatCard';
 
 const ScrollIndicator = memo(() => (
   <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-20 animate-bounce" data-aos="fade-up" data-aos-delay="1000">
@@ -232,6 +275,7 @@ const ScrollIndicator = memo(() => (
     </div>
   </div>
 ));
+ScrollIndicator.displayName = 'ScrollIndicator';
 
 const LoadingSpinner = memo(() => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014]">
@@ -244,34 +288,87 @@ const LoadingSpinner = memo(() => (
     </div>
   </div>
 ));
+LoadingSpinner.displayName = 'LoadingSpinner';
+
+// Optimized button components
+const DownloadCVButton = memo(({ onClick }) => (
+  <button 
+    onClick={onClick}
+    className="group relative px-5 py-3.5 rounded-xl bg-gradient-to-r from-[#6366f1] to-[#a855f7] text-white font-semibold text-base transition-all duration-500 hover:scale-105 active:scale-95 flex items-center justify-center gap-3 shadow-xl overflow-hidden hover:shadow-2xl w-full sm:w-auto sm:flex-1"
+    style={{
+      boxShadow: '0 0 20px rgba(168, 85, 247, 0.5)'
+    }}
+  >
+    {/* Button shine effect */}
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 transition-all duration-1000 group-hover:translate-x-full"></div>
+    
+    <Download className="w-4 h-4 sm:w-5 sm:h-5 group-hover:animate-bounce relative z-10 flex-shrink-0" />
+    <span className="relative z-10 font-[Inter] font-semibold whitespace-nowrap">Download CV</span>
+    
+    {/* Floating hearts */}
+    <Heart className="absolute -top-1 -right-1 w-2 h-2 sm:w-3 sm:h-3 text-pink-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-bounce" />
+  </button>
+));
+DownloadCVButton.displayName = 'DownloadCVButton';
+
+const ViewWorkButton = memo(({ onClick }) => (
+  <button 
+    onClick={onClick}
+    className="group relative px-5 py-3.5 rounded-xl border-2 border-[#a855f7] text-[#a855f7] font-semibold text-base transition-all duration-500 hover:scale-105 active:scale-95 flex items-center justify-center gap-3 hover:bg-[#a855f7]/10 overflow-hidden cursor-pointer hover:shadow-xl w-full sm:w-auto sm:flex-1"
+  >
+    {/* Hover background */}
+    <div className="absolute inset-0 bg-gradient-to-r from-[#a855f7] to-[#ec4899] opacity-0 group-hover:opacity-10 transition-opacity duration-500"></div>
+    
+    <Eye className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform duration-300 relative z-10 flex-shrink-0" />
+    <span className="relative z-10 font-[Inter] font-semibold whitespace-nowrap">View Work</span>
+    
+    {/* Border animation */}
+    <div className="absolute inset-0 rounded-xl border-2 border-transparent bg-gradient-to-r from-[#6366f1] via-[#a855f7] to-[#ec4899] bg-clip-border opacity-0 group-hover:opacity-100 transition-opacity duration-500 -m-0.5"></div>
+  </button>
+));
+ViewWorkButton.displayName = 'ViewWorkButton';
 
 const AboutPage = () => {
   const [mounted, setMounted] = useState(false);
   const [activeSection, setActiveSection] = useState('about');
   const [isReducedMotion, setIsReducedMotion] = useState(false);
+  const scrollThrottleRef = useRef();
 
   useEffect(() => {
-    setMounted(true);
+    startTransition(() => {
+      setMounted(true);
+    });
     
     // Check for reduced motion preference
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     setIsReducedMotion(mediaQuery.matches);
     
-    // Add scroll listener for section tracking
+    // Add throttled scroll listener for section tracking
     const handleScroll = () => {
-      const sections = ['About', 'Portfolio', 'Portofolio'];
-      const scrollPosition = window.scrollY + 100;
+      if (scrollThrottleRef.current) return;
+      
+      scrollThrottleRef.current = requestAnimationFrame(() => {
+        const sections = ['About', 'Portfolio', 'Portofolio'];
+        const scrollPosition = window.scrollY + 100;
 
-      for (const section of sections) {
-        const element = document.getElementById(section);
-        if (element && scrollPosition >= element.offsetTop) {
-          setActiveSection(section.toLowerCase());
+        for (const section of sections) {
+          const element = document.getElementById(section);
+          if (element && scrollPosition >= element.offsetTop) {
+            setActiveSection(section.toLowerCase());
+            break; // Only set one active section
+          }
         }
-      }
+        scrollThrottleRef.current = null;
+      });
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollThrottleRef.current) {
+        cancelAnimationFrame(scrollThrottleRef.current);
+      }
+    };
   }, []);
 
   // Memoized calculations with improved experience calculation and error handling
@@ -363,23 +460,34 @@ const AboutPage = () => {
     }
   }, []);
 
+  // Preload critical resources
+  useEffect(() => {
+    if (mounted) {
+      preloadImage("/Cover.png");
+    }
+  }, [mounted]);
+
+  // Memoized background elements
+  const backgroundElements = useMemo(() => (
+    <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-[#6366f1] rounded-full blur-3xl opacity-10 animate-pulse"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#a855f7] rounded-full blur-3xl opacity-5 animate-pulse delay-1000"></div>
+      <div className="absolute top-1/2 left-1/2 w-56 h-56 bg-[#8b5cf6] rounded-full blur-2xl opacity-5 animate-pulse delay-500"></div>
+      
+      {/* Animated grid background with reduced motion support */}
+      <div className="absolute inset-0 opacity-10">
+        <div className={`w-full h-full ${!isReducedMotion ? 'about-grid-move' : ''}`}></div>
+      </div>
+    </div>
+  ), [isReducedMotion]);
+
   if (!mounted) {
     return <LoadingSpinner />;
   }
 
   return (
     <div className="min-h-screen py-8 lg:py-16 text-white overflow-hidden bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014] relative" id="About">
-      {/* Enhanced background decoration with reduced motion support */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-[#6366f1] rounded-full blur-3xl opacity-10 animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#a855f7] rounded-full blur-3xl opacity-5 animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 w-56 h-56 bg-[#8b5cf6] rounded-full blur-2xl opacity-5 animate-pulse delay-500"></div>
-        
-        {/* Animated grid background with reduced motion support */}
-        <div className="absolute inset-0 opacity-10">
-          <div className={`w-full h-full ${!isReducedMotion ? 'about-grid-move' : ''}`}></div>
-        </div>
-      </div>
+      {backgroundElements}
 
       <div className="relative z-10 container mx-auto px-4 lg:px-8 xl:px-16">
         {/* Header Section */}
@@ -419,38 +527,8 @@ const AboutPage = () => {
 
               {/* Enhanced CTA Buttons - Beautiful & Responsive */}
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full" data-aos={!isReducedMotion ? "fade-up" : undefined} data-aos-delay={!isReducedMotion ? "500" : undefined}>
-                {/* Download CV Button */}
-                <button 
-                  onClick={handleDownloadCV}
-                  className="group relative px-5 py-3.5 rounded-xl bg-gradient-to-r from-[#6366f1] to-[#a855f7] text-white font-semibold text-base transition-all duration-500 hover:scale-105 active:scale-95 flex items-center justify-center gap-3 shadow-xl overflow-hidden hover:shadow-2xl w-full sm:w-auto sm:flex-1"
-                  style={{
-                    boxShadow: '0 0 20px rgba(168, 85, 247, 0.5)'
-                  }}
-                >
-                  {/* Button shine effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 transition-all duration-1000 group-hover:translate-x-full"></div>
-                  
-                  <Download className="w-4 h-4 sm:w-5 sm:h-5 group-hover:animate-bounce relative z-10 flex-shrink-0" />
-                  <span className="relative z-10 font-[Inter] font-semibold whitespace-nowrap">Download CV</span>
-                  
-                  {/* Floating hearts */}
-                  <Heart className="absolute -top-1 -right-1 w-2 h-2 sm:w-3 sm:h-3 text-pink-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-bounce" />
-                </button>
-                
-                {/* View Work Button */}
-                <button 
-                  onClick={handleViewWork}
-                  className="group relative px-5 py-3.5 rounded-xl border-2 border-[#a855f7] text-[#a855f7] font-semibold text-base transition-all duration-500 hover:scale-105 active:scale-95 flex items-center justify-center gap-3 hover:bg-[#a855f7]/10 overflow-hidden cursor-pointer hover:shadow-xl w-full sm:w-auto sm:flex-1"
-                >
-                  {/* Hover background */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#a855f7] to-[#ec4899] opacity-0 group-hover:opacity-10 transition-opacity duration-500"></div>
-                  
-                  <Eye className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform duration-300 relative z-10 flex-shrink-0" />
-                  <span className="relative z-10 font-[Inter] font-semibold whitespace-nowrap">View Work</span>
-                  
-                  {/* Border animation */}
-                  <div className="absolute inset-0 rounded-xl border-2 border-transparent bg-gradient-to-r from-[#6366f1] via-[#a855f7] to-[#ec4899] bg-clip-border opacity-0 group-hover:opacity-100 transition-opacity duration-500 -m-0.5"></div>
-                </button>
+                <DownloadCVButton onClick={handleDownloadCV} />
+                <ViewWorkButton onClick={handleViewWork} />
               </div>
             </div>
 
