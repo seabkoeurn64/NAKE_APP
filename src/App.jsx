@@ -40,6 +40,13 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+// Preload strategy for critical components
+const preloadCriticalComponents = () => {
+  // Preload above-the-fold components
+  import('./components/Navbar');
+  import('./Pages/Home');
+};
+
 // Preload strategy for lazy components
 const preloadComponent = (importFn) => {
   const preloadPromise = importFn();
@@ -88,6 +95,11 @@ function App() {
     startTransition(() => {
       setShowWelcome(false);
     });
+  }, []);
+
+  // Preload critical components on mount
+  useEffect(() => {
+    preloadCriticalComponents();
   }, []);
 
   // Preload pages after mount

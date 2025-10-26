@@ -8,19 +8,24 @@ export default defineConfig({
     terserOptions: {
       compress: {
         drop_console: true,
-        drop_debugger: true
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info']
+      },
+      mangle: {
+        safari10: true
       }
     },
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
-          animation: ['framer-motion']
+          animation: ['framer-motion'],
+          icons: ['lucide-react']
         }
       }
     }
   },
-  server: {
-    port: 3000,
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'framer-motion']
   }
 })
