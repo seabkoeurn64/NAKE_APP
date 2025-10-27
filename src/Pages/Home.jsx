@@ -1,11 +1,11 @@
-// src/Pages/Home.jsx
+// src/Pages/Home.jsx - FIXED PADDING FOR NAVBAR
 import React, { useState, useEffect, useCallback, memo, useMemo, useRef } from "react"
 import { Github, Linkedin, Mail, ExternalLink, Instagram, Sparkles } from "lucide-react"
 import { DotLottieReact } from '@lottiefiles/dotlottie-react'
 import AOS from 'aos'
 import 'aos/dist/aos.css'
 
-// Constants
+// ✅ Constants
 const ANIMATION_CONFIG = {
   TYPING_SPEED: 80,
   ERASING_SPEED: 40,
@@ -24,7 +24,7 @@ const WORDS = [
   "Branding Materials"
 ];
 
-const TECH_STACK = ["Figma", "Adobe XD", "Photoshop", "Illustrator", "Corel"];
+const TECH_STACK = ["Figma", "Adobe XD", "Photoshop", "Illustrator", "CorelDraw"];
 
 const SOCIAL_LINKS = [
   { 
@@ -44,58 +44,49 @@ const SOCIAL_LINKS = [
   }
 ];
 
-// Enhanced media queries hook
+// ✅ Enhanced media queries hook
 const useMediaQueries = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  const [breakpoint, setBreakpoint] = useState('mobile');
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    let animationFrameId;
-
-    const updateBreakpoint = () => {
+    const checkDevice = () => {
       const width = window.innerWidth;
-      const mobile = width < 768;
-      const tablet = width >= 768 && width < 1024;
-      
-      setIsMobile(mobile);
-      setIsTablet(tablet);
-      
-      if (mobile) setBreakpoint('mobile');
-      else if (tablet) setBreakpoint('tablet');
-      else setBreakpoint('desktop');
+      setIsMobile(width < 768);
+      setIsTablet(width >= 768 && width < 1024);
     };
 
-    const checkReducedMotion = () => 
+    const checkReducedMotion = () => {
       setPrefersReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-    
-    const throttledResize = () => {
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
-      animationFrameId = requestAnimationFrame(updateBreakpoint);
     };
-    
-    updateBreakpoint();
+
+    checkDevice();
     checkReducedMotion();
-    
-    window.addEventListener('resize', throttledResize, { passive: true });
-    
+
+    let resizeTimeout;
+    const handleResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(checkDevice, 150);
+    };
+
+    window.addEventListener('resize', handleResize, { passive: true });
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     mediaQuery.addEventListener('change', checkReducedMotion);
     
     return () => {
-      window.removeEventListener('resize', throttledResize);
+      window.removeEventListener('resize', handleResize);
       mediaQuery.removeEventListener('change', checkReducedMotion);
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      clearTimeout(resizeTimeout);
     };
   }, []);
 
-  return { isMobile, isTablet, prefersReducedMotion, breakpoint };
+  return { isMobile, isTablet, prefersReducedMotion };
 };
 
-// Fixed Typing effect hook
+// ✅ Fixed Typing effect hook
 const useTypingEffect = (words, typingSpeed, erasingSpeed, pauseDuration) => {
   const [text, setText] = useState("");
   const [isTyping, setIsTyping] = useState(true);
@@ -113,20 +104,17 @@ const useTypingEffect = (words, typingSpeed, erasingSpeed, pauseDuration) => {
           setCharIndex(prev => prev + 1);
         }, typingSpeed);
       } else {
-        // Finished typing - pause before erasing
         timeoutRef.current = setTimeout(() => {
           setIsTyping(false);
         }, pauseDuration);
       }
     } else {
-      // Erasing
       if (charIndex > 0) {
         timeoutRef.current = setTimeout(() => {
           setText(currentWord.substring(0, charIndex - 1));
           setCharIndex(prev => prev - 1);
         }, erasingSpeed);
       } else {
-        // Finished erasing - move to next word
         setWordIndex(prev => (prev + 1) % words.length);
         setIsTyping(true);
       }
@@ -140,7 +128,7 @@ const useTypingEffect = (words, typingSpeed, erasingSpeed, pauseDuration) => {
   return text;
 };
 
-// Memoized Components
+// ✅ Memoized Components
 const StatusBadge = memo(() => (
   <div className="inline-block animate-float mx-auto lg:mx-0" data-aos="zoom-in" data-aos-delay="200">
     <div className="relative group">
@@ -217,7 +205,7 @@ const MobileSocialLinks = memo(() => (
   </div>
 ));
 
-// Fixed Lottie Component with HIDDEN loading states
+// ✅ Fixed Lottie Component
 const LottieComponent = memo(({ 
   config, 
   className, 
@@ -256,7 +244,6 @@ const LottieComponent = memo(({
     return () => observer.disconnect();
   }, []);
 
-  // No loading state - just show animation or error
   if (lottieError) {
     return (
       <div className="flex items-center justify-center w-full h-full">
@@ -275,13 +262,14 @@ const LottieComponent = memo(({
           {...config}
           onLoad={handleLoad}
           onError={handleError}
+          crossOrigin="anonymous"
         />
       )}
     </div>
   );
 });
 
-// Error Boundary Component
+// ✅ Error Boundary Component
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -293,7 +281,7 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
+    console.error('Home Error:', error, errorInfo);
   }
 
   render() {
@@ -317,13 +305,14 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+// ✅ Main Home Component
 const Home = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const [lottieLoaded, setLottieLoaded] = useState(false);
   const [lottieError, setLottieError] = useState(false);
   
-  const { isMobile, isTablet, prefersReducedMotion, breakpoint } = useMediaQueries();
+  const { isMobile, isTablet, prefersReducedMotion } = useMediaQueries();
   
   const typedText = useTypingEffect(
     WORDS, 
@@ -334,7 +323,7 @@ const Home = () => {
   
   const shouldAnimate = !isMobile && !prefersReducedMotion;
 
-  // AOS initialization with mobile optimizations
+  // ✅ AOS initialization
   useEffect(() => {
     if (prefersReducedMotion) return;
 
@@ -362,7 +351,7 @@ const Home = () => {
     setIsLoaded(true);
   }, []);
 
-  // Fixed Lottie configuration
+  // ✅ Fixed Lottie configuration
   const lottieConfig = useMemo(() => ({
     src: "https://assets-v2.lottiefiles.com/a/a48f1c1e-1181-11ee-8323-1fd18ac98420/CefN62GDJc.lottie",
     autoplay: true,
@@ -443,7 +432,6 @@ const Home = () => {
   // Optimized background elements for mobile
   const backgroundElements = useMemo(() => (
     <div className="absolute inset-0 overflow-hidden">
-      {/* Reduced background elements on mobile */}
       {!isMobile && (
         <>
           <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-[#6366f1] rounded-full blur-3xl opacity-10 animate-pulse"></div>
@@ -465,12 +453,16 @@ const Home = () => {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014] overflow-hidden relative" id="Home">
+      {/* ✅ FIXED: Added proper padding and scroll margin for navbar */}
+      <section 
+        id="Home" 
+        className="min-h-screen bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014] overflow-hidden relative scroll-mt-16 py-8 sm:py-12 lg:py-16"
+      >
         {backgroundElements}
 
         <div className={`relative z-10 transition-all duration-500 ${isLoaded ? "opacity-100" : "opacity-0"}`}>
           <div className="container mx-auto min-h-screen flex items-center justify-center px-4 sm:px-[5%] lg:px-[10%]">
-            <div className={`flex flex-col lg:flex-row items-center justify-between w-full gap-4 sm:gap-8 lg:gap-16 py-8 sm:py-12 lg:py-0 ${
+            <div className={`flex flex-col lg:flex-row items-center justify-between w-full gap-4 sm:gap-8 lg:gap-16 ${
               isMobile ? 'pt-4' : ''
             }`}>
               
@@ -526,7 +518,7 @@ const Home = () => {
                     data-aos-duration={prefersReducedMotion ? 0 : 800}
                     data-aos-delay="700"
                   >
-                    <CTAButton href="#Portofolio" text="Projects" icon={ExternalLink} />
+                    <CTAButton href="#Portfolio" text="Projects" icon={ExternalLink} />
                     <CTAButton href="#Contact" text="Contact" icon={Mail} />
                   </div>
 
@@ -562,7 +554,7 @@ const Home = () => {
                   <div className={gradientClasses} />
                   
                   <div className={animationContainerClass}>
-                    {/* Lottie Animation with HIDDEN loading states */}
+                    {/* Lottie Animation */}
                     <div className="relative w-full h-full">
                       <div className={lottieClassName}>
                         <LottieComponent
@@ -646,7 +638,7 @@ const Home = () => {
             }
           }
         `}</style>
-      </div>
+      </section>
     </ErrorBoundary>
   );
 };

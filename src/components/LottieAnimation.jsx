@@ -202,8 +202,9 @@ const LottieAnimation = memo(React.forwardRef(({
     }
   }, [interactive, isPlaying, handlePause]);
 
-  const handleClick = useCallback(() => {
+  const handleClick = useCallback((e) => {
     if (interactive && animationRef.current) {
+      e.stopPropagation();
       if (isPlaying) {
         handlePause();
       } else {
@@ -216,13 +217,14 @@ const LottieAnimation = memo(React.forwardRef(({
   const handleKeyDown = useCallback((e) => {
     if (interactive && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault();
-      handleClick();
+      handleClick(e);
     }
   }, [interactive, handleClick]);
 
   // Progress bar for interactive mode
   const handleProgressClick = useCallback((e) => {
     if (interactive && animationRef.current) {
+      e.stopPropagation();
       const rect = e.currentTarget.getBoundingClientRect();
       const clickX = e.clientX - rect.left;
       const percentage = clickX / rect.width;
@@ -253,7 +255,7 @@ const LottieAnimation = memo(React.forwardRef(({
     <div 
       ref={containerRef}
       className={`relative w-full h-full ${className} ${
-        interactive ? 'cursor-pointer hover:scale-105 transition-transform duration-300' : ''
+        interactive ? 'cursor-pointer transition-transform duration-300' : ''
       }`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -262,6 +264,9 @@ const LottieAnimation = memo(React.forwardRef(({
       role={interactive ? 'button' : 'img'}
       aria-label={interactive ? `${isPlaying ? 'Pause' : 'Play'} ${fallbackText}` : fallbackText}
       tabIndex={interactive ? 0 : undefined}
+      style={{
+        transform: interactive && isPlaying ? 'scale(1.05)' : 'scale(1)'
+      }}
     >
       {/* Screen reader announcements */}
       <div 
@@ -275,11 +280,15 @@ const LottieAnimation = memo(React.forwardRef(({
       {/* Loading Skeleton */}
       {!loaded && (
         <div 
-          className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 animate-pulse rounded-lg flex items-center justify-center z-10"
+          className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg flex items-center justify-center z-10"
           aria-hidden="true"
+          style={{ animation: 'pulse 2s ease-in-out infinite' }}
         >
           <div className="flex flex-col items-center space-y-2">
-            <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+            <div 
+              className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full"
+              style={{ animation: 'spin 1s linear infinite' }}
+            />
             <span className="text-xs text-gray-400">Loading animation...</span>
           </div>
         </div>
@@ -333,7 +342,19 @@ const LottieAnimation = memo(React.forwardRef(({
 
       {/* Interactive overlay */}
       {interactive && loaded && (
-        <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center bg-black/20 rounded-lg pointer-events-none">
+        <div 
+          className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg pointer-events-none"
+          style={{ 
+            opacity: 0,
+            transition: 'opacity 300ms ease-in-out'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.opacity = '1';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.opacity = '0';
+          }}
+        >
           <div className="bg-black/50 rounded-full p-2 backdrop-blur-sm">
             <span className="text-white text-xs">
               {isPlaying ? 'Click to pause' : 'Click to play'}
@@ -358,6 +379,28 @@ const LottieAnimation = memo(React.forwardRef(({
           <div className="w-2 h-2 bg-blue-400 rounded-full" aria-label="Cached" />
         </div>
       )}
+
+      {/* ✅ FIXED: Add CSS animations via style tag */}
+      <style>
+        {`
+          @keyframes pulse {
+            0%, 100% {
+              opacity: 1;
+            }
+            50% {
+              opacity: 0.7;
+            }
+          }
+          @keyframes spin {
+            from {
+              transform: rotate(0deg);
+            }
+            to {
+              transform: rotate(360deg);
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }));

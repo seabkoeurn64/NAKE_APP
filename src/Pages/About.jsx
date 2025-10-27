@@ -1,4 +1,4 @@
-// src/Pages/About.jsx
+// src/Pages/About.jsx - FIXED FOR NAVBAR
 import React, { useEffect, memo, useMemo, useState, useCallback, useRef } from "react";
 import { Code, Award, Globe, ArrowUpRight, Sparkles, UserCheck, Download, Eye, Star, Zap, Heart } from "lucide-react";
 
@@ -18,14 +18,14 @@ const STATS_CONFIG = {
 
 // Memoized Components
 const Header = memo(() => (
-  <div className="text-center mb-8 lg:mb-12 px-4" data-aos="fade-down">
+  <div className="text-center mb-8 lg:mb-12 px-4">
     <div className="inline-block relative group mb-4">
       <div className="absolute -inset-3 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-full opacity-10 blur-xl group-hover:opacity-20 transition-opacity duration-500"></div>
       <h2 className="relative text-3xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#a855f7] tracking-tight">
         About Me
       </h2>
     </div>
-    <p className="text-lg lg:text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed font-light" data-aos="fade-up" data-aos-delay="100">
+    <p className="text-lg lg:text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed font-light">
       Crafting <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#6366f1] to-[#a855f7] font-semibold">digital experiences</span> that blend aesthetics with functionality
     </p>
   </div>
@@ -42,27 +42,36 @@ const ProfileImage = memo(() => {
   const handleImageError = useCallback(() => setImageError(true), []);
 
   return (
-    <div className="flex justify-center items-center p-4 lg:p-8" data-aos="zoom-in" data-aos-delay="200">
+    <div className="flex justify-center items-center p-4 lg:p-8">
       <div 
         className="relative group cursor-pointer"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
         {/* Floating animation */}
-        <div className="absolute -inset-6 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-full opacity-10 blur-2xl about-float-slow"></div>
+        <div 
+          className="absolute -inset-6 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-full opacity-10 blur-2xl"
+          style={{ animation: 'aboutFloat 6s ease-in-out infinite' }}
+        ></div>
 
         {/* Animated stars */}
-        <div className="absolute -top-4 -right-4 animate-bounce">
-          <Star className="w-5 h-5 text-yellow-400 fill-current" />
+        <div className="absolute -top-4 -right-4">
+          <Star className="w-5 h-5 text-yellow-400 fill-current" style={{ animation: 'bounce 2s infinite' }} />
         </div>
-        <div className="absolute -bottom-4 -left-4 animate-pulse">
-          <Zap className="w-4 h-4 text-blue-400" />
+        <div className="absolute -bottom-4 -left-4">
+          <Zap className="w-4 h-4 text-blue-400" style={{ animation: 'pulse 2s infinite' }} />
         </div>
 
         <div className="relative">
           <div className="relative w-64 h-64 lg:w-80 lg:h-80 xl:w-96 xl:h-96 rounded-2xl overflow-hidden shadow-2xl transform transition-all duration-700 group-hover:scale-105 group-hover:rotate-1">
             {/* Gradient border with animation */}
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#a855f7] p-1 about-gradient-slow">
+            <div 
+              className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#a855f7] p-1"
+              style={{ 
+                backgroundSize: '200% 200%',
+                animation: 'aboutGradient 3s ease infinite'
+              }}
+            >
               <div className="w-full h-full rounded-2xl bg-[#030014] relative overflow-hidden">
                 {/* Image with enhanced hover effects and error handling */}
                 {!imageError ? (
@@ -75,7 +84,6 @@ const ProfileImage = memo(() => {
                     onLoad={handleImageLoad}
                     onError={handleImageError}
                     loading="lazy"
-                    decoding="async"
                     width={384}
                     height={384}
                   />
@@ -91,9 +99,9 @@ const ProfileImage = memo(() => {
                 
                 {/* Loading state */}
                 {!imageLoaded && !imageError && (
-                  <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 animate-pulse flex items-center justify-center">
+                  <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
                     <div className="relative">
-                      <UserCheck className="w-12 h-12 text-gray-600 animate-ping" />
+                      <UserCheck className="w-12 h-12 text-gray-600" style={{ animation: 'ping 1s infinite' }} />
                       <UserCheck className="w-12 h-12 text-gray-400 absolute top-0" />
                     </div>
                   </div>
@@ -119,16 +127,16 @@ const ProfileImage = memo(() => {
           }}>
             <div className="flex items-center gap-2 text-white text-sm font-semibold">
               <div className="relative">
-                <UserCheck className="w-4 h-4 animate-pulse" />
-                <div className="absolute top-0 left-0 w-1.5 h-1.5 bg-green-400 rounded-full animate-ping"></div>
+                <UserCheck className="w-4 h-4" style={{ animation: 'pulse 2s infinite' }} />
+                <div className="absolute top-0 left-0 w-1.5 h-1.5 bg-green-400 rounded-full" style={{ animation: 'ping 1s infinite' }}></div>
               </div>
               <span>Available</span>
             </div>
           </div>
 
           {/* Floating elements */}
-          <div className="absolute -top-1 -left-1 w-3 h-3 bg-purple-500 rounded-full opacity-60 animate-bounce"></div>
-          <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-pink-500 rounded-full opacity-60 animate-bounce delay-300"></div>
+          <div className="absolute -top-1 -left-1 w-3 h-3 bg-purple-500 rounded-full opacity-60" style={{ animation: 'bounce 2s infinite' }}></div>
+          <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-pink-500 rounded-full opacity-60" style={{ animation: 'bounce 2s infinite 0.3s' }}></div>
         </div>
       </div>
     </div>
@@ -186,8 +194,6 @@ const StatCard = memo(({ icon: Icon, color, value, label, description, index }) 
       className="relative group cursor-pointer"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      data-aos="fade-up"
-      data-aos-delay={index * 100}
     >
       {/* Hover glow effect */}
       <div className={`absolute -inset-1 bg-gradient-to-br ${color} rounded-xl blur opacity-0 group-hover:opacity-30 transition-all duration-500`}></div>
@@ -197,7 +203,7 @@ const StatCard = memo(({ icon: Icon, color, value, label, description, index }) 
         <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
 
         {/* Floating particles */}
-        <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-white rounded-full opacity-0 group-hover:opacity-40 animate-ping"></div>
+        <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-white rounded-full opacity-0 group-hover:opacity-40" style={{ animation: 'ping 1s infinite' }}></div>
 
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
@@ -250,7 +256,7 @@ const DownloadCVButton = memo(({ onClick }) => (
     <span className="relative z-10 font-semibold whitespace-nowrap">Download CV</span>
     
     {/* Floating hearts */}
-    <Heart className="absolute -top-1 -right-1 w-2 h-2 sm:w-3 sm:h-3 text-pink-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-bounce" />
+    <Heart className="absolute -top-1 -right-1 w-2 h-2 sm:w-3 sm:h-3 text-pink-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ animation: 'bounce 2s infinite' }} />
   </button>
 ));
 
@@ -374,7 +380,7 @@ const AboutPage = () => {
   ], [totalProjects, totalCertificates, YearExperience]);
 
   const handleViewWork = useCallback(() => {
-    const portfolioSection = document.getElementById('Portofolio');
+    const portfolioSection = document.getElementById('Portfolio');
     if (portfolioSection) {
       portfolioSection.scrollIntoView({ 
         behavior: 'smooth',
@@ -393,41 +399,23 @@ const AboutPage = () => {
     }
   }, []);
 
-  // Initialize AOS
-  useEffect(() => {
-    if (!mounted) return;
-
-    const initAOS = () => {
-      if (typeof AOS !== 'undefined') {
-        AOS.init({
-          once: true,
-          offset: 50,
-          duration: 800,
-          easing: 'ease-out-cubic',
-          disable: isReducedMotion
-        });
-      }
-    };
-
-    const timer = setTimeout(initAOS, 100);
-    return () => {
-      clearTimeout(timer);
-      if (typeof AOS !== 'undefined') {
-        AOS.refresh();
-      }
-    };
-  }, [mounted, isReducedMotion]);
-
   // Memoized background elements
   const backgroundElements = useMemo(() => (
     <div className="absolute inset-0 overflow-hidden">
-      <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-[#6366f1] rounded-full blur-3xl opacity-10 animate-pulse"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#a855f7] rounded-full blur-3xl opacity-5 animate-pulse delay-1000"></div>
-      <div className="absolute top-1/2 left-1/2 w-56 h-56 bg-[#8b5cf6] rounded-full blur-2xl opacity-5 animate-pulse delay-500"></div>
+      <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-[#6366f1] rounded-full blur-3xl opacity-10" style={{ animation: 'pulse 4s infinite' }}></div>
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#a855f7] rounded-full blur-3xl opacity-5" style={{ animation: 'pulse 4s infinite 1s' }}></div>
+      <div className="absolute top-1/2 left-1/2 w-56 h-56 bg-[#8b5cf6] rounded-full blur-2xl opacity-5" style={{ animation: 'pulse 4s infinite 0.5s' }}></div>
       
       {/* Animated grid background with reduced motion support */}
       <div className="absolute inset-0 opacity-10">
-        <div className={`w-full h-full ${!isReducedMotion ? 'about-grid-move' : ''}`}></div>
+        <div 
+          className="w-full h-full"
+          style={!isReducedMotion ? {
+            backgroundImage: 'linear-gradient(#6366f1 1px, transparent 1px), linear-gradient(90deg, #6366f1 1px, transparent 1px)',
+            backgroundSize: '40px 40px',
+            animation: 'aboutGridMove 20s linear infinite'
+          } : {}}
+        ></div>
       </div>
     </div>
   ), [isReducedMotion]);
@@ -437,8 +425,8 @@ const AboutPage = () => {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014]">
         <div className="text-center">
           <div className="relative">
-            <div className="w-12 h-12 border-3 border-[#6366f1] border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <div className="absolute top-0 left-0 w-12 h-12 border-3 border-[#a855f7] border-b-transparent rounded-full animate-spin mx-auto opacity-50"></div>
+            <div className="w-12 h-12 border-3 border-[#6366f1] border-t-transparent rounded-full" style={{ animation: 'spin 1s linear infinite' }}></div>
+            <div className="absolute top-0 left-0 w-12 h-12 border-3 border-[#a855f7] border-b-transparent rounded-full" style={{ animation: 'spin 1s linear infinite', opacity: '0.5' }}></div>
           </div>
           <p className="mt-3 text-gray-300 text-sm">Loading portfolio...</p>
         </div>
@@ -447,7 +435,11 @@ const AboutPage = () => {
   }
 
   return (
-    <div className="min-h-screen py-8 lg:py-16 text-white overflow-hidden bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014] relative" id="About">
+    // ✅ FIXED: Added proper section structure and navbar padding
+    <section 
+      id="About" 
+      className="min-h-screen py-8 lg:py-16 text-white overflow-hidden bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014] relative scroll-mt-16"
+    >
       {backgroundElements}
 
       <div className="relative z-10 container mx-auto px-4 lg:px-8 xl:px-16">
@@ -460,7 +452,7 @@ const AboutPage = () => {
             
             {/* Left Side - Content */}
             <div className="w-full lg:w-1/2 space-y-6 lg:space-y-8 text-center lg:text-left order-2 lg:order-1">
-              <div data-aos={!isReducedMotion ? "fade-right" : undefined} data-aos-delay={!isReducedMotion ? "200" : undefined}>
+              <div>
                 <h1 className="text-3xl lg:text-5xl xl:text-6xl font-bold mb-4 tracking-tight">
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 block leading-tight">
                     Koeurn
@@ -471,12 +463,12 @@ const AboutPage = () => {
                 </h1>
               </div>
               
-              <p className="text-lg lg:text-xl text-gray-300 leading-relaxed font-light" data-aos={!isReducedMotion ? "fade-right" : undefined} data-aos-delay={!isReducedMotion ? "300" : undefined}>
+              <p className="text-lg lg:text-xl text-gray-300 leading-relaxed font-light">
                 Passionate about creating <span className="text-white font-semibold bg-gradient-to-r from-[#6366f1] to-[#a855f7] bg-clip-text text-transparent">user-centered designs</span> that blend aesthetics with functionality.
               </p>
 
               {/* Description section */}
-              <div className="bg-gray-900/60 backdrop-blur-2xl rounded-xl p-6 border border-white/10 hover:border-white/20 transition-all duration-500 hover:shadow-xl group cursor-pointer" data-aos={!isReducedMotion ? "fade-right" : undefined} data-aos-delay={!isReducedMotion ? "400" : undefined}>
+              <div className="bg-gray-900/60 backdrop-blur-2xl rounded-xl p-6 border border-white/10 hover:border-white/20 transition-all duration-500 hover:shadow-xl group cursor-pointer">
                 <h3 className="text-xl font-semibold text-white mb-4 flex items-center justify-center lg:justify-start gap-2">
                   <Sparkles className="w-5 h-5 text-[#a855f7] group-hover:rotate-180 transition-transform duration-500" />
                   My Approach
@@ -487,7 +479,7 @@ const AboutPage = () => {
               </div>
 
               {/* Enhanced CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full" data-aos={!isReducedMotion ? "fade-up" : undefined} data-aos-delay={!isReducedMotion ? "500" : undefined}>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full">
                 <DownloadCVButton onClick={handleDownloadCV} />
                 <ViewWorkButton onClick={handleViewWork} />
               </div>
@@ -513,7 +505,7 @@ const AboutPage = () => {
           </div>
 
           {/* Additional Info Section */}
-          <div className="mt-16 lg:mt-20 grid grid-cols-1 xl:grid-cols-2 gap-8" data-aos={!isReducedMotion ? "fade-up" : undefined} data-aos-delay={!isReducedMotion ? "600" : undefined}>
+          <div className="mt-16 lg:mt-20 grid grid-cols-1 xl:grid-cols-2 gap-8">
             <div className="bg-gray-900/60 backdrop-blur-2xl rounded-xl p-6 border border-white/10 hover:border-white/20 transition-all duration-500 hover:shadow-xl group cursor-pointer">
               <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-[#6366f1] group-hover:rotate-180 transition-transform duration-500" />
@@ -537,64 +529,71 @@ const AboutPage = () => {
         </div>
       </div>
 
-      {/* Enhanced CSS Animations with reduced motion support */}
-      <style>{`
-        .about-float-slow {
-          animation: aboutFloat 6s ease-in-out infinite;
-        }
-        
-        .about-gradient-slow {
-          background-size: 200% 200%;
-          animation: aboutGradient 3s ease infinite;
-        }
-        
-        .about-grid-move {
-          background-image: linear-gradient(#6366f1 1px, transparent 1px), linear-gradient(90deg, #6366f1 1px, transparent 1px);
-          background-size: 40px 40px;
-          animation: aboutGridMove 20s linear infinite;
-        }
-        
-        @keyframes aboutFloat {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-15px) rotate(180deg); }
-        }
-        
-        @keyframes aboutGradient {
-          0%, 100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-        }
-        
-        @keyframes aboutGridMove {
-          0% { transform: translate(0, 0); }
-          100% { transform: translate(40px, 40px); }
-        }
-        
-        /* Reduced motion support */
-        @media (prefers-reduced-motion: reduce) {
-          .about-float-slow,
-          .about-gradient-slow,
-          .about-grid-move,
-          .animate-pulse,
-          .animate-bounce,
-          .animate-ping,
-          .animate-spin {
-            animation: none !important;
+      {/* ✅ FIXED: Move inline styles to regular style tag to avoid jsx prop warning */}
+      <style>
+        {`
+          @keyframes aboutFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(180deg); }
           }
           
-          .transition-all,
-          .transform {
-            transition: none !important;
+          @keyframes aboutGradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
           }
           
-          .group-hover\\:scale-105:hover,
-          .group-hover\\:rotate-12:hover,
-          .group-hover\\:rotate-180:hover,
-          .group-hover\\:scale-110:hover {
-            transform: none !important;
+          @keyframes aboutGridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(40px, 40px); }
           }
-        }
-      `}</style>
-    </div>
+
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+
+          @keyframes ping {
+            0% { transform: scale(1); opacity: 1; }
+            75%, 100% { transform: scale(2); opacity: 0; }
+          }
+
+          @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+          }
+
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+          }
+          
+          /* Reduced motion support */
+          @media (prefers-reduced-motion: reduce) {
+            .about-float-slow,
+            .about-gradient-slow,
+            .about-grid-move,
+            .animate-pulse,
+            .animate-bounce,
+            .animate-ping,
+            .animate-spin {
+              animation: none !important;
+            }
+            
+            .transition-all,
+            .transform {
+              transition: none !important;
+            }
+            
+            .group-hover\\:scale-105:hover,
+            .group-hover\\:rotate-12:hover,
+            .group-hover\\:rotate-180:hover,
+            .group-hover\\:scale-110:hover {
+              transform: none !important;
+            }
+          }
+        `}
+      </style>
+    </section>
   );
 };
 

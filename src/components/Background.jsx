@@ -23,7 +23,7 @@ const AnimatedBackground = memo(({
     high: { fps: 60, blur: blurIntensity, particles: 4 },
     medium: { fps: 30, blur: blurIntensity * 0.8, particles: 3 },
     low: { fps: 20, blur: blurIntensity * 0.6, particles: 2 },
-    auto: { fps: 60, blur: blurIntensity, particles: 4 } // Will be adjusted
+    auto: { fps: 60, blur: blurIntensity, particles: 4 }
   }
 
   const [config, setConfig] = useState(performanceConfig[performanceMode])
@@ -258,12 +258,11 @@ const AnimatedBackground = memo(({
   }, [animate, handleScroll, handleMouseMove, handleResize, reducedMotion, getBatteryAwareConfig])
 
   // Memoized blob components
-  const Blob = memo(({ index, className, style, size }) => (
+  const Blob = memo(({ index, className, size }) => (
     <div
       ref={(ref) => (blobRefs.current[index] = ref)}
       className={className}
       style={{
-        ...style,
         width: size.w,
         height: size.h,
         display: index < config.particles ? 'block' : 'none'
@@ -276,7 +275,7 @@ const AnimatedBackground = memo(({
   const Orb = memo(({ index, config }) => (
     <div
       ref={(ref) => (orbRefs.current[index] = ref)}
-      className={`absolute w-${config.size} h-${config.size} bg-${config.color}-400 rounded-full blur-sm opacity-40`}
+      className={`absolute w-2 h-2 bg-blue-400 rounded-full blur-sm opacity-40`}
       style={{
         left: config.x,
         top: config.y,
@@ -303,7 +302,7 @@ const AnimatedBackground = memo(({
             key={index}
             index={index}
             size={pos.size}
-            className={`absolute rounded-full mix-blend-soft-light filter blur-[${config.blur}px] ${
+            className={`absolute rounded-full mix-blend-soft-light filter ${
               index === 0 ? 'top-0 -left-4 bg-gradient-to-br from-[#a855f7] to-[#6366f1]' :
               index === 1 ? 'top-0 -right-4 bg-gradient-to-br from-cyan-400 to-blue-500 hidden sm:block' :
               index === 2 ? '-bottom-8 left-[-40%] md:left-20 bg-gradient-to-br from-blue-500 to-indigo-600' :
@@ -344,94 +343,96 @@ const AnimatedBackground = memo(({
         </div>
       )}
 
-      {/* Inline styles for better performance */}
-      <style jsx>{`
-        @keyframes gradientShift {
-          0%, 100% {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, transparent 50%, rgba(168, 85, 247, 0.05) 100%);
+      {/* ✅ FIXED: Move inline styles to regular style tag to avoid jsx prop warning */}
+      <style>
+        {`
+          @keyframes gradientShift {
+            0%, 100% {
+              background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, transparent 50%, rgba(168, 85, 247, 0.05) 100%);
+            }
+            50% {
+              background: linear-gradient(135deg, rgba(168, 85, 247, 0.05) 0%, transparent 50%, rgba(99, 102, 241, 0.05) 100%);
+            }
           }
-          50% {
-            background: linear-gradient(135deg, rgba(168, 85, 247, 0.05) 0%, transparent 50%, rgba(99, 102, 241, 0.05) 100%);
-          }
-        }
 
-        @keyframes gridMove {
-          0% {
-            transform: translate(0, 0);
+          @keyframes gridMove {
+            0% {
+              transform: translate(0, 0);
+            }
+            100% {
+              transform: translate(64px, 64px);
+            }
           }
-          100% {
-            transform: translate(64px, 64px);
-          }
-        }
 
-        @keyframes noiseAnim {
-          0%, 100% { transform: translate(0, 0); }
-          10% { transform: translate(-5%, -5%); }
-          20% { transform: translate(-10%, 5%); }
-          30% { transform: translate(5%, -10%); }
-          40% { transform: translate(-5%, 15%); }
-          50% { transform: translate(-10%, 5%); }
-          60% { transform: translate(15%, 0); }
-          70% { transform: translate(0, 10%); }
-          80% { transform: translate(-15%, 0); }
-          90% { transform: translate(10%, 5%); }
-        }
+          @keyframes noiseAnim {
+            0%, 100% { transform: translate(0, 0); }
+            10% { transform: translate(-5%, -5%); }
+            20% { transform: translate(-10%, 5%); }
+            30% { transform: translate(5%, -10%); }
+            40% { transform: translate(-5%, 15%); }
+            50% { transform: translate(-10%, 5%); }
+            60% { transform: translate(15%, 0); }
+            70% { transform: translate(0, 10%); }
+            80% { transform: translate(-15%, 0); }
+            90% { transform: translate(10%, 5%); }
+          }
 
-        @keyframes orbFloat {
-          0%, 100% {
-            transform: translate(0, 0) scale(1);
-            opacity: 0.4;
+          @keyframes orbFloat {
+            0%, 100% {
+              transform: translate(0, 0) scale(1);
+              opacity: 0.4;
+            }
+            25% {
+              transform: translate(20px, -15px) scale(1.1);
+              opacity: 0.6;
+            }
+            50% {
+              transform: translate(-10px, 10px) scale(0.9);
+              opacity: 0.3;
+            }
+            75% {
+              transform: translate(15px, 5px) scale(1.05);
+              opacity: 0.5;
+            }
           }
-          25% {
-            transform: translate(20px, -15px) scale(1.1);
-            opacity: 0.6;
-          }
-          50% {
-            transform: translate(-10px, 10px) scale(0.9);
-            opacity: 0.3;
-          }
-          75% {
-            transform: translate(15px, 5px) scale(1.05);
-            opacity: 0.5;
-          }
-        }
 
-        @keyframes orbPulse {
-          0%, 100% {
-            transform: scale(1);
-            opacity: 0.4;
+          @keyframes orbPulse {
+            0%, 100% {
+              transform: scale(1);
+              opacity: 0.4;
+            }
+            50% {
+              transform: scale(2);
+              opacity: 0;
+            }
           }
-          50% {
-            transform: scale(2);
-            opacity: 0;
-          }
-        }
 
-        /* Performance optimizations */
-        .will-change-transform {
-          will-change: transform;
-        }
-
-        /* Reduced motion support */
-        @media (prefers-reduced-motion: reduce) {
-          * {
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.01ms !important;
-          }
-          
+          /* Performance optimizations */
           .will-change-transform {
-            will-change: auto;
+            will-change: transform;
           }
-        }
 
-        /* Mobile optimizations */
-        @media (max-width: 768px) {
-          .blob-mobile {
-            opacity: 0.7 !important;
+          /* Reduced motion support */
+          @media (prefers-reduced-motion: reduce) {
+            * {
+              animation-duration: 0.01ms !important;
+              animation-iteration-count: 1 !important;
+              transition-duration: 0.01ms !important;
+            }
+            
+            .will-change-transform {
+              will-change: auto;
+            }
           }
-        }
-      `}</style>
+
+          /* Mobile optimizations */
+          @media (max-width: 768px) {
+            .blob-mobile {
+              opacity: 0.7 !important;
+            }
+          }
+        `}
+      </style>
     </div>
   )
 })

@@ -4,13 +4,14 @@ import PropTypes from 'prop-types';
 // FloatingParticle component defined outside
 const FloatingParticle = memo(({ size, color, delay, top, left, right, bottom }) => (
   <div 
-    className={`absolute ${size} ${color} rounded-full opacity-60 animate-float`}
+    className={`absolute ${size} ${color} rounded-full opacity-60`}
     style={{ 
       animationDelay: delay,
       top: top || 'auto',
       left: left || 'auto',
       right: right || 'auto',
-      bottom: bottom || 'auto'
+      bottom: bottom || 'auto',
+      animation: 'float 8s ease-in-out infinite'
     }}
   />
 ));
@@ -144,7 +145,10 @@ const LoadingScreen = memo(({ onLoadingComplete, minDisplayTime = 2000 }) => {
     return (
       <div className="fixed inset-0 bg-[#030014] flex items-center justify-center z-50">
         <div className="text-center">
-          <div className="w-12 h-12 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div 
+            className="w-12 h-12 border-2 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"
+            style={{ animation: 'spin-slow 1.8s linear infinite' }}
+          ></div>
           <p className="text-gray-400 text-sm">Loading portfolio...</p>
         </div>
       </div>
@@ -159,7 +163,10 @@ const LoadingScreen = memo(({ onLoadingComplete, minDisplayTime = 2000 }) => {
     >
       <div className="relative w-full max-w-sm sm:max-w-md mx-auto">
         {/* Enhanced Animated Background Effects */}
-        <div className="absolute -inset-8 sm:-inset-12 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-full opacity-20 blur-3xl animate-pulse-slow mx-auto left-1/2 transform -translate-x-1/2"></div>
+        <div 
+          className="absolute -inset-8 sm:-inset-12 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-full opacity-20 blur-3xl mx-auto left-1/2 transform -translate-x-1/2"
+          style={{ animation: 'pulse-slow 4s ease-in-out infinite' }}
+        ></div>
         
         {/* Dynamic Floating Particles */}
         <div className="absolute inset-0 flex items-center justify-center">
@@ -172,20 +179,25 @@ const LoadingScreen = memo(({ onLoadingComplete, minDisplayTime = 2000 }) => {
         <div className="relative flex flex-col items-center justify-center gap-4 sm:gap-6 p-6 sm:p-8">
           {/* Enhanced Spinner Container */}
           <div className="relative flex items-center justify-center will-change-transform">
-            <div className="absolute -inset-3 sm:-inset-4 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-full opacity-30 blur-xl animate-ping-slow"></div>
+            <div 
+              className="absolute -inset-3 sm:-inset-4 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-full opacity-30 blur-xl"
+              style={{ animation: 'ping-slow 3s cubic-bezier(0, 0, 0.2, 1) infinite' }}
+            ></div>
             <div 
               className={`relative rounded-full border-4 border-t-transparent ${
                 isMobile 
                   ? "w-10 h-10 border-3" 
                   : "w-12 h-12 border-4"
-              } border-[#6366f1] animate-spin-slow`}
+              } border-[#6366f1]`}
+              style={{ animation: 'spin-slow 1.8s linear infinite' }}
             />
             
             {/* Inner spinner for depth */}
             <div 
               className={`absolute rounded-full border-2 border-[#a855f7] border-t-transparent ${
                 isMobile ? "w-8 h-8" : "w-10 h-10"
-              } animate-spin-slow-reverse opacity-60`}
+              } opacity-60`}
+              style={{ animation: 'spin-slow-reverse 2.2s linear infinite' }}
             />
           </div>
 
@@ -196,7 +208,10 @@ const LoadingScreen = memo(({ onLoadingComplete, minDisplayTime = 2000 }) => {
                 showLoadingText ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
               }`}
             >
-              <div className="absolute -inset-2 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded blur opacity-20 animate-pulse"></div>
+              <div 
+                className="absolute -inset-2 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded blur opacity-20"
+                style={{ animation: 'pulse-slow 4s ease-in-out infinite' }}
+              ></div>
               <span className="relative text-gray-200 text-sm sm:text-base font-light tracking-wide bg-gradient-to-r from-gray-200 to-gray-300 bg-clip-text text-transparent">
                 {getLoadingMessage()}
               </span>
@@ -238,94 +253,74 @@ const LoadingScreen = memo(({ onLoadingComplete, minDisplayTime = 2000 }) => {
         </div>
       </div>
 
-      {/* Enhanced CSS Styles */}
-      <style>{`
-        @keyframes spin-slow {
-          from {
-            transform: rotate(0deg);
+      {/* ✅ FIXED: Move inline styles to regular style tag to avoid jsx prop warning */}
+      <style>
+        {`
+          @keyframes spin-slow {
+            from {
+              transform: rotate(0deg);
+            }
+            to {
+              transform: rotate(360deg);
+            }
           }
-          to {
-            transform: rotate(360deg);
+          @keyframes spin-slow-reverse {
+            from {
+              transform: rotate(0deg);
+            }
+            to {
+              transform: rotate(-360deg);
+            }
           }
-        }
-        @keyframes spin-slow-reverse {
-          from {
-            transform: rotate(0deg);
+          @keyframes pulse-slow {
+            0%, 100% {
+              opacity: 0.15;
+              transform: scale(1);
+            }
+            50% {
+              opacity: 0.25;
+              transform: scale(1.05);
+            }
           }
-          to {
-            transform: rotate(-360deg);
+          @keyframes ping-slow {
+            0% {
+              transform: scale(1);
+              opacity: 0.3;
+            }
+            75%, 100% {
+              transform: scale(2.5);
+              opacity: 0;
+            }
           }
-        }
-        @keyframes pulse-slow {
-          0%, 100% {
-            opacity: 0.15;
-            transform: scale(1);
+          @keyframes float {
+            0%, 100% {
+              transform: translateY(0px) translateX(0px) scale(1);
+              opacity: 0.6;
+            }
+            25% {
+              transform: translateY(-12px) translateX(8px) scale(1.1);
+              opacity: 0.8;
+            }
+            50% {
+              transform: translateY(-5px) translateX(-6px) scale(0.9);
+              opacity: 0.7;
+            }
+            75% {
+              transform: translateY(8px) translateX(4px) scale(1.05);
+              opacity: 0.5;
+            }
           }
-          50% {
-            opacity: 0.25;
-            transform: scale(1.05);
-          }
-        }
-        @keyframes ping-slow {
-          0% {
-            transform: scale(1);
-            opacity: 0.3;
-          }
-          75%, 100% {
-            transform: scale(2.5);
-            opacity: 0;
-          }
-        }
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(0px) translateX(0px) scale(1);
-            opacity: 0.6;
-          }
-          25% {
-            transform: translateY(-12px) translateX(8px) scale(1.1);
-            opacity: 0.8;
-          }
-          50% {
-            transform: translateY(-5px) translateX(-6px) scale(0.9);
-            opacity: 0.7;
-          }
-          75% {
-            transform: translateY(8px) translateX(4px) scale(1.05);
-            opacity: 0.5;
-          }
-        }
-        .animate-spin-slow {
-          animation: spin-slow 1.8s linear infinite;
-        }
-        .animate-spin-slow-reverse {
-          animation: spin-slow-reverse 2.2s linear infinite;
-        }
-        .animate-pulse-slow {
-          animation: pulse-slow 4s ease-in-out infinite;
-        }
-        .animate-ping-slow {
-          animation: ping-slow 3s cubic-bezier(0, 0, 0.2, 1) infinite;
-        }
-        .animate-float {
-          animation: float 8s ease-in-out infinite;
-        }
 
-        /* Enhanced reduced motion support */
-        @media (prefers-reduced-motion: reduce) {
-          .animate-spin-slow,
-          .animate-spin-slow-reverse,
-          .animate-pulse-slow,
-          .animate-ping-slow,
-          .animate-float {
-            animation: none;
+          /* Enhanced reduced motion support */
+          @media (prefers-reduced-motion: reduce) {
+            * {
+              animation-duration: 0.01ms !important;
+              animation-iteration-count: 1 !important;
+              transition-duration: 0.01ms !important;
+            }
           }
-          
-          .transition-all,
-          .transform {
-            transition: none !important;
-          }
-        }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 });

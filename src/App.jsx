@@ -1,10 +1,15 @@
-import React, { useState, useEffect, useCallback, lazy, Suspense, startTransition } from "react";
+// src/App.jsx - COMPLETELY FIXED VERSION WITH PORTFOLIO
+import React, { useState, useEffect, useCallback } from "react";
 import "./index.css";
 import Navbar from "./components/Navbar";
 import WelcomeScreen from "./Pages/WelcomeScreen";
+import Home from "./Pages/Home.jsx";
+import About from "./Pages/About.jsx";
+import Portofolio from "./Pages/Portofolio.jsx"; // ✅ Import the actual Portfolio
+import ContactPage from "./Pages/Contact.jsx";
 import { AnimatePresence, motion } from "framer-motion";
 
-// Enhanced ErrorBoundary with performance optimization
+// Enhanced Error Boundary
 class ErrorBoundary extends React.Component {
   state = { hasError: false, error: null };
   
@@ -14,11 +19,6 @@ class ErrorBoundary extends React.Component {
   
   componentDidCatch(error, errorInfo) {
     console.error('App Error:', error, errorInfo);
-    
-    // Log to analytics in production
-    if (process.env.NODE_ENV === 'production') {
-      // You can integrate with your error tracking service here
-    }
   }
   
   render() {
@@ -36,7 +36,7 @@ class ErrorBoundary extends React.Component {
                 this.setState({ hasError: false, error: null });
                 window.location.reload();
               }}
-              className="px-6 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
+              className="px-6 py-3 bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors min-h-[44px] min-w-[44px]"
             >
               Reload Page
             </button>
@@ -48,116 +48,21 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-// Optimized loading components with reduced motion support
-const LoadingFallback = React.memo(() => {
-  const [reducedMotion, setReducedMotion] = useState(false);
-  
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setReducedMotion(mediaQuery.matches);
-    
-    const handleChange = (e) => setReducedMotion(e.matches);
-    mediaQuery.addEventListener('change', handleChange);
-    
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
-  
-  return (
-    <div className="min-h-screen bg-[#030014] flex items-center justify-center">
-      <div className="text-center">
-        <div 
-          className={`w-12 h-12 border-3 border-indigo-600 border-t-transparent rounded-full mx-auto mb-4 ${
-            reducedMotion ? '' : 'animate-spin'
-          }`}
-          style={reducedMotion ? { 
-            borderColor: '#4f46e5',
-            borderTopColor: 'transparent'
-          } : {}}
-        ></div>
-        <p className="text-gray-400 text-sm">Loading...</p>
-      </div>
+// Loading Components
+const LoadingFallback = React.memo(() => (
+  <div className="min-h-screen bg-[#030014] flex items-center justify-center p-4">
+    <div className="text-center">
+      <div className="w-12 h-12 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+      <p className="text-gray-400 text-sm md:text-base">Loading portfolio...</p>
     </div>
-  );
-});
+  </div>
+));
 
-const SectionLoader = React.memo(() => {
-  const [reducedMotion, setReducedMotion] = useState(false);
-  
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setReducedMotion(mediaQuery.matches);
-    
-    const handleChange = (e) => setReducedMotion(e.matches);
-    mediaQuery.addEventListener('change', handleChange);
-    
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
-  
-  return (
-    <div className="min-h-[50vh] flex items-center justify-center">
-      <div 
-        className={`w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full ${
-          reducedMotion ? '' : 'animate-spin'
-        }`}
-        style={reducedMotion ? { 
-          borderColor: '#4f46e5',
-          borderTopColor: 'transparent'
-        } : {}}
-      ></div>
-    </div>
-  );
-});
-
-// Lazy load pages with preloading
-const Home = lazy(() => import(/* webpackPrefetch: true */ "./Pages/Home"));
-const About = lazy(() => import(/* webpackPrefetch: true */ "./Pages/About"));
-const Portofolio = lazy(() => import(/* webpackPrefetch: true */ "./Pages/Portofolio"));
-const ContactPage = lazy(() => import(/* webpackPrefetch: true */ "./Pages/Contact"));
-
-// Preload strategy for critical components
-const preloadCriticalComponents = () => {
-  if (typeof window !== 'undefined') {
-    // Preload above-the-fold components
-    const criticalComponents = [
-      import('./components/Navbar'),
-      import('./Pages/Home')
-    ];
-    
-    return Promise.allSettled(criticalComponents);
-  }
-};
-
-// Resource hints for better preloading
-const addResourceHints = () => {
-  if (typeof document !== 'undefined') {
-    // Add preconnect for external domains if you have any
-    const preconnectUrls = [
-      'https://fonts.googleapis.com',
-      'https://fonts.gstatic.com'
-    ];
-    
-    preconnectUrls.forEach(url => {
-      const link = document.createElement('link');
-      link.rel = 'preconnect';
-      link.href = url;
-      link.crossOrigin = 'true';
-      document.head.appendChild(link);
-    });
-  }
-};
-
-// Main App component with performance optimizations
+// Main App Component
 function App() {
   const [showWelcome, setShowWelcome] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
-  const [shouldPreload, setShouldPreload] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
-
-  const handleLoadingComplete = useCallback(() => {
-    startTransition(() => {
-      setShowWelcome(false);
-    });
-  }, []);
 
   // Check for reduced motion preference
   useEffect(() => {
@@ -170,83 +75,31 @@ function App() {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  // Optimized preload with priority
-  const preloadPages = useCallback(() => {
-    if (typeof window === 'undefined') return;
-    
-    const preloadStrategy = () => {
-      startTransition(() => {
-        Promise.allSettled([
-          import("./Pages/Home"),
-          import("./Pages/About"), 
-          import("./Pages/Portofolio"),
-          import("./Pages/Contact")
-        ]).catch(() => {}); // Silent fail for better UX
-      });
-    };
-
-    if ('requestIdleCallback' in window) {
-      requestIdleCallback(preloadStrategy, { timeout: 2000 });
-    } else {
-      // Fallback with shorter timeout
-      setTimeout(preloadStrategy, 100);
-    }
-  }, []);
-
-  // Preload critical components on mount
-  useEffect(() => {
-    preloadCriticalComponents();
-    addResourceHints();
-  }, []);
-
-  // Preload pages after mount
-  useEffect(() => {
-    if (shouldPreload) {
-      preloadPages();
-    }
-  }, [shouldPreload, preloadPages]);
-
-  // Main initialization effect
+  // Main initialization
   useEffect(() => {
     let mounted = true;
-    let welcomeTimer;
-    let preloadTimer;
     
     const initializeApp = () => {
       if (!mounted) return;
-      
-      // Start preloading after a short delay
-      preloadTimer = setTimeout(() => {
-        if (mounted) {
-          setShouldPreload(true);
-        }
-      }, 200);
 
-      // Auto-hide welcome screen with reduced motion consideration
       const welcomeDuration = reducedMotion ? 800 : 1500;
-      welcomeTimer = setTimeout(() => {
+      setTimeout(() => {
         if (mounted) {
-          startTransition(() => {
-            setShowWelcome(false);
-          });
+          setShowWelcome(false);
         }
       }, welcomeDuration);
 
       setIsMounted(true);
     };
 
-    // Small delay to ensure DOM is ready
     const initTimer = setTimeout(initializeApp, 50);
-
     return () => {
       mounted = false;
       clearTimeout(initTimer);
-      clearTimeout(preloadTimer);
-      clearTimeout(welcomeTimer);
     };
   }, [reducedMotion]);
 
-  // Animation configurations based on motion preference
+  // Animation configurations
   const animationProps = {
     initial: reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.98 },
     animate: reducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1 },
@@ -257,7 +110,6 @@ function App() {
     }
   };
 
-  // Early return before mount
   if (!isMounted) {
     return <LoadingFallback />;
   }
@@ -267,35 +119,19 @@ function App() {
       <div className="App bg-[#030014] min-h-screen overflow-hidden">
         <AnimatePresence mode="wait" initial={false}>
           {showWelcome ? (
-            <motion.div
-              key="welcome-screen"
-              {...animationProps}
-            >
-              <WelcomeScreen 
-                onLoadingComplete={handleLoadingComplete}
-                reducedMotion={reducedMotion}
-              />
+            <motion.div key="welcome-screen" {...animationProps}>
+              <WelcomeScreen reducedMotion={reducedMotion} />
             </motion.div>
           ) : (
-            <motion.div
-              key="main-content"
-              {...animationProps}
-            >
+            <motion.div key="main-content" {...animationProps}>
               <div className="min-h-screen">
                 <Navbar />
                 <main>
-                  <Suspense fallback={<SectionLoader />}>
-                    <Home />
-                  </Suspense>
-                  <Suspense fallback={<SectionLoader />}>
-                    <About />
-                  </Suspense>
-                  <Suspense fallback={<SectionLoader />}>
-                    <Portofolio />
-                  </Suspense>
-                  <Suspense fallback={<SectionLoader />}>
-                    <ContactPage />
-                  </Suspense>
+                  {/* ✅ ALL COMPONENTS INCLUDING ACTUAL PORTFOLIO */}
+                  <Home />
+                  <About />
+                  <Portofolio /> {/* ✅ Now using the actual Portfolio component */}
+                  <ContactPage />
                 </main>
                 <footer className="text-center py-6 px-4 text-gray-500 bg-black/30 backdrop-blur-sm border-t border-white/10 mt-20">
                   <div className="max-w-7xl mx-auto">
@@ -311,8 +147,5 @@ function App() {
     </ErrorBoundary>
   );
 }
-
-// Add display name for better dev tools
-App.displayName = 'App';
 
 export default React.memo(App);

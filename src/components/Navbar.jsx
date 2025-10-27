@@ -1,140 +1,293 @@
-import React, { useState, useEffect, useCallback, memo, useMemo } from "react";
+// ENHANCED Navbar.jsx - OPTIMIZED FOR PERFORMANCE & RESPONSIVENESS
+import React, { useState, useEffect, useCallback, memo, useMemo, useRef } from "react";
 import { Menu, X } from "lucide-react";
 
+// ✅ Custom hook for scroll detection
+const useScrollDetection = (threshold = 20) => {
+  const [scrolled, setScrolled] = useState(false);
+  const scrollTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (scrollTimeoutRef.current) return;
+      
+      scrollTimeoutRef.current = setTimeout(() => {
+        setScrolled(window.scrollY > threshold);
+        scrollTimeoutRef.current = null;
+      }, 10);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // Initial check
+    
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, [threshold]);
+
+  return scrolled;
+};
+
+// ✅ Custom hook for intersection observer
+const useIntersectionObserver = (navItems, setActiveSection) => {
+  const observerRef = useRef(null);
+
+  useEffect(() => {
+    const setupIntersectionObserver = () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+
+      const options = {
+        root: null,
+        rootMargin: '-20% 0px -70% 0px',
+        threshold: 0.1
+      };
+
+      observerRef.current = new IntersectionObserver((entries) => {
+        let mostVisibleSection = null;
+        let highestRatio = 0;
+
+        entries.forEach(entry => {
+          if (entry.isIntersecting && entry.intersectionRatio > highestRatio) {
+            highestRatio = entry.intersectionRatio;
+            mostVisibleSection = entry.target.id;
+          }
+        });
+
+        if (mostVisibleSection) {
+          setActiveSection(mostVisibleSection);
+        }
+      }, options);
+
+      // Observe all sections with case-insensitive matching
+      navItems.forEach(item => {
+        const sectionId = item.href.substring(1);
+        let section = document.getElementById(sectionId);
+        
+        // If not found, try lowercase
+        if (!section) {
+          section = document.getElementById(sectionId.toLowerCase());
+        }
+        
+        // If still not found, try to find by data attribute
+        if (!section) {
+          section = document.querySelector(`[data-section="${sectionId}"]`);
+        }
+        
+        if (section) {
+          observerRef.current.observe(section);
+        }
+      });
+    };
+
+    // Small delay to ensure sections are rendered
+    const timeoutId = setTimeout(setupIntersectionObserver, 100);
+    
+    return () => {
+      clearTimeout(timeoutId);
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [navItems, setActiveSection]);
+};
+
+// ✅ Custom hook for mobile detection
+const useMobileDetection = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    
+    let resizeTimeout;
+    const handleResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(checkMobile, 100);
+    };
+
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(resizeTimeout);
+    };
+  }, []);
+
+  return isMobile;
+};
+
+// ✅ Optimized Desktop NavItem Component
+const DesktopNavItem = memo(({ item, activeSection, scrollToSection }) => {
+  const sectionId = item.href.substring(1);
+  const isActuallyActive = activeSection.toLowerCase() === sectionId.toLowerCase();
+  
+  const handleClick = useCallback((e) => {
+    scrollToSection(e, item.href);
+  }, [scrollToSection, item.href]);
+
+  return (
+    <a
+      href={item.href}
+      onClick={handleClick}
+      className="group relative px-1 py-2 text-sm font-medium transition-all duration-300 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 rounded-lg transform-gpu will-change-transform"
+      aria-current={isActuallyActive ? "page" : undefined}
+    >
+      <span
+        className={`relative z-10 transition-all duration-300 ${
+          isActuallyActive
+            ? "bg-gradient-to-r from-[#6366f1] to-[#a855f7] bg-clip-text text-transparent font-semibold"
+            : "text-[#e2d3fd] group-hover:text-white group-hover:scale-105"
+        }`}
+      >
+        {item.label}
+      </span>
+      <span
+        className={`absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-[#6366f1] to-[#a855f7] transform origin-left transition-all duration-300 ${
+          isActuallyActive
+            ? "scale-x-100 opacity-100"
+            : "scale-x-0 opacity-0 group-hover:scale-x-100 group-hover:opacity-100"
+        }`}
+      />
+    </a>
+  );
+});
+
+DesktopNavItem.displayName = 'DesktopNavItem';
+
+// ✅ Optimized Mobile NavItem Component
+const MobileNavItem = memo(({ item, activeSection, index, isOpen, scrollToSection }) => {
+  const sectionId = item.href.substring(1);
+  const isActuallyActive = activeSection.toLowerCase() === sectionId.toLowerCase();
+  
+  const handleClick = useCallback((e) => {
+    scrollToSection(e, item.href);
+  }, [scrollToSection, item.href]);
+
+  return (
+    <a
+      href={item.href}
+      onClick={handleClick}
+      className={`block px-4 py-3 text-base font-medium transition-all duration-300 ease-out active:scale-95 border-l-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset rounded-r-lg transform-gpu will-change-transform ${
+        isActuallyActive
+          ? "bg-gradient-to-r from-[#6366f1]/10 to-[#a855f7]/10 text-white font-semibold border-[#6366f1]"
+          : "text-[#e2d3fd] hover:text-white hover:bg-white/5 border-transparent"
+      }`}
+      style={{
+        transitionDelay: isOpen ? `${index * 80}ms` : '0ms',
+        transform: isOpen ? "translateX(0)" : "translateX(-20px)",
+        opacity: isOpen ? 1 : 0,
+      }}
+      aria-current={isActuallyActive ? "page" : undefined}
+      tabIndex={isOpen ? 0 : -1}
+    >
+      {item.label}
+    </a>
+  );
+});
+
+MobileNavItem.displayName = 'MobileNavItem';
+
+// ✅ Main Navbar Component
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const [scrolled, setScrolled] = useState(false);
     const [activeSection, setActiveSection] = useState("Home");
-    const [isMobile, setIsMobile] = useState(false);
     
-    // Memoized nav items to prevent unnecessary re-renders
+    // ✅ Custom hooks for optimized state management
+    const scrolled = useScrollDetection(20);
+    const isMobile = useMobileDetection();
+    
+    // ✅ Fixed nav items with original case
     const navItems = useMemo(() => [
         { href: "#Home", label: "Home" },
         { href: "#About", label: "About" },
-        { href: "#Portofolio", label: "Portofolio" },
+        { href: "#Portfolio", label: "Portfolio" },
         { href: "#Contact", label: "Contact" },
     ], []);
 
-    // Debounced mobile detection
-    useEffect(() => {
-        const checkMobile = () => {
-            setIsMobile(window.innerWidth < 768);
-        };
-        
-        checkMobile();
-        
-        const debouncedResize = debounce(checkMobile, 100);
-        window.addEventListener('resize', debouncedResize);
-        
-        return () => window.removeEventListener('resize', debouncedResize);
-    }, []);
+    // ✅ Setup intersection observer
+    useIntersectionObserver(navItems, setActiveSection);
 
-    // FIXED: Enhanced scroll handling with proper section detection
-    useEffect(() => {
-        const handleScroll = () => {
-            setScrolled(window.scrollY > 20);
-            
-            // Simple scroll-based section detection (more reliable)
-            const scrollPosition = window.scrollY + 100;
-            
-            // Get all sections
-            const sections = navItems.map(item => ({
-                id: item.href.substring(1),
-                element: document.getElementById(item.href.substring(1)),
-                href: item.href
-            })).filter(section => section.element);
-            
-            // Find current active section
-            let currentActive = "Home";
-            
-            for (const section of sections) {
-                const element = section.element;
-                if (element) {
-                    const offsetTop = element.offsetTop;
-                    const offsetHeight = element.offsetHeight;
-                    
-                    if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
-                        currentActive = section.id;
-                        break;
-                    }
-                }
-            }
-            
-            // Fallback: Find the section closest to the viewport
-            if (currentActive === "Home") {
-                let closestSection = "Home";
-                let closestDistance = Infinity;
-                
-                for (const section of sections) {
-                    const element = section.element;
-                    if (element) {
-                        const rect = element.getBoundingClientRect();
-                        const distance = Math.abs(rect.top);
-                        
-                        if (distance < closestDistance) {
-                            closestDistance = distance;
-                            closestSection = section.id;
-                        }
-                    }
-                }
-                setActiveSection(closestSection);
-            } else {
-                setActiveSection(currentActive);
-            }
-        };
-
-        window.addEventListener("scroll", handleScroll, { passive: true });
-        handleScroll(); // Initial check
-        
-        return () => {
-            window.removeEventListener("scroll", handleScroll);
-        };
-    }, [navItems]);
-
-    // Handle body overflow when menu is open
-    useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-            document.body.style.touchAction = 'none';
-        } else {
-            document.body.style.overflow = 'unset';
-            document.body.style.touchAction = 'unset';
-        }
-
-        return () => {
-            document.body.style.overflow = 'unset';
-            document.body.style.touchAction = 'unset';
-        };
-    }, [isOpen]);
-
-    // Enhanced scroll to section with offset calculation
+    // ✅ Enhanced scroll to section with case-insensitive finding
     const scrollToSection = useCallback((e, href) => {
         e.preventDefault();
-        const sectionId = href.substring(1);
-        const section = document.getElementById(sectionId);
+        const targetId = href.substring(1);
+        
+        // ✅ Try multiple ways to find the section
+        let section = document.getElementById(targetId);
+        
+        // If not found, try lowercase
+        if (!section) {
+            section = document.getElementById(targetId.toLowerCase());
+        }
+        
+        // If still not found, try by data attribute
+        if (!section) {
+            section = document.querySelector(`[data-section="${targetId}"]`);
+        }
+        
+        // Last resort: try to find any element with similar ID
+        if (!section) {
+            const elements = document.querySelectorAll('[id]');
+            for (let element of elements) {
+                if (element.id.toLowerCase() === targetId.toLowerCase()) {
+                    section = element;
+                    break;
+                }
+            }
+        }
         
         if (section) {
             const headerHeight = isMobile ? 70 : 80;
             const sectionTop = section.offsetTop;
-            const offsetPosition = sectionTop - headerHeight;
+            const offsetPosition = Math.max(0, sectionTop - headerHeight);
 
             window.scrollTo({
                 top: offsetPosition,
                 behavior: "smooth"
             });
             
-            // Update active section immediately
-            setActiveSection(sectionId);
+            // Update active section with the actual ID found
+            setActiveSection(section.id);
         }
+        
         setIsOpen(false);
     }, [isMobile]);
 
-    // Toggle mobile menu with animation
+    // ✅ Enhanced body overflow management
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+            document.body.style.touchAction = 'none';
+            document.body.style.paddingRight = '0px'; // Prevent layout shift
+        } else {
+            document.body.style.overflow = '';
+            document.body.style.touchAction = '';
+            document.body.style.paddingRight = '';
+        }
+
+        return () => {
+            document.body.style.overflow = '';
+            document.body.style.touchAction = '';
+            document.body.style.paddingRight = '';
+        };
+    }, [isOpen]);
+
+    // ✅ Enhanced menu toggle with animation frame
     const toggleMenu = useCallback(() => {
-        setIsOpen(prev => !prev);
+        requestAnimationFrame(() => {
+            setIsOpen(prev => !prev);
+        });
     }, []);
 
-    // Close menu on escape key and outside click
+    // ✅ Enhanced event listeners with passive events
     useEffect(() => {
         const handleEscape = (e) => {
             if (e.key === 'Escape' && isOpen) {
@@ -143,13 +296,18 @@ const Navbar = () => {
         };
 
         const handleClickOutside = (e) => {
-            if (isOpen && !e.target.closest('nav') && !e.target.closest('button[aria-expanded]')) {
+            if (isOpen && 
+                !e.target.closest('nav') && 
+                !e.target.closest('button[aria-expanded]') &&
+                !e.target.closest('#mobile-menu')) {
                 setIsOpen(false);
             }
         };
 
-        document.addEventListener('keydown', handleEscape);
-        document.addEventListener('click', handleClickOutside);
+        if (isOpen) {
+            document.addEventListener('keydown', handleEscape);
+            document.addEventListener('click', handleClickOutside, { passive: true });
+        }
         
         return () => {
             document.removeEventListener('keydown', handleEscape);
@@ -157,70 +315,64 @@ const Navbar = () => {
         };
     }, [isOpen]);
 
-    // Memoized Desktop NavItem component
-    const DesktopNavItem = memo(({ item, isActive }) => (
-        <a
-            href={item.href}
-            onClick={(e) => scrollToSection(e, item.href)}
-            className="group relative px-1 py-2 text-sm font-medium touch-manipulation transition-all duration-300 active:scale-95"
-            aria-current={isActive ? "page" : undefined}
-        >
-            <span
-                className={`relative z-10 transition-all duration-300 ${
-                    isActive
-                        ? "bg-gradient-to-r from-[#6366f1] to-[#a855f7] bg-clip-text text-transparent font-semibold"
-                        : "text-[#e2d3fd] group-hover:text-white group-hover:scale-105"
+    // ✅ Memoized desktop navigation
+    const desktopNavigation = useMemo(() => (
+        <div className="hidden md:block">
+            <div className="ml-8 flex items-center space-x-6 lg:space-x-8" role="menubar">
+                {navItems.map((item) => (
+                    <DesktopNavItem 
+                        key={item.label} 
+                        item={item} 
+                        activeSection={activeSection}
+                        scrollToSection={scrollToSection}
+                    />
+                ))}
+            </div>
+        </div>
+    ), [navItems, activeSection, scrollToSection]);
+
+    // ✅ Memoized mobile navigation
+    const mobileNavigation = useMemo(() => (
+        <>
+            {/* Mobile Menu Overlay */}
+            {isOpen && (
+                <div 
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300"
+                    onClick={() => setIsOpen(false)}
+                    aria-hidden="true"
+                />
+            )}
+            
+            {/* Enhanced Mobile Menu */}
+            <div
+                id="mobile-menu"
+                className={`md:hidden fixed top-16 left-0 right-0 bg-[#030014]/95 backdrop-blur-xl border-t border-white/10 shadow-2xl transition-all duration-300 ease-in-out z-50 overflow-hidden transform-gpu ${
+                    isOpen
+                        ? "max-h-[80vh] opacity-100 translate-y-0"
+                        : "max-h-0 opacity-0 -translate-y-4 pointer-events-none"
                 }`}
+                role="menu"
+                aria-hidden={!isOpen}
             >
-                {item.label}
-            </span>
-            <span
-                className={`absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-[#6366f1] to-[#a855f7] transform origin-left transition-all duration-300 ${
-                    isActive
-                        ? "scale-x-100 opacity-100"
-                        : "scale-x-0 opacity-0 group-hover:scale-x-100 group-hover:opacity-100"
-                }`}
-            />
-        </a>
-    ));
-
-    // Memoized Mobile NavItem component
-    const MobileNavItem = memo(({ item, isActive, index, isOpen }) => (
-        <a
-            href={item.href}
-            onClick={(e) => scrollToSection(e, item.href)}
-            className={`block px-4 py-3 text-base font-medium transition-all duration-300 ease-out touch-manipulation active:scale-95 border-l-2 ${
-                isActive
-                    ? "bg-gradient-to-r from-[#6366f1] to-[#a855f7] bg-clip-text text-transparent font-semibold border-[#6366f1]"
-                    : "text-[#e2d3fd] hover:text-white border-transparent hover:border-[#6366f1]/50"
-            }`}
-            style={{
-                transitionDelay: isOpen ? `${index * 80}ms` : '0ms',
-                transform: isOpen ? "translateX(0)" : "translateX(-20px)",
-                opacity: isOpen ? 1 : 0,
-            }}
-            aria-current={isActive ? "page" : undefined}
-        >
-            {item.label}
-        </a>
-    ));
-
-    // Debounce helper function
-    const debounce = (func, wait) => {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    };
+                <div className="px-2 py-3 space-y-1">
+                    {navItems.map((item, index) => (
+                        <MobileNavItem 
+                            key={item.label} 
+                            item={item} 
+                            activeSection={activeSection}
+                            index={index}
+                            isOpen={isOpen}
+                            scrollToSection={scrollToSection}
+                        />
+                    ))}
+                </div>
+            </div>
+        </>
+    ), [isOpen, navItems, activeSection, scrollToSection]);
 
     return (
         <nav
-            className={`fixed w-full top-0 z-50 transition-all duration-500 ${
+            className={`fixed w-full top-0 z-50 transition-all duration-500 transform-gpu will-change-transform ${
                 isOpen
                     ? "bg-[#030014] backdrop-blur-xl shadow-2xl"
                     : scrolled
@@ -237,7 +389,7 @@ const Navbar = () => {
                         <a
                             href="#Home"
                             onClick={(e) => scrollToSection(e, "#Home")}
-                            className="text-xl font-bold bg-gradient-to-r from-[#a855f7] to-[#6366f1] bg-clip-text text-transparent touch-manipulation transition-all duration-300 hover:scale-105 active:scale-95"
+                            className="text-xl font-bold bg-gradient-to-r from-[#a855f7] to-[#6366f1] bg-clip-text text-transparent transition-all duration-300 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 rounded-lg px-2 py-1 transform-gpu will-change-transform"
                             aria-label="Go to homepage"
                         >
                             Portfolio
@@ -245,23 +397,13 @@ const Navbar = () => {
                     </div>
         
                     {/* Desktop Navigation */}
-                    <div className="hidden md:block">
-                        <div className="ml-8 flex items-center space-x-6 lg:space-x-8" role="menubar">
-                            {navItems.map((item) => (
-                                <DesktopNavItem 
-                                    key={item.label} 
-                                    item={item} 
-                                    isActive={activeSection === item.href.substring(1)} 
-                                />
-                            ))}
-                        </div>
-                    </div>
+                    {desktopNavigation}
         
                     {/* Mobile Menu Button */}
                     <div className="md:hidden">
                         <button
                             onClick={toggleMenu}
-                            className={`relative p-2 rounded-lg text-[#e2d3fd] hover:text-white transition-all duration-300 ease-in-out touch-manipulation active:scale-95 ${
+                            className={`relative p-2 rounded-lg text-[#e2d3fd] hover:text-white transition-all duration-300 ease-in-out active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 transform-gpu will-change-transform ${
                                 isOpen 
                                     ? "bg-[#6366f1]/10 rotate-90 scale-110" 
                                     : "bg-transparent rotate-0 scale-100 hover:bg-white/5"
@@ -280,38 +422,8 @@ const Navbar = () => {
                 </div>
             </div>
         
-            {/* Mobile Menu Overlay */}
-            {isOpen && (
-                <div 
-                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
-                    onClick={() => setIsOpen(false)}
-                    aria-hidden="true"
-                />
-            )}
-        
-            {/* Mobile Menu */}
-            <div
-                id="mobile-menu"
-                className={`md:hidden fixed top-16 left-0 right-0 bg-[#030014]/95 backdrop-blur-xl border-t border-white/10 shadow-2xl transition-all duration-300 ease-out z-50 ${
-                    isOpen
-                        ? "max-h-screen opacity-100 translate-y-0"
-                        : "max-h-0 opacity-0 -translate-y-4 pointer-events-none"
-                }`}
-                role="menu"
-                aria-hidden={!isOpen}
-            >
-                <div className="px-2 py-3 space-y-1">
-                    {navItems.map((item, index) => (
-                        <MobileNavItem 
-                            key={item.label} 
-                            item={item} 
-                            isActive={activeSection === item.href.substring(1)}
-                            index={index}
-                            isOpen={isOpen}
-                        />
-                    ))}
-                </div>
-            </div>
+            {/* Mobile Navigation */}
+            {mobileNavigation}
         </nav>
     );
 };

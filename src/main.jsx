@@ -1,10 +1,10 @@
-// src/main.jsx - COMPLETE VERSION WITHOUT REACT ROUTER
+// src/main.jsx - CLEANED & OPTIMIZED VERSION
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
 
-// Enhanced error handler with better styling
+// Enhanced error handler with better UX
 const handleRenderError = (error) => {
   console.error('Failed to render React app:', error);
   
@@ -18,12 +18,9 @@ const handleRenderError = (error) => {
         align-items: center;
         justify-content: center;
         color: white;
-        font-family: 'Poppins', sans-serif;
+        font-family: system-ui, -apple-system, sans-serif;
         text-align: center;
         padding: 2rem;
-        background-image: 
-          radial-gradient(at 40% 20%, rgba(99, 102, 241, 0.1) 0px, transparent 50%),
-          radial-gradient(at 80% 0%, rgba(168, 85, 247, 0.1) 0px, transparent 50%);
       ">
         <div style="
           background: rgba(255, 255, 255, 0.05);
@@ -80,10 +77,8 @@ const handleRenderError = (error) => {
                 font-size: 1rem;
                 font-weight: 500;
                 transition: all 0.2s ease;
-                box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.3);
+                min-height: 44px;
               "
-              onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px 0 rgba(99, 102, 241, 0.4)'"
-              onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 14px 0 rgba(99, 102, 241, 0.3)'"
             >
               🔄 Refresh Page
             </button>
@@ -100,27 +95,11 @@ const handleRenderError = (error) => {
                 font-size: 1rem;
                 font-weight: 500;
                 transition: all 0.2s ease;
+                min-height: 44px;
               "
-              onmouseover="this.style.background='rgba(255, 255, 255, 0.1)'; this.style.transform='translateY(-2px)'"
-              onmouseout="this.style.background='transparent'; this.style.transform='translateY(0)'"
             >
               🏠 Go Home
             </button>
-          </div>
-          
-          <div style="
-            margin-top: 2rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-          ">
-            <p style="
-              color: #64748b;
-              font-size: 0.875rem;
-              margin: 0;
-            ">
-              If the problem persists, please check your internet connection 
-              or try using a different browser.
-            </p>
           </div>
         </div>
       </div>
@@ -131,36 +110,76 @@ const handleRenderError = (error) => {
 // Performance monitoring
 const startTime = performance.now();
 
-try {
-  const rootElement = document.getElementById("root");
-  
-  if (!rootElement) {
-    throw new Error("Root element '#root' not found in the DOM");
-  }
+// Initialize the application
+const initializeApp = () => {
+  try {
+    const rootElement = document.getElementById("root");
+    
+    if (!rootElement) {
+      throw new Error("Root element '#root' not found in the DOM");
+    }
 
-  // Clear any existing content
-  rootElement.innerHTML = '';
-  
-  const root = ReactDOM.createRoot(rootElement);
-  
-  console.log('🚀 Starting React application...');
-  
-  root.render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  );
-  
-  const endTime = performance.now();
-  console.log(`✅ React app rendered successfully in ${(endTime - startTime).toFixed(2)}ms`);
-  
-} catch (error) {
-  const endTime = performance.now();
-  console.error(`❌ Failed to render React app after ${(endTime - startTime).toFixed(2)}ms:`, error);
-  handleRenderError(error);
+    // Clear any existing content and add loading state
+    rootElement.innerHTML = `
+      <div style="
+        min-height: 100vh;
+        background: #030014;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-family: system-ui, -apple-system, sans-serif;
+      ">
+        <div style="text-align: center;">
+          <div style="
+            width: 40px;
+            height: 40px;
+            border: 3px solid #6366f1;
+            border-top: 3px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+          "></div>
+          <p style="color: #94a3b8; font-size: 0.875rem;">Loading portfolio...</p>
+        </div>
+      </div>
+      <style>
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      </style>
+    `;
+    
+    // Create React root and render
+    const root = ReactDOM.createRoot(rootElement);
+    
+    console.log('🚀 Starting React application...');
+    
+    root.render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
+    );
+    
+    const endTime = performance.now();
+    console.log(`✅ React app rendered successfully in ${(endTime - startTime).toFixed(2)}ms`);
+    
+  } catch (error) {
+    const endTime = performance.now();
+    console.error(`❌ Failed to render React app after ${(endTime - startTime).toFixed(2)}ms:`, error);
+    handleRenderError(error);
+  }
+};
+
+// Start the application
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+  initializeApp();
 }
 
-// Add some global error handling
+// Global error handling for better debugging
 window.addEventListener('error', (event) => {
   console.error('Global error caught:', event.error);
 });
@@ -169,7 +188,9 @@ window.addEventListener('unhandledrejection', (event) => {
   console.error('Unhandled promise rejection:', event.reason);
 });
 
-// Log successful load
+// Performance monitoring
 window.addEventListener('load', () => {
+  const loadTime = performance.now();
   console.log('🎉 Portfolio website loaded successfully!');
+  console.log(`📊 Total load time: ${loadTime.toFixed(2)}ms`);
 });

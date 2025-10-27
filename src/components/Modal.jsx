@@ -393,7 +393,10 @@ const ProjectCardModal = memo(({
 
   // Loading component for buttons
   const LoadingSpinner = () => (
-    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+    <div 
+      className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+      style={{ animation: 'spin 1s linear infinite' }}
+    />
   );
 
   return (
@@ -476,14 +479,17 @@ const ProjectCardModal = memo(({
               </div>
 
               {/* Content Area */}
-              <div className="max-h-[70vh] overflow-y-auto custom-scrollbar">
+              <div className="max-h-[70vh] overflow-y-auto" style={customScrollbarStyle}>
                 {/* Image/Media Section */}
                 {image && (
                   <div className="p-4 sm:p-6 pb-0">
                     <div className="rounded-lg overflow-hidden border border-white/10 bg-black/20 relative aspect-video">
                       {!imageLoaded && (
                         <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
-                          <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                          <div 
+                            className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full"
+                            style={{ animation: 'spin 1s linear infinite' }}
+                          />
                         </div>
                       )}
                       <img 
@@ -611,40 +617,79 @@ const ProjectCardModal = memo(({
           </div>
         )}
 
-        {/* Enhanced CSS */}
-        <style jsx>{`
-          .modal-open {
-            overflow: hidden;
-          }
-          
-          .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-          }
-          
-          .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 3px;
-          }
-          
-          .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 3px;
-          }
-          
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.3);
-          }
-          
-          @media (prefers-reduced-motion: reduce) {
-            .transition-all, .transform {
-              transition: none !important;
+        {/* ✅ FIXED: Move inline styles to regular style tag to avoid jsx prop warning */}
+        <style>
+          {`
+            .modal-open {
+              overflow: hidden;
             }
-          }
-        `}</style>
+            
+            .custom-scrollbar::-webkit-scrollbar {
+              width: 6px;
+            }
+            
+            .custom-scrollbar::-webkit-scrollbar-track {
+              background: rgba(255, 255, 255, 0.05);
+              border-radius: 3px;
+            }
+            
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+              background: rgba(255, 255, 255, 0.2);
+              border-radius: 3px;
+            }
+            
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+              background: rgba(255, 255, 255, 0.3);
+            }
+            
+            @keyframes spin {
+              from {
+                transform: rotate(0deg);
+              }
+              to {
+                transform: rotate(360deg);
+              }
+            }
+            
+            @media (prefers-reduced-motion: reduce) {
+              .transition-all, .transform {
+                transition: none !important;
+              }
+            }
+          `}
+        </style>
       </>
     </ModalErrorBoundary>
   );
 });
+
+// Custom scrollbar styles as object
+const customScrollbarStyle = {
+  scrollbarWidth: 'thin',
+  scrollbarColor: 'rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05)',
+};
+
+// Add custom scrollbar styles for Webkit browsers
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = `
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 3px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+  `;
+  document.head.appendChild(style);
+}
 
 // PropTypes
 ProjectCardModal.propTypes = {

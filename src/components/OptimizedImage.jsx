@@ -170,12 +170,16 @@ const OptimizedImage = ({
       {/* Skeleton Loading */}
       {shouldShowSkeleton && (
         <div 
-          className={`absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 animate-pulse flex items-center justify-center z-10 ${
+          className={`absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center z-10 ${
             hasValidDimensions ? '' : 'h-full'
           }`}
+          style={{ animation: 'pulse 2s ease-in-out infinite' }}
           aria-hidden="true"
         >
-          <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+          <div 
+            className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full"
+            style={{ animation: 'spin 1s linear infinite' }}
+          />
         </div>
       )}
 
@@ -215,7 +219,6 @@ const OptimizedImage = ({
             sizes={sizes}
             srcSet={srcSet}
             loading={priority ? "eager" : "lazy"}
-            decoding="async"
             onLoad={handleLoad}
             onError={handleError}
             className={`w-full h-full transition-all duration-700 ${
@@ -243,7 +246,10 @@ const OptimizedImage = ({
             aria-hidden="true"
           >
             <div className="text-gray-500 text-sm">
-              <div className="w-6 h-6 border-2 border-gray-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+              <div 
+                className="w-6 h-6 border-2 border-gray-600 border-t-transparent rounded-full mx-auto mb-2"
+                style={{ animation: 'spin 1s linear infinite' }}
+              />
               Loading...
             </div>
           </div>
@@ -269,6 +275,28 @@ const OptimizedImage = ({
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {isLoading ? `Loading image: ${alt}` : hasError ? `Failed to load image: ${alt}` : `Image loaded: ${alt}`}
       </div>
+
+      {/* ✅ FIXED: Add CSS animations via style tag to avoid jsx prop warning */}
+      <style>
+        {`
+          @keyframes pulse {
+            0%, 100% {
+              opacity: 1;
+            }
+            50% {
+              opacity: 0.7;
+            }
+          }
+          @keyframes spin {
+            from {
+              transform: rotate(0deg);
+            }
+            to {
+              transform: rotate(360deg);
+            }
+          }
+        `}
+      </style>
     </div>
   );
 };

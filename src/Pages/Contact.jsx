@@ -59,7 +59,11 @@ const ContactPage = () => {
   }, [isMobile, prefersReducedMotion, mounted]);
 
   return (
-    <div className="min-h-screen py-8 lg:py-16 text-white overflow-hidden bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014] relative" id="Contact">
+    // ✅ FIXED: Added proper section structure and navbar padding
+    <section 
+      id="Contact" 
+      className="min-h-screen py-8 lg:py-16 text-white overflow-hidden bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014] relative scroll-mt-16"
+    >
       {/* Enhanced background decoration from About page */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-[#6366f1] rounded-full blur-3xl opacity-10 animate-pulse"></div>
@@ -71,7 +75,7 @@ const ContactPage = () => {
           <div className="w-full h-full" style={{
             backgroundImage: `linear-gradient(#6366f1 1px, transparent 1px), linear-gradient(90deg, #6366f1 1px, transparent 1px)`,
             backgroundSize: '40px 40px',
-            animation: 'grid-move 20s linear infinite'
+            animation: prefersReducedMotion ? 'none' : 'grid-move 20s linear infinite'
           }}></div>
         </div>
       </div>
@@ -182,9 +186,28 @@ const ContactPage = () => {
           .animation-delay-2000 {
             animation-delay: 2s;
           }
+          
+          /* Reduced motion support */
+          @media (prefers-reduced-motion: reduce) {
+            .animate-pulse,
+            .animate-bounce,
+            .animate-ping,
+            .animate-spin {
+              animation: none !important;
+            }
+            
+            .transition-all,
+            .transform {
+              transition: none !important;
+            }
+            
+            .hover\\:scale-110:hover {
+              transform: none !important;
+            }
+          }
         `
       }} />
-    </div>
+    </section>
   );
 };
 
