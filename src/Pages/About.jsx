@@ -1,8 +1,9 @@
-import React, { useEffect, memo, useMemo, useState, useCallback, useRef, startTransition } from "react"
-import { Code, Award, Globe, ArrowUpRight, Sparkles, UserCheck, Download, Eye, Star, Zap, Heart, Mouse } from "lucide-react"
+// src/Pages/About.jsx
+import React, { useEffect, memo, useMemo, useState, useCallback, useRef } from "react";
+import { Code, Award, Globe, ArrowUpRight, Sparkles, UserCheck, Download, Eye, Star, Zap, Heart } from "lucide-react";
 
-// Constants with Object.freeze for better performance
-const STATS_CONFIG = Object.freeze({
+// Constants
+const STATS_CONFIG = {
   COUNT_DURATION: 1500,
   COUNT_STEPS: 60,
   DELAY_BETWEEN_CARDS: 200,
@@ -13,61 +14,32 @@ const STATS_CONFIG = Object.freeze({
     BUTTONS: 500,
     STATS: 600
   }
-});
-
-// Preload critical images
-const preloadImage = (src) => {
-  if (typeof window !== 'undefined') {
-    const img = new Image();
-    img.src = src;
-  }
 };
 
-// Enhanced Memoized Components with error boundaries and display names
+// Memoized Components
 const Header = memo(() => (
   <div className="text-center mb-8 lg:mb-12 px-4" data-aos="fade-down">
     <div className="inline-block relative group mb-4">
       <div className="absolute -inset-3 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-full opacity-10 blur-xl group-hover:opacity-20 transition-opacity duration-500"></div>
-      <h2 className="relative text-3xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#a855f7] font-[Poppins] tracking-tight">
+      <h2 className="relative text-3xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#a855f7] tracking-tight">
         About Me
       </h2>
     </div>
-    <p className="text-lg lg:text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed font-[Inter] font-light" data-aos="fade-up" data-aos-delay="100">
+    <p className="text-lg lg:text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed font-light" data-aos="fade-up" data-aos-delay="100">
       Crafting <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#6366f1] to-[#a855f7] font-semibold">digital experiences</span> that blend aesthetics with functionality
     </p>
   </div>
 ));
-Header.displayName = 'Header';
 
 const ProfileImage = memo(() => {
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const imageRef = useRef();
 
   const handleMouseEnter = useCallback(() => setIsHovered(true), []);
   const handleMouseLeave = useCallback(() => setIsHovered(false), []);
   const handleImageLoad = useCallback(() => setImageLoaded(true), []);
   const handleImageError = useCallback(() => setImageError(true), []);
-
-  // Preload image with Intersection Observer for lazy loading
-  useEffect(() => {
-    const img = imageRef.current;
-    if (!img) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !imageLoaded && !imageError) {
-          img.src = "/Cover.png";
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.1, rootMargin: '50px' }
-    );
-
-    observer.observe(img);
-    return () => observer.disconnect();
-  }, [imageLoaded, imageError]);
 
   return (
     <div className="flex justify-center items-center p-4 lg:p-8" data-aos="zoom-in" data-aos-delay="200">
@@ -95,7 +67,7 @@ const ProfileImage = memo(() => {
                 {/* Image with enhanced hover effects and error handling */}
                 {!imageError ? (
                   <img
-                    ref={imageRef}
+                    src="/images/Cover.png"
                     alt="Koeurn - Graphic Designer"
                     className={`w-full h-full object-cover transform transition-all duration-700 group-hover:scale-110 ${
                       imageLoaded ? 'opacity-100' : 'opacity-0'
@@ -145,7 +117,7 @@ const ProfileImage = memo(() => {
           <div className="absolute -bottom-3 -right-3 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-xl p-3 shadow-2xl transform transition-all duration-300 group-hover:scale-110 group-hover:rotate-6" style={{
             boxShadow: '0 0 20px rgba(168, 85, 247, 0.5)'
           }}>
-            <div className="flex items-center gap-2 text-white text-sm font-semibold font-[Inter]">
+            <div className="flex items-center gap-2 text-white text-sm font-semibold">
               <div className="relative">
                 <UserCheck className="w-4 h-4 animate-pulse" />
                 <div className="absolute top-0 left-0 w-1.5 h-1.5 bg-green-400 rounded-full animate-ping"></div>
@@ -162,7 +134,6 @@ const ProfileImage = memo(() => {
     </div>
   );
 });
-ProfileImage.displayName = 'ProfileImage';
 
 const StatCard = memo(({ icon: Icon, color, value, label, description, index }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -177,7 +148,6 @@ const StatCard = memo(({ icon: Icon, color, value, label, description, index }) 
   useEffect(() => {
     if (localMounted && value > 0) {
       const timer = setTimeout(() => {
-        // Optimized counting animation with requestAnimationFrame
         let startTime = null;
         const duration = STATS_CONFIG.COUNT_DURATION;
         
@@ -186,7 +156,6 @@ const StatCard = memo(({ icon: Icon, color, value, label, description, index }) 
           const elapsed = currentTime - startTime;
           const progress = Math.min(elapsed / duration, 1);
           
-          // Ease-out function for smooth ending
           const easedProgress = 1 - Math.pow(1 - progress, 3);
           setCount(Math.floor(value * easedProgress));
           
@@ -239,19 +208,19 @@ const StatCard = memo(({ icon: Icon, color, value, label, description, index }) 
                 isHovered ? 'translate-x-full' : '-translate-x-full'
               }`}></div>
             </div>
-            <span className="text-2xl lg:text-3xl font-bold text-white drop-shadow-lg font-[Poppins] bg-gradient-to-br from-white to-gray-300 bg-clip-text text-transparent">
+            <span className="text-2xl lg:text-3xl font-bold text-white drop-shadow-lg bg-gradient-to-br from-white to-gray-300 bg-clip-text text-transparent">
               {count}+
             </span>
           </div>
 
           <div>
-            <p className="text-sm uppercase tracking-widest text-gray-300 mb-3 font-semibold font-[Inter]" style={{
+            <p className="text-sm uppercase tracking-widest text-gray-300 mb-3 font-semibold" style={{
               letterSpacing: '0.1em'
             }}>
               {label}
             </p>
             <div className="flex items-center justify-between">
-              <p className="text-base text-gray-400 leading-relaxed font-[Inter] font-light">
+              <p className="text-base text-gray-400 leading-relaxed font-light">
                 {description}
               </p>
               <ArrowUpRight className={`w-5 h-5 transition-all duration-300 flex-shrink-0 ml-3 transform ${
@@ -264,31 +233,6 @@ const StatCard = memo(({ icon: Icon, color, value, label, description, index }) 
     </div>
   );
 });
-StatCard.displayName = 'StatCard';
-
-const ScrollIndicator = memo(() => (
-  <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-20 animate-bounce" data-aos="fade-up" data-aos-delay="1000">
-    <div className="flex flex-col items-center gap-1">
-      <Mouse className="w-5 h-5 text-gray-400" />
-      <div className="w-px h-6 bg-gradient-to-b from-[#6366f1] to-transparent"></div>
-      <span className="text-xs text-gray-400 font-[Inter]">Scroll to explore</span>
-    </div>
-  </div>
-));
-ScrollIndicator.displayName = 'ScrollIndicator';
-
-const LoadingSpinner = memo(() => (
-  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014]">
-    <div className="text-center">
-      <div className="relative">
-        <div className="w-12 h-12 border-3 border-[#6366f1] border-t-transparent rounded-full animate-spin mx-auto"></div>
-        <div className="absolute top-0 left-0 w-12 h-12 border-3 border-[#a855f7] border-b-transparent rounded-full animate-spin mx-auto opacity-50"></div>
-      </div>
-      <p className="mt-3 text-gray-300 text-sm font-[Inter]">Loading portfolio...</p>
-    </div>
-  </div>
-));
-LoadingSpinner.displayName = 'LoadingSpinner';
 
 // Optimized button components
 const DownloadCVButton = memo(({ onClick }) => (
@@ -303,13 +247,12 @@ const DownloadCVButton = memo(({ onClick }) => (
     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 transition-all duration-1000 group-hover:translate-x-full"></div>
     
     <Download className="w-4 h-4 sm:w-5 sm:h-5 group-hover:animate-bounce relative z-10 flex-shrink-0" />
-    <span className="relative z-10 font-[Inter] font-semibold whitespace-nowrap">Download CV</span>
+    <span className="relative z-10 font-semibold whitespace-nowrap">Download CV</span>
     
     {/* Floating hearts */}
     <Heart className="absolute -top-1 -right-1 w-2 h-2 sm:w-3 sm:h-3 text-pink-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-bounce" />
   </button>
 ));
-DownloadCVButton.displayName = 'DownloadCVButton';
 
 const ViewWorkButton = memo(({ onClick }) => (
   <button 
@@ -320,24 +263,20 @@ const ViewWorkButton = memo(({ onClick }) => (
     <div className="absolute inset-0 bg-gradient-to-r from-[#a855f7] to-[#ec4899] opacity-0 group-hover:opacity-10 transition-opacity duration-500"></div>
     
     <Eye className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform duration-300 relative z-10 flex-shrink-0" />
-    <span className="relative z-10 font-[Inter] font-semibold whitespace-nowrap">View Work</span>
+    <span className="relative z-10 font-semibold whitespace-nowrap">View Work</span>
     
     {/* Border animation */}
     <div className="absolute inset-0 rounded-xl border-2 border-transparent bg-gradient-to-r from-[#6366f1] via-[#a855f7] to-[#ec4899] bg-clip-border opacity-0 group-hover:opacity-100 transition-opacity duration-500 -m-0.5"></div>
   </button>
 ));
-ViewWorkButton.displayName = 'ViewWorkButton';
 
 const AboutPage = () => {
   const [mounted, setMounted] = useState(false);
-  const [activeSection, setActiveSection] = useState('about');
   const [isReducedMotion, setIsReducedMotion] = useState(false);
   const scrollThrottleRef = useRef();
 
   useEffect(() => {
-    startTransition(() => {
-      setMounted(true);
-    });
+    setMounted(true);
     
     // Check for reduced motion preference
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -348,16 +287,6 @@ const AboutPage = () => {
       if (scrollThrottleRef.current) return;
       
       scrollThrottleRef.current = requestAnimationFrame(() => {
-        const sections = ['About', 'Portfolio', 'Portofolio'];
-        const scrollPosition = window.scrollY + 100;
-
-        for (const section of sections) {
-          const element = document.getElementById(section);
-          if (element && scrollPosition >= element.offsetTop) {
-            setActiveSection(section.toLowerCase());
-            break; // Only set one active section
-          }
-        }
         scrollThrottleRef.current = null;
       });
     };
@@ -371,87 +300,91 @@ const AboutPage = () => {
     };
   }, []);
 
-  // Memoized calculations with improved experience calculation and error handling
+  // Memoized calculations
   const { totalProjects, totalCertificates, YearExperience } = useMemo(() => {
     if (!mounted) return { totalProjects: 0, totalCertificates: 0, YearExperience: 0 };
     
     try {
-      const storedProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-      const storedCertificates = JSON.parse(localStorage.getItem("certificates") || "[]");
+      let storedProjects = [];
+      let storedCertificates = [];
       
-      // Improved experience calculation with fallback
+      try {
+        storedProjects = JSON.parse(localStorage.getItem("projects") || "[]");
+        storedCertificates = JSON.parse(localStorage.getItem("certificates") || "[]");
+      } catch (storageError) {
+        console.warn("LocalStorage access failed:", storageError);
+        storedProjects = [];
+        storedCertificates = [];
+      }
+      
+      // Experience calculation
       let experience = 0;
       try {
         const startDate = new Date("2024-11-06");
         const today = new Date();
         experience = today.getFullYear() - startDate.getFullYear();
         
-        // Adjust if current month/day is before start month/day
         if (today.getMonth() < startDate.getMonth() || 
             (today.getMonth() === startDate.getMonth() && today.getDate() < startDate.getDate())) {
           experience--;
         }
       } catch (dateError) {
         console.warn("Date calculation failed, using fallback experience:", dateError);
-        experience = 1; // Fallback experience
+        experience = 1;
       }
 
       return {
-        totalProjects: storedProjects?.length || 0,
-        totalCertificates: storedCertificates?.length || 0,
-        YearExperience: Math.max(experience, 0) // Ensure non-negative
+        totalProjects: storedProjects?.length || 6,
+        totalCertificates: storedCertificates?.length || 3,
+        YearExperience: Math.max(experience, 1)
       };
     } catch (error) {
       console.error("Error calculating stats:", error);
       return {
-        totalProjects: 0,
-        totalCertificates: 0,
-        YearExperience: 0
+        totalProjects: 6,
+        totalCertificates: 3,
+        YearExperience: 1
       };
     }
   }, [mounted]);
 
-  // Memoized stats data with fallback values
+  // Memoized stats data
   const statsData = useMemo(() => [
     {
       icon: Code,
       color: "from-[#6366f1] to-[#8b5cf6]",
-      value: totalProjects || 0,
+      value: totalProjects,
       label: "Projects",
       description: "Successful designs"
     },
     {
       icon: Award,
       color: "from-[#a855f7] to-[#ec4899]",
-      value: totalCertificates || 0,
+      value: totalCertificates,
       label: "Certificates",
       description: "Achievements earned"
     },
     {
       icon: Globe,
       color: "from-[#8b5cf6] to-[#6366f1]",
-      value: YearExperience || 0,
+      value: YearExperience,
       label: "Years Exp",
       description: "Design excellence"
     },
   ], [totalProjects, totalCertificates, YearExperience]);
 
   const handleViewWork = useCallback(() => {
-    const portfolioSection = document.getElementById('Portfolio') || document.getElementById('Portofolio');
+    const portfolioSection = document.getElementById('Portofolio');
     if (portfolioSection) {
       portfolioSection.scrollIntoView({ 
         behavior: 'smooth',
         block: 'start'
       });
-    } else {
-      // Fallback: scroll to top if section not found
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, []);
 
   const handleDownloadCV = useCallback((e) => {
     e.preventDefault();
-    // Add download tracking with error handling
     try {
       console.log('CV download initiated');
       window.open("https://drive.google.com/file/d/1qJ7awhiMQMHxmhZu5D8ySG3DvtQx_yLK/view?usp=drive_link", '_blank', 'noopener,noreferrer');
@@ -460,12 +393,30 @@ const AboutPage = () => {
     }
   }, []);
 
-  // Preload critical resources
+  // Initialize AOS
   useEffect(() => {
-    if (mounted) {
-      preloadImage("/Cover.png");
-    }
-  }, [mounted]);
+    if (!mounted) return;
+
+    const initAOS = () => {
+      if (typeof AOS !== 'undefined') {
+        AOS.init({
+          once: true,
+          offset: 50,
+          duration: 800,
+          easing: 'ease-out-cubic',
+          disable: isReducedMotion
+        });
+      }
+    };
+
+    const timer = setTimeout(initAOS, 100);
+    return () => {
+      clearTimeout(timer);
+      if (typeof AOS !== 'undefined') {
+        AOS.refresh();
+      }
+    };
+  }, [mounted, isReducedMotion]);
 
   // Memoized background elements
   const backgroundElements = useMemo(() => (
@@ -482,7 +433,17 @@ const AboutPage = () => {
   ), [isReducedMotion]);
 
   if (!mounted) {
-    return <LoadingSpinner />;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014]">
+        <div className="text-center">
+          <div className="relative">
+            <div className="w-12 h-12 border-3 border-[#6366f1] border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <div className="absolute top-0 left-0 w-12 h-12 border-3 border-[#a855f7] border-b-transparent rounded-full animate-spin mx-auto opacity-50"></div>
+          </div>
+          <p className="mt-3 text-gray-300 text-sm">Loading portfolio...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -500,7 +461,7 @@ const AboutPage = () => {
             {/* Left Side - Content */}
             <div className="w-full lg:w-1/2 space-y-6 lg:space-y-8 text-center lg:text-left order-2 lg:order-1">
               <div data-aos={!isReducedMotion ? "fade-right" : undefined} data-aos-delay={!isReducedMotion ? "200" : undefined}>
-                <h1 className="text-3xl lg:text-5xl xl:text-6xl font-bold mb-4 font-[Poppins] tracking-tight">
+                <h1 className="text-3xl lg:text-5xl xl:text-6xl font-bold mb-4 tracking-tight">
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 block leading-tight">
                     Koeurn
                   </span>
@@ -510,22 +471,22 @@ const AboutPage = () => {
                 </h1>
               </div>
               
-              <p className="text-lg lg:text-xl text-gray-300 leading-relaxed font-[Inter] font-light" data-aos={!isReducedMotion ? "fade-right" : undefined} data-aos-delay={!isReducedMotion ? "300" : undefined}>
+              <p className="text-lg lg:text-xl text-gray-300 leading-relaxed font-light" data-aos={!isReducedMotion ? "fade-right" : undefined} data-aos-delay={!isReducedMotion ? "300" : undefined}>
                 Passionate about creating <span className="text-white font-semibold bg-gradient-to-r from-[#6366f1] to-[#a855f7] bg-clip-text text-transparent">user-centered designs</span> that blend aesthetics with functionality.
               </p>
 
               {/* Description section */}
               <div className="bg-gray-900/60 backdrop-blur-2xl rounded-xl p-6 border border-white/10 hover:border-white/20 transition-all duration-500 hover:shadow-xl group cursor-pointer" data-aos={!isReducedMotion ? "fade-right" : undefined} data-aos-delay={!isReducedMotion ? "400" : undefined}>
-                <h3 className="text-xl font-semibold text-white mb-4 flex items-center justify-center lg:justify-start gap-2 font-[Poppins]">
+                <h3 className="text-xl font-semibold text-white mb-4 flex items-center justify-center lg:justify-start gap-2">
                   <Sparkles className="w-5 h-5 text-[#a855f7] group-hover:rotate-180 transition-transform duration-500" />
                   My Approach
                 </h3>
-                <p className="text-base text-gray-300 leading-relaxed font-[Inter] font-light">
+                <p className="text-base text-gray-300 leading-relaxed font-light">
                   I craft <span className="text-white font-medium">user-focused designs</span> that captivate and communicate effectively. With attention to detail and creative problem-solving, I transform ideas into visually compelling experiences.
                 </p>
               </div>
 
-              {/* Enhanced CTA Buttons - Beautiful & Responsive */}
+              {/* Enhanced CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full" data-aos={!isReducedMotion ? "fade-up" : undefined} data-aos-delay={!isReducedMotion ? "500" : undefined}>
                 <DownloadCVButton onClick={handleDownloadCV} />
                 <ViewWorkButton onClick={handleViewWork} />
@@ -554,30 +515,27 @@ const AboutPage = () => {
           {/* Additional Info Section */}
           <div className="mt-16 lg:mt-20 grid grid-cols-1 xl:grid-cols-2 gap-8" data-aos={!isReducedMotion ? "fade-up" : undefined} data-aos-delay={!isReducedMotion ? "600" : undefined}>
             <div className="bg-gray-900/60 backdrop-blur-2xl rounded-xl p-6 border border-white/10 hover:border-white/20 transition-all duration-500 hover:shadow-xl group cursor-pointer">
-              <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2 font-[Poppins]">
+              <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-[#6366f1] group-hover:rotate-180 transition-transform duration-500" />
                 Design Philosophy
               </h3>
-              <p className="text-base text-gray-300 leading-relaxed font-[Inter] font-light">
+              <p className="text-base text-gray-300 leading-relaxed font-light">
                 I believe in creating designs that not only look beautiful but also serve a purpose. Every element should have intention, and every design should tell a story.
               </p>
             </div>
             
             <div className="bg-gray-900/60 backdrop-blur-2xl rounded-xl p-6 border border-white/10 hover:border-white/20 transition-all duration-500 hover:shadow-xl group cursor-pointer">
-              <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2 font-[Poppins]">
+              <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-[#a855f7] group-hover:scale-110 transition-transform duration-500" />
                 What I Offer
               </h3>
-              <p className="text-base text-gray-300 leading-relaxed font-[Inter] font-light">
+              <p className="text-base text-gray-300 leading-relaxed font-light">
                 From branding and visual identity to digital graphics, I deliver comprehensive design solutions that elevate brands and engage target audiences.
               </p>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Scroll Indicator */}
-      {!isReducedMotion && <ScrollIndicator />}
 
       {/* Enhanced CSS Animations with reduced motion support */}
       <style>{`

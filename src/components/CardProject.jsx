@@ -1,350 +1,171 @@
-import React, { useState, useCallback, memo, useMemo, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight, Eye, Sparkles, Palette, Figma, Image, ExternalLink } from 'lucide-react';
-import PropTypes from 'prop-types';
+// components/CardProject.jsx
+import React, { memo, useState, useCallback } from 'react';
 
-// Custom hook for intersection observer
-const useInView = (options = {}) => {
-  const [isInView, setIsInView] = useState(false);
-  const ref = useRef();
-  
-  useEffect(() => {
-    const observer = new IntersectionObserver(([entry]) => {
-      setIsInView(entry.isIntersecting);
-    }, {
-      threshold: 0.1,
-      ...options
-    });
-    
-    if (ref.current) observer.observe(ref.current);
-    
-    return () => observer.disconnect();
-  }, [options]);
-  
-  return [ref, isInView];
-};
-
-const CardProject = memo(({ 
-  Img, 
-  Title, 
-  Description, 
-  id, 
-  technologies = [], 
-  prototypeLink, 
-  behanceLink,
-  category = "Design",
-  status = "available",
-  priority = false,
-  index = 0
-}) => {
-  const [imageState, setImageState] = useState({
-    loaded: false,
-    error: false,
-    naturalAspectRatio: 4/3 // Keep original aspect ratio
-  });
+const ProjectImage = memo(({ src, alt, onLoad, onError, onClick }) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const [ref, isInView] = useInView({ threshold: 0.1 });
-  const imgRef = useRef(null);
 
-  // Determine loading strategy
-  const loadingStrategy = useMemo(() => {
-    if (priority || index < 3) return 'eager';
-    return 'lazy';
-  }, [priority, index]);
+  const handleLoad = useCallback(() => {
+    setImageLoaded(true);
+    onLoad?.();
+  }, [onLoad]);
 
-  // Memoized category icons
-  const categoryIcons = useMemo(() => ({
-    Design: Sparkles,
-    Web: Palette,
-    Brand: Image,
-    Print: Figma,
-    default: Sparkles
-  }), []);
+  const handleError = useCallback(() => {
+    setImageLoaded(true);
+    onError?.();
+  }, [onError]);
 
-  const CategoryIcon = categoryIcons[category] || categoryIcons.default;
-
-  const handleDetails = useCallback((e) => {
-    if (!id || status === "unavailable") {
-      e.preventDefault();
-    }
-  }, [id, status]);
-
-  const handleImageLoad = useCallback((e) => {
-    const img = e.target;
-    if (img.naturalWidth && img.naturalHeight) {
-      setImageState(prev => ({
-        ...prev,
-        loaded: true,
-        error: false,
-        naturalAspectRatio: img.naturalWidth / img.naturalHeight
-      }));
-    } else {
-      setImageState(prev => ({
-        ...prev,
-        loaded: true,
-        error: false
-      }));
-    }
-  }, []);
-
-  const handleImageError = useCallback(() => {
-    setImageState(prev => ({
-      ...prev,
-      loaded: true,
-      error: true
-    }));
-  }, []);
-
-  const stopPropagation = useCallback((e) => {
+  const handleClick = useCallback((e) => {
+    e.preventDefault();
     e.stopPropagation();
-  }, []);
-
-  const handleMouseEnter = useCallback(() => {
-    setIsHovered(true);
-  }, []);
-
-  const handleMouseLeave = useCallback(() => {
-    setIsHovered(false);
-  }, []);
-
-  // Memoized technology tags
-  const technologyTags = useMemo(() => {
-    const visibleTechs = technologies.slice(0, 3);
-    const remainingCount = technologies.length - 3;
-    
-    return {
-      visible: visibleTechs,
-      remaining: remainingCount > 0 ? remainingCount : 0
-    };
-  }, [technologies]);
-
-  // Generate fallback image
-  const fallbackImage = useMemo(() => {
-    const colors = {
-      Design: '8b5cf6',
-      Web: 'ec4899', 
-      Brand: 'f59e0b',
-      Print: '10b981',
-      default: '6b7280'
-    };
-    const color = colors[category] || colors.default;
-    const text = encodeURIComponent(Title);
-    return `https://via.placeholder.com/600x400/${color}/ffffff?text=${text}`;
-  }, [Title, category]);
-
-  const isProjectAvailable = id && status === "available";
-  const imageSource = imageState.error ? fallbackImage : Img;
+    onClick?.();
+  }, [onClick]);
 
   return (
     <div 
-      ref={ref}
-      className="group relative w-full cursor-pointer"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      className="relative aspect-[4/3] w-full overflow-hidden bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-t-2xl cursor-pointer group performance-optimized"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      aria-label={`View full size image of ${alt}`}
+      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleClick(e)}
     >
-      <div className="relative overflow-hidden rounded-xl glass-morphism shadow-lg transition-all duration-300 hover:shadow-purple-500/20 border border-white/10 bg-gray-900/20 hover:bg-gray-900/30 backdrop-blur-sm">
-        
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl" />
-        
-        <div className="relative p-3 sm:p-4 z-10">
+      {src ? (
+        <>
+          <img
+            src={src}
+            alt={alt}
+            className={`w-full h-full object-cover transition-all duration-700 ease-out ${
+              isHovered ? 'scale-110 rotate-1' : 'scale-100 rotate-0'
+            } ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+            onLoad={handleLoad}
+            onError={handleError}
+            loading="lazy"
+            decoding="async"
+          />
           
-          {/* Image Section with Dynamic Aspect Ratio */}
-          <Link
-            to={isProjectAvailable ? `/project/${id}` : '#'}
-            onClick={handleDetails}
-            className="block relative overflow-hidden rounded-lg mb-3 group/image"
-            aria-label={`View ${Title} project details`}
-          >
-            <div 
-              className="relative overflow-hidden rounded-lg bg-gradient-to-br from-gray-800/30 to-gray-900/30 border border-white/5"
-              style={{ paddingBottom: `${(1 / imageState.naturalAspectRatio) * 100}%` }}
-            >
-              {/* Skeleton Loader */}
-              <div className={`absolute inset-0 transition-all duration-500 ${
-                imageState.loaded ? 'opacity-0 scale-105' : 'opacity-100 scale-100'
-              }`}>
-                <div className="skeleton w-full h-full rounded-lg bg-gradient-to-r from-gray-700/50 to-gray-600/50 animate-pulse" />
-              </div>
-              
-              {/* Main Image - Preserve Original Aspect Ratio */}
-              {isInView && imageSource && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <img
-                    ref={imgRef}
-                    src={imageSource}
-                    alt={`${Title} - ${category} project`}
-                    loading={loadingStrategy}
-                    decoding="async"
-                    className={`max-w-full max-h-full object-contain transition-all duration-700 ${
-                      imageState.loaded ? 'opacity-100 scale-100' : 'opacity-0 scale-110'
-                    } ${isHovered ? 'scale-105' : 'scale-100'}`}
-                    onLoad={handleImageLoad}
-                    onError={handleImageError}
-                  />
-                </div>
-              )}
-              
-              <div className={`absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/20 to-transparent transition-all duration-500 ${
-                isHovered ? 'opacity-80' : 'opacity-60'
-              } rounded-lg`} />
-            </div>
-            
-            {/* Badge */}
-            <div className="absolute top-2 left-2 z-20 transform transition-transform duration-300 group-hover/image:scale-110">
-              <div className="flex items-center gap-1 px-2 py-1 bg-black/90 backdrop-blur-md rounded-lg border border-white/10 text-xs shadow-lg">
-                <CategoryIcon className="w-3 h-3 text-pink-400" />
-                <span className="text-white/90 font-medium">{category}</span>
+          {/* Loading State - Hidden as requested */}
+          {!imageLoaded && (
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
+              <div className="text-center text-slate-500 opacity-0">
+                <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                <p className="text-sm">Loading...</p>
               </div>
             </div>
+          )}
 
-            {/* Action Icons */}
-            <div className={`absolute top-2 right-2 z-20 transition-all duration-300 ${
-              isHovered ? 'opacity-100 scale-100' : 'opacity-70 scale-95'
-            }`}>
-              <div className="flex gap-1">
-                <div className="p-1.5 bg-black/90 backdrop-blur-md rounded-lg border border-white/10 shadow-lg transition-transform duration-200 hover:scale-110">
-                  <Eye className="w-3 h-3 text-white" />
-                </div>
-                {prototypeLink && (
-                  <a
-                    href={prototypeLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-1.5 bg-black/90 backdrop-blur-md rounded-lg border border-white/10 shadow-lg transition-transform duration-200 hover:scale-110"
-                    onClick={stopPropagation}
-                    aria-label={`Open ${Title} prototype`}
-                  >
-                    <Figma className="w-3 h-3 text-white" />
-                  </a>
-                )}
-              </div>
-            </div>
+          {/* Enhanced Animated Overlay with Home.jsx gradient */}
+          <div className={`absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent transition-all duration-500 ${
+            isHovered ? 'opacity-60' : 'opacity-30'
+          }`} />
 
-            {/* Hover Indicator */}
-            <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
-              isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-            }`}>
-              <div className="bg-black/80 backdrop-blur-md rounded-full p-3 border border-white/20 transform transition-transform duration-300 group-hover/image:scale-110">
-                <ExternalLink className="w-4 h-4 text-white" />
-              </div>
-            </div>
-          </Link>
-          
-          {/* Content Section */}
-          <div className="space-y-2">
-            <div className="space-y-2">
-              <h3 className="text-sm font-bold text-white line-clamp-2 leading-tight transition-colors duration-200 group-hover:text-white/90">
-                {Title}
-              </h3>
-              
-              <p className="text-gray-300/80 text-xs leading-relaxed line-clamp-2 transition-colors duration-200 group-hover:text-gray-300">
-                {Description}
-              </p>
-            </div>
+          {/* Enhanced Shine Effect */}
+          <div className={`absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 transition-all duration-1000 ${
+            isHovered ? 'translate-x-full' : '-translate-x-full'
+          }`} />
 
-            {technologies.length > 0 && (
-              <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-1">
-                {technologyTags.visible.map((tech, index) => (
-                  <span
-                    key={`${tech}-${index}`}
-                    className="flex-shrink-0 px-2 py-1 bg-white/5 rounded-lg text-xs text-gray-300 border border-white/5 transition-all duration-200 hover:bg-white/10 hover:border-white/10 hover:text-white"
-                    title={tech}
-                  >
-                    {tech}
-                  </span>
-                ))}
-                {technologyTags.remaining > 0 && (
-                  <span 
-                    className="flex-shrink-0 px-2 py-1 bg-white/5 rounded-lg text-xs text-gray-400 border border-white/5"
-                    title={`${technologyTags.remaining} more technologies`}
-                  >
-                    +{technologyTags.remaining}
-                  </span>
-                )}
-              </div>
-            )}
-            
-            <div className="flex items-center justify-between gap-2 pt-2">
-              <div className="flex items-center gap-1">
-                {behanceLink && (
-                  <a
-                    href={behanceLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-1.5 bg-white/5 rounded-lg border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white transition-all duration-200 hover:scale-110"
-                    onClick={stopPropagation}
-                    aria-label={`View ${Title} on Behance`}
-                  >
-                    <Palette className="w-3 h-3" />
-                  </a>
-                )}
-                <a
-                  href={imageSource}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-1.5 bg-white/5 rounded-lg border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white transition-all duration-200 hover:scale-110"
-                  onClick={stopPropagation}
-                  aria-label={`Open ${Title} image in new tab`}
-                >
-                  <Image className="w-3 h-3" />
-                </a>
-              </div>
-              
-              <div className="flex-1 flex justify-end min-w-0">
-                {isProjectAvailable ? (
-                  <Link
-                    to={`/project/${id}`}
-                    onClick={handleDetails}
-                    className="inline-flex items-center justify-center space-x-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-pink-500/10 to-purple-500/10 hover:from-pink-500/20 hover:to-purple-500/20 border border-pink-500/20 hover:border-pink-500/30 text-white/90 hover:text-white transition-all duration-200 group/button text-xs font-medium whitespace-nowrap overflow-hidden shadow-lg hover:shadow-pink-500/10"
-                  >
-                    <span className="truncate">View Details</span>
-                    <ArrowRight className="w-3 h-3 flex-shrink-0 transform group-hover/button:translate-x-0.5 transition-transform duration-200" />
-                  </Link>
-                ) : (
-                  <div className="inline-flex items-center justify-center space-x-1.5 px-3 py-1.5 rounded-lg bg-gray-500/5 border border-gray-500/20 text-gray-500 cursor-not-allowed text-xs font-medium whitespace-nowrap">
-                    <span className="truncate">Coming Soon</span>
-                  </div>
-                )}
-              </div>
+          {/* Gradient Border Glow */}
+          <div className={`absolute inset-0 rounded-t-2xl border-2 transition-all duration-700 ${
+            isHovered ? 'border-blue-500/20 shadow-lg shadow-blue-500/10' : 'border-transparent'
+          }`} />
+        </>
+      ) : (
+        <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
+          <div className="text-center text-slate-500">
+            <div className="w-12 h-12 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-3">
+              <span className="text-2xl">🖼️</span>
             </div>
+            <p className="text-sm">Project Image</p>
           </div>
         </div>
-      </div>
-
-      <style jsx>{`
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
+      )}
     </div>
   );
 });
 
-CardProject.propTypes = {
-  Img: PropTypes.string,
-  Title: PropTypes.string.isRequired,
-  Description: PropTypes.string.isRequired,
-  id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  technologies: PropTypes.arrayOf(PropTypes.string),
-  prototypeLink: PropTypes.string,
-  behanceLink: PropTypes.string,
-  category: PropTypes.oneOf(['Design', 'Web', 'Brand', 'Print']),
-  status: PropTypes.oneOf(['available', 'unavailable']),
-  priority: PropTypes.bool,
-  index: PropTypes.number
-};
+ProjectImage.displayName = 'ProjectImage';
 
-CardProject.defaultProps = {
-  technologies: [],
-  category: "Design",
-  status: "available",
-  priority: false,
-  index: 0
-};
+// Main CardProject Component with Home.jsx effects
+const CardProject = memo(({ 
+  Img, 
+  Title, 
+  Description, 
+  onImageClick 
+}) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleImageClick = useCallback(() => {
+    if (onImageClick && Img) {
+      onImageClick(Img, Title);
+    }
+  }, [onImageClick, Img, Title]);
+
+  return (
+    <article 
+      className="group relative w-full bg-gradient-to-br from-slate-900/80 to-slate-800/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] overflow-hidden performance-optimized"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Enhanced Floating Animation with Home.jsx colors */}
+      <div className={`absolute inset-0 bg-gradient-to-r from-[#6366f1]/0 via-[#a855f7]/0 to-[#8b5cf6]/0 rounded-2xl transition-all duration-1000 ${
+        isHovered ? 'opacity-10' : 'opacity-0'
+      }`} />
+      
+      {/* Enhanced Glow Border */}
+      <div className={`absolute inset-0 rounded-2xl border transition-all duration-500 ${
+        isHovered ? 'border-[#6366f1]/20 shadow-2xl shadow-[#6366f1]/10' : 'border-transparent'
+      }`} />
+
+      {/* Background Glow Effect */}
+      <div className={`absolute inset-0 bg-gradient-to-br from-[#6366f1]/5 to-[#a855f7]/5 rounded-2xl transition-all duration-700 ${
+        isHovered ? 'opacity-100' : 'opacity-0'
+      }`} />
+
+      {/* Image Section */}
+      <ProjectImage
+        src={Img}
+        alt={`Project: ${Title}`}
+        onClick={handleImageClick}
+      />
+
+      {/* Content Section */}
+      <div className="p-6 space-y-4 relative z-10">
+        {/* Enhanced Header with Home.jsx gradient text */}
+        <div className="space-y-3">
+          <h3 className="text-xl font-bold text-white line-clamp-2 transition-all duration-500 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-[#6366f1] group-hover:to-[#a855f7]">
+            {Title}
+          </h3>
+          <p className="text-gray-300 text-sm leading-relaxed line-clamp-3 transition-all duration-500 group-hover:text-gray-200">
+            {Description}
+          </p>
+        </div>
+      </div>
+
+      {/* Enhanced Floating Particles Effect */}
+      <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
+        <div className={`absolute top-2 right-2 w-2 h-2 bg-[#6366f1] rounded-full transition-all duration-1000 ${
+          isHovered ? 'opacity-70 animate-bounce' : 'opacity-0'
+        }`} style={{ animationDelay: '0.1s' }} />
+        <div className={`absolute bottom-4 left-4 w-1 h-1 bg-[#a855f7] rounded-full transition-all duration-1000 ${
+          isHovered ? 'opacity-60 animate-bounce' : 'opacity-0'
+        }`} style={{ animationDelay: '0.3s' }} />
+        <div className={`absolute top-4 left-2 w-1.5 h-1.5 bg-[#8b5cf6] rounded-full transition-all duration-1000 ${
+          isHovered ? 'opacity-50 animate-bounce' : 'opacity-0'
+        }`} style={{ animationDelay: '0.5s' }} />
+      </div>
+
+      {/* Corner Accents */}
+      <div className={`absolute top-0 left-0 w-4 h-4 border-l-2 border-t-2 border-[#6366f1]/20 transition-all duration-500 ${
+        isHovered ? 'opacity-100' : 'opacity-0'
+      }`} />
+      <div className={`absolute bottom-0 right-0 w-4 h-4 border-r-2 border-b-2 border-[#a855f7]/20 transition-all duration-500 ${
+        isHovered ? 'opacity-100' : 'opacity-0'
+      }`} />
+    </article>
+  );
+});
 
 CardProject.displayName = 'CardProject';
 

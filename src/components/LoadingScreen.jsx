@@ -1,10 +1,42 @@
 import React, { useState, useEffect, memo, useMemo } from 'react';
+import PropTypes from 'prop-types';
 
+// FloatingParticle component defined outside
+const FloatingParticle = memo(({ size, color, delay, top, left, right, bottom }) => (
+  <div 
+    className={`absolute ${size} ${color} rounded-full opacity-60 animate-float`}
+    style={{ 
+      animationDelay: delay,
+      top: top || 'auto',
+      left: left || 'auto',
+      right: right || 'auto',
+      bottom: bottom || 'auto'
+    }}
+  />
+));
+FloatingParticle.displayName = 'FloatingParticle';
+
+// Debounce utility
+const debounce = (func, wait) => {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+};
+
+// FIXED: Use JavaScript default parameters instead of defaultProps
 const LoadingScreen = memo(({ onLoadingComplete, minDisplayTime = 2000 }) => {
   const [isMobile, setIsMobile] = useState(false);
   const [showLoadingText, setShowLoadingText] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [loadingPhase, setLoadingPhase] = useState('initializing');
 
   // Memoized particle configurations for better performance
   const particles = useMemo(() => [
@@ -14,6 +46,14 @@ const LoadingScreen = memo(({ onLoadingComplete, minDisplayTime = 2000 }) => {
     { size: 'w-1.5 h-1.5', color: 'bg-[#ec4899]', delay: '0.8s', top: '40%', right: '35%' },
     { size: 'w-2 h-2', color: 'bg-[#06b6d4]', delay: '3s', bottom: '35%', right: '30%' }
   ], []);
+
+  // Update loading phase based on progress
+  useEffect(() => {
+    if (progress < 30) setLoadingPhase('initializing');
+    else if (progress < 70) setLoadingPhase('loading-assets');
+    else if (progress < 95) setLoadingPhase('finalizing');
+    else setLoadingPhase('complete');
+  }, [progress]);
 
   // Debounced mobile detection
   useEffect(() => {
@@ -29,76 +69,87 @@ const LoadingScreen = memo(({ onLoadingComplete, minDisplayTime = 2000 }) => {
     return () => window.removeEventListener('resize', debouncedResize);
   }, []);
 
-  // Enhanced loading simulation with progress
+  // Enhanced loading simulation with progress and error handling
   useEffect(() => {
-    let progressInterval;
-    let startTime = Date.now();
+    try {
+      let progressInterval;
+      let startTime = Date.now();
 
-    // Show loading text after short delay
-    const textTimer = setTimeout(() => {
-      setShowLoadingText(true);
-    }, 300);
+      // Show loading text after short delay
+      const textTimer = setTimeout(() => {
+        setShowLoadingText(true);
+      }, 300);
 
-    // Simulate loading progress
-    progressInterval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 95) {
-          clearInterval(progressInterval);
-          return 95;
-        }
-        return prev + Math.random() * 15;
-      });
-    }, 200);
+      // Simulate loading progress with more realistic increments
+      progressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 95) {
+            clearInterval(progressInterval);
+            return 95;
+          }
+          // Slower progression as we approach completion
+          const remaining = 100 - prev;
+          const increment = Math.min(remaining * 0.2, 10);
+          return prev + increment;
+        });
+      }, 300);
 
-    // Complete loading after minimum display time
-    const completeTimer = setTimeout(() => {
-      const elapsed = Date.now() - startTime;
-      const remainingTime = Math.max(0, minDisplayTime - elapsed);
-      
-      setTimeout(() => {
-        setProgress(100);
-        setIsComplete(true);
+      // Complete loading after minimum display time
+      const completeTimer = setTimeout(() => {
+        const elapsed = Date.now() - startTime;
+        const remainingTime = Math.max(0, minDisplayTime - elapsed);
         
-        // Call completion callback after animation
         setTimeout(() => {
-          onLoadingComplete?.();
-        }, 500);
-      }, remainingTime);
-    }, minDisplayTime);
+          setProgress(100);
+          setIsComplete(true);
+          
+          // Call completion callback after animation
+          setTimeout(() => {
+            onLoadingComplete?.();
+          }, 500);
+        }, remainingTime);
+      }, minDisplayTime);
 
-    return () => {
-      clearTimeout(textTimer);
-      clearInterval(progressInterval);
-      clearTimeout(completeTimer);
-    };
+      return () => {
+        clearTimeout(textTimer);
+        clearInterval(progressInterval);
+        clearTimeout(completeTimer);
+      };
+    } catch (error) {
+      console.error('LoadingScreen error:', error);
+      setHasError(true);
+      // Fallback: complete loading immediately on error
+      setTimeout(() => onLoadingComplete?.(), 500);
+    }
   }, [onLoadingComplete, minDisplayTime]);
 
-  // Enhanced particle component
-  const FloatingParticle = memo(({ size, color, delay, top, left, right, bottom }) => (
-    <div 
-      className={`absolute ${size} ${color} rounded-full opacity-60 animate-float`}
-      style={{ 
-        animationDelay: delay,
-        top: top || 'auto',
-        left: left || 'auto',
-        right: right || 'auto',
-        bottom: bottom || 'auto'
-      }}
-    />
-  ));
-
-  // Debounce utility
-  const debounce = (func, wait) => {
-    let timeout;
-    return function executedFunction(...args) {
-      const later = () => {
-        clearTimeout(timeout);
-        func(...args);
-      };
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
-    };
+  // Loading phase messages
+  const getLoadingMessage = () => {
+    switch (loadingPhase) {
+      case 'initializing':
+        return 'Initializing portfolio...';
+      case 'loading-assets':
+        return 'Loading design assets...';
+      case 'finalizing':
+        return 'Finalizing experience...';
+      case 'complete':
+        return 'Ready!';
+      default:
+        return 'Loading portfolio...';
+    }
   };
+
+  // Error state fallback
+  if (hasError) {
+    return (
+      <div className="fixed inset-0 bg-[#030014] flex items-center justify-center z-50">
+        <div className="text-center">
+          <div className="w-12 h-12 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-400 text-sm">Loading portfolio...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 
@@ -120,7 +171,7 @@ const LoadingScreen = memo(({ onLoadingComplete, minDisplayTime = 2000 }) => {
         {/* Main Loading Content */}
         <div className="relative flex flex-col items-center justify-center gap-4 sm:gap-6 p-6 sm:p-8">
           {/* Enhanced Spinner Container */}
-          <div className="relative flex items-center justify-center">
+          <div className="relative flex items-center justify-center will-change-transform">
             <div className="absolute -inset-3 sm:-inset-4 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-full opacity-30 blur-xl animate-ping-slow"></div>
             <div 
               className={`relative rounded-full border-4 border-t-transparent ${
@@ -147,7 +198,7 @@ const LoadingScreen = memo(({ onLoadingComplete, minDisplayTime = 2000 }) => {
             >
               <div className="absolute -inset-2 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded blur opacity-20 animate-pulse"></div>
               <span className="relative text-gray-200 text-sm sm:text-base font-light tracking-wide bg-gradient-to-r from-gray-200 to-gray-300 bg-clip-text text-transparent">
-                Loading Portfolio...
+                {getLoadingMessage()}
               </span>
             </div>
             
@@ -161,9 +212,10 @@ const LoadingScreen = memo(({ onLoadingComplete, minDisplayTime = 2000 }) => {
                 }}
               >
                 <span className="text-gray-400 text-xs sm:text-sm font-light">
-                  {progress < 50 ? 'Initializing...' : 
-                   progress < 80 ? 'Loading assets...' : 
-                   'Almost ready...'}
+                  {loadingPhase === 'initializing' && 'Setting up your experience...'}
+                  {loadingPhase === 'loading-assets' && 'Loading design projects...'}
+                  {loadingPhase === 'finalizing' && 'Applying final touches...'}
+                  {loadingPhase === 'complete' && 'Welcome!'}
                 </span>
               </div>
             )}
@@ -186,8 +238,8 @@ const LoadingScreen = memo(({ onLoadingComplete, minDisplayTime = 2000 }) => {
         </div>
       </div>
 
-      {/* Enhanced Inline Styles */}
-      <style jsx>{`
+      {/* Enhanced CSS Styles */}
+      <style>{`
         @keyframes spin-slow {
           from {
             transform: rotate(0deg);
@@ -273,19 +325,17 @@ const LoadingScreen = memo(({ onLoadingComplete, minDisplayTime = 2000 }) => {
             transition: none !important;
           }
         }
-
-        /* Smooth performance optimizations */
-        .will-change-transform {
-          will-change: transform;
-        }
       `}</style>
     </div>
   );
 });
 
-// Default props
-LoadingScreen.defaultProps = {
-  minDisplayTime: 2000
+// FIXED: Remove defaultProps and keep only PropTypes for development
+LoadingScreen.propTypes = {
+  onLoadingComplete: PropTypes.func,
+  minDisplayTime: PropTypes.number
 };
+
+LoadingScreen.displayName = 'LoadingScreen';
 
 export default LoadingScreen;

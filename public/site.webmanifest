@@ -1,0 +1,23 @@
+{
+  "name": "Koeurn - Graphic Designer Portfolio",
+  "short_name": "Koeurn Portfolio",
+  "description": "Professional portfolio of Koeurn - Creative Graphic Designer",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#030014",
+  "theme_color": "#030014",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "categories": ["design", "portfolio", "art"]
+}

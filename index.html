@@ -9,20 +9,29 @@
     <title>Koeurn - Creative Graphic Designer | UI/UX Designer</title>
     <meta name="description" content="Professional portfolio of Koeurn - Creative Graphic Designer specializing in poster design, logo design, branding materials, and user-centered design solutions.">
     <meta name="author" content="Koeurn">
+    <meta name="keywords" content="graphic designer, UI designer, UX designer, portfolio, branding, logo design, poster design, Cambodia designer">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://www.koeurn.my.id/">
     <meta property="og:title" content="Koeurn - Creative Graphic Designer">
     <meta property="og:description" content="Professional portfolio of Koeurn - Creative Graphic Designer specializing in beautiful, intuitive designs and user-centered solutions.">
-    <meta property="og:image" content="/og-image.jpg">
+    <meta property="og:image" content="/images/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="Koeurn Portfolio">
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://www.koeurn.my.id/">
     <meta property="twitter:title" content="Koeurn - Creative Graphic Designer">
     <meta property="twitter:description" content="Professional portfolio of Koeurn - Creative Graphic Designer">
-    <meta property="twitter:image" content="/twitter-image.jpg">
+    <meta property="twitter:image" content="/images/twitter-image.jpg">
+    <meta property="twitter:creator" content="@koeurn">
+
+    <!-- Favicon - Keep only essential -->
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="theme-color" content="#030014">
 
     <!-- Preload Critical Resources -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -32,10 +41,6 @@
     <!-- Preload Fonts -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"></noscript>
-
-    <!-- Theme Color -->
-    <meta name="theme-color" content="#030014">
-    <meta name="msapplication-TileColor" content="#030014">
 
     <style>
       /* Critical CSS - Inlined for fastest rendering */
@@ -54,6 +59,7 @@
         background: #030014;
         color: #ffffff;
         overflow-x: hidden;
+        line-height: 1.6;
       }
 
       /* Loading container */
@@ -202,6 +208,24 @@
           animation: none;
           border: 3px solid #8b5cf6;
         }
+        
+        html {
+          scroll-behavior: auto;
+        }
+      }
+
+      /* Focus styles for accessibility */
+      button:focus-visible,
+      a:focus-visible {
+        outline: 2px solid #8b5cf6;
+        outline-offset: 2px;
+      }
+
+      /* Print styles */
+      @media print {
+        #loading-fallback {
+          display: none !important;
+        }
       }
     </style>
   </head>
@@ -226,6 +250,24 @@
         
         const loader = document.getElementById('loading-fallback');
         const startTime = performance.now();
+        const performanceMetrics = {
+          loadTime: 0,
+          domContentLoaded: 0,
+          firstContentfulPaint: 0
+        };
+        
+        // Track performance metrics
+        if ('PerformanceObserver' in window) {
+          const paintObserver = new PerformanceObserver((list) => {
+            for (const entry of list.getEntries()) {
+              if (entry.name === 'first-contentful-paint') {
+                performanceMetrics.firstContentfulPaint = entry.startTime;
+              }
+            }
+          });
+          
+          paintObserver.observe({ entryTypes: ['paint'] });
+        }
         
         // Create background particles
         function createParticles() {
@@ -256,6 +298,9 @@
         // Hide loading screen
         function hideLoader() {
           const loadTime = performance.now() - startTime;
+          performanceMetrics.loadTime = loadTime;
+          performanceMetrics.domContentLoaded = performance.timing.domContentLoadedEventStart - performance.timing.navigationStart;
+          
           const minDisplayTime = 1200; // Minimum 1.2 seconds for brand impression
           const remainingTime = Math.max(0, minDisplayTime - loadTime);
           
@@ -264,8 +309,12 @@
             setTimeout(() => {
               loader.style.display = 'none';
               
-              // Log performance (always log for debugging)
-              console.log(`🚀 App loaded in ${loadTime.toFixed(2)}ms`);
+              // Log performance metrics
+              console.log('🚀 Performance Metrics:', {
+                totalLoadTime: `${loadTime.toFixed(2)}ms`,
+                domContentLoaded: `${performanceMetrics.domContentLoaded}ms`,
+                firstContentfulPaint: performanceMetrics.firstContentfulPaint ? `${performanceMetrics.firstContentfulPaint.toFixed(2)}ms` : 'N/A'
+              });
             }, 800);
           }, remainingTime);
         }
@@ -274,6 +323,7 @@
         if (document.readyState === 'loading') {
           document.addEventListener('DOMContentLoaded', () => {
             createParticles();
+            performanceMetrics.domContentLoaded = performance.now() - startTime;
           });
         } else {
           createParticles();
@@ -285,7 +335,14 @@
         setTimeout(hideLoader, 4000);
         
         // Handle errors gracefully
-        window.addEventListener('error', () => {
+        window.addEventListener('error', (event) => {
+          console.warn('Loading error:', event.error);
+          setTimeout(hideLoader, 1000);
+        });
+        
+        // Handle unhandled promise rejections
+        window.addEventListener('unhandledrejection', (event) => {
+          console.warn('Unhandled promise rejection:', event.reason);
           setTimeout(hideLoader, 1000);
         });
         

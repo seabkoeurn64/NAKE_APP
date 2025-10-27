@@ -1,6 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
+import PropTypes from 'prop-types';
 
 const TechStackIcon = ({ TechStackIcon, Language, delay = 0 }) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
   // Memoize gradient classes for better performance
   const gradientClasses = useMemo(() => ({
     mainGradient: "bg-gradient-to-br from-slate-800/50 to-slate-900/50 hover:from-slate-700/60 hover:to-slate-800/60",
@@ -10,8 +14,24 @@ const TechStackIcon = ({ TechStackIcon, Language, delay = 0 }) => {
     underlineGradient: "bg-gradient-to-r from-blue-500 to-purple-500"
   }), []);
 
-  // Inline styles for animations
-  const styles = `
+  // Handle image load
+  const handleImageLoad = (e) => {
+    setImageLoaded(true);
+    e.target.style.opacity = '0';
+    setTimeout(() => {
+      e.target.style.transition = 'opacity 0.3s ease-in';
+      e.target.style.opacity = '1';
+    }, 100);
+  };
+
+  // Handle image error
+  const handleImageError = (e) => {
+    setImageError(true);
+    e.target.style.display = 'none';
+  };
+
+  // Inline styles for animations - moved to useMemo for better performance
+  const animationStyles = useMemo(() => `
     @keyframes fadeInUp {
       from {
         opacity: 0;
@@ -42,24 +62,34 @@ const TechStackIcon = ({ TechStackIcon, Language, delay = 0 }) => {
         transform: none !important;
       }
     }
-  `;
+  `, []);
 
   return (
     <>
-      <style>{styles}</style>
+      <style>{animationStyles}</style>
       <div 
         className="group relative p-6 rounded-3xl backdrop-blur-sm transition-all duration-500 ease-out flex flex-col items-center justify-center gap-4 hover:scale-105 cursor-pointer border border-white/10 hover:border-white/20 shadow-xl hover:shadow-2xl hover:shadow-blue-500/10 techstack-reduce-motion techstack-reduce-motion-hover"
         style={{
           animationDelay: `${delay}ms`,
           animation: 'fadeInUp 0.6s ease-out both'
         }}
+        role="button"
+        tabIndex={0}
+        aria-label={`${Language} technology`}
         onMouseEnter={(e) => {
-          // Add floating animation on hover
-          e.currentTarget.style.animation = 'techStackFloat 3s ease-in-out infinite';
+          if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            e.currentTarget.style.animation = 'techStackFloat 3s ease-in-out infinite';
+          }
         }}
         onMouseLeave={(e) => {
-          // Restore original animation
           e.currentTarget.style.animation = 'fadeInUp 0.6s ease-out both';
+        }}
+        onKeyDown={(e) => {
+          // Add keyboard support
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            // Add any keyboard action here
+          }
         }}
       >
         
@@ -82,34 +112,23 @@ const TechStackIcon = ({ TechStackIcon, Language, delay = 0 }) => {
           {/* Icon Shadow Effect */}
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-md opacity-0 group-hover:opacity-100 transition duration-500" />
           
-          <img 
-            src={TechStackIcon} 
-            alt={`${Language} icon`} 
-            className="relative h-16 w-16 md:h-20 md:w-20 drop-shadow-lg filter group-hover:drop-shadow-xl transition-all duration-300"
-            loading="lazy"
-            onError={(e) => {
-              // Fallback if image fails to load
-              e.target.style.display = 'none';
-              const fallback = e.target.parentNode.querySelector('.techstack-fallback');
-              if (fallback) fallback.style.display = 'flex';
-            }}
-            onLoad={(e) => {
-              // Smooth image load
-              e.target.style.opacity = '0';
-              setTimeout(() => {
-                e.target.style.transition = 'opacity 0.3s ease-in';
-                e.target.style.opacity = '1';
-              }, 100);
-            }}
-          />
-          
-          {/* Fallback for broken images */}
-          <div 
-            className="techstack-fallback hidden h-16 w-16 md:h-20 md:w-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-lg"
-            style={{ display: 'none' }}
-          >
-            {Language.charAt(0).toUpperCase()}
-          </div>
+          {!imageError ? (
+            <img 
+              src={TechStackIcon} 
+              alt={`${Language} icon`} 
+              className="relative h-16 w-16 md:h-20 md:w-20 drop-shadow-lg filter group-hover:drop-shadow-xl transition-all duration-300"
+              loading="lazy"
+              onLoad={handleImageLoad}
+              onError={handleImageError}
+              style={{ opacity: imageLoaded ? 1 : 0 }}
+            />
+          ) : (
+            <div 
+              className="h-16 w-16 md:h-20 md:w-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg"
+            >
+              {Language.charAt(0).toUpperCase()}
+            </div>
+          )}
         </div>
 
         {/* Language Text */}
@@ -139,59 +158,18 @@ const TechStackIcon = ({ TechStackIcon, Language, delay = 0 }) => {
   );
 };
 
-// Default props for better error handling
+// Proper PropTypes validation
+TechStackIcon.propTypes = {
+  TechStackIcon: PropTypes.string.isRequired,
+  Language: PropTypes.string.isRequired,
+  delay: PropTypes.number
+};
+
+// Default props
 TechStackIcon.defaultProps = {
   TechStackIcon: '',
   Language: 'Tech',
   delay: 0
 };
 
-// Prop types validation (optional but recommended)
-TechStackIcon.propTypes = {
-  TechStackIcon: (props, propName, componentName) => {
-    if (!props[propName]) {
-      return new Error(`Invalid prop ${propName} supplied to ${componentName}. Validation failed.`);
-    }
-  },
-  Language: (props, propName, componentName) => {
-    if (!props[propName] || typeof props[propName] !== 'string') {
-      return new Error(`Invalid prop ${propName} supplied to ${componentName}. Must be a string.`);
-    }
-  },
-  delay: (props, propName, componentName) => {
-    if (props[propName] && typeof props[propName] !== 'number') {
-      return new Error(`Invalid prop ${propName} supplied to ${componentName}. Must be a number.`);
-    }
-  }
-};
-
 export default React.memo(TechStackIcon);
-
-
-// USAGE EXAMPLE (commented out but included for reference)
-/*
-// Example of how to use this component in a grid:
-const TechStackGrid = () => {
-  const techStack = [
-    { icon: "/icons/react.svg", name: "React", delay: 0 },
-    { icon: "/icons/javascript.svg", name: "JavaScript", delay: 100 },
-    { icon: "/icons/typescript.svg", name: "TypeScript", delay: 200 },
-    { icon: "/icons/tailwind.svg", name: "Tailwind CSS", delay: 300 },
-    { icon: "/icons/nodejs.svg", name: "Node.js", delay: 400 },
-    { icon: "/icons/python.svg", name: "Python", delay: 500 },
-  ];
-
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 md:gap-6 p-4">
-      {techStack.map((tech, index) => (
-        <TechStackIcon
-          key={tech.name}
-          TechStackIcon={tech.icon}
-          Language={tech.name}
-          delay={tech.delay || index * 100}
-        />
-      ))}
-    </div>
-  );
-};
-*/

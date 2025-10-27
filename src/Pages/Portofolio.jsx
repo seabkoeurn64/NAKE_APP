@@ -1,765 +1,246 @@
+// src/Pages/Portofolio.jsx
 import React, { useEffect, useState, useCallback, memo, useMemo, useRef } from "react";
-import PropTypes from "prop-types";
-
-import { Swiper, SwiperSlide } from "swiper/react";
-import "swiper/css";
-
 import { useTheme } from "@mui/material/styles";
 import AppBar from "@mui/material/AppBar";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
-import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
-
-import { Palette, ArrowRight, Eye, Sparkles, Figma, Image, X, ExternalLink } from "lucide-react";
+import { X, Github, Linkedin, Mail, ExternalLink, Sparkles } from "lucide-react";
 import AOS from "aos";
 import "aos/dist/aos.css";
 
-// SVG Placeholder Generator - Works offline
-const generateSVGPlaceholder = (title, color) => {
-  const colors = {
-    purple: '#8b5cf6',
-    pink: '#ec4899',
-    blue: '#3b82f6', 
-    green: '#10b981',
-    amber: '#f59e0b',
-    indigo: '#6366f1'
-  };
+// Import components
+import CardProject from "../components/CardProject";
+import PortfolioLoading from "../components/LoadingScreen";
+import { PortfolioErrorBoundary, ToggleButton, LoadingSpinner } from "../components/PortfolioComponents";
+import { useProjects } from "../hooks/usePreload";
 
-  const selectedColor = colors[color] || colors.purple;
-  
-  return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
-    <rect width="800" height="600" fill="${selectedColor}" opacity="0.1"/>
-    <rect x="50" y="50" width="700" height="500" fill="${selectedColor}" opacity="0.2" rx="20"/>
-    <text x="400" y="280" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="${selectedColor}" opacity="0.8">${title}</text>
-    <text x="400" y="330" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="${selectedColor}" opacity="0.6">Design Project</text>
-    <rect x="300" y="400" width="200" height="8" fill="${selectedColor}" opacity="0.4" rx="4"/>
-    <rect x="250" y="420" width="300" height="6" fill="${selectedColor}" opacity="0.3" rx="3"/>
-    <rect x="280" y="440" width="240" height="6" fill="${selectedColor}" opacity="0.3" rx="3"/>
-  </svg>`;
-};
-
-// Custom Hooks
-const useDebounce = (func, wait) => {
-  const timeoutRef = useRef();
-
-  return useCallback((...args) => {
-    clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => func(...args), wait);
-  }, [func, wait]);
-};
-
-const useInView = (options = {}) => {
-  const [isInView, setIsInView] = useState(false);
-  const ref = useRef();
-  
-  useEffect(() => {
-    const observer = new IntersectionObserver(([entry]) => {
-      setIsInView(entry.isIntersecting);
-    }, {
-      threshold: 0.1,
-      rootMargin: '50px',
-      ...options
-    });
-    
-    if (ref.current) observer.observe(ref.current);
-    
-    return () => observer.disconnect();
-  }, [options]);
-  
-  return [ref, isInView];
-};
-
-const useProjects = () => {
-  const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  
-  useEffect(() => {
-    const loadProjects = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Use sample projects with SVG placeholders
-        setProjects(sampleProjects);
-        
-        // Cache in localStorage for persistence
-        localStorage.setItem("projects", JSON.stringify(sampleProjects));
-      } catch (e) {
-        console.error("Error loading projects:", e);
-        setError("Failed to load projects");
-        // Fallback to sample projects
-        setProjects(sampleProjects);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadProjects();
-  }, []);
-  
-  return { projects, loading, error };
-};
-
-const useSwipe = (onSwipeLeft, onSwipeRight) => {
-  const touchStart = useRef(null);
-  
-  const onTouchStart = useCallback((e) => {
-    touchStart.current = e.touches[0].clientX;
-  }, []);
-
-  const onTouchEnd = useCallback((e) => {
-    if (!touchStart.current) return;
-    
-    const touchEnd = e.changedTouches[0].clientX;
-    const diff = touchStart.current - touchEnd;
-    
-    if (Math.abs(diff) > 50) {
-      diff > 0 ? onSwipeRight?.() : onSwipeLeft?.();
-    }
-    
-    touchStart.current = null;
-  }, [onSwipeLeft, onSwipeRight]);
-  
-  return { onTouchStart, onTouchEnd };
-};
-
-// Error Boundary Component
-class PortfolioErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-  
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error };
-  }
-  
-  componentDidCatch(error, errorInfo) {
-    console.error('Portfolio Error:', error, errorInfo);
-  }
-  
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014]">
-          <div className="text-center p-8 max-w-md mx-auto">
-            <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <X className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="text-xl font-bold text-white mb-2">Something went wrong</h3>
-            <p className="text-gray-300 mb-6">
-              We encountered an error while loading the portfolio.
-            </p>
-            <button 
-              onClick={() => this.setState({ hasError: false, error: null })}
-              className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors duration-300"
-            >
-              Try Again
-            </button>
-          </div>
-        </div>
-      );
-    }
-    
-    return this.props.children;
-  }
-}
-
-// Enhanced ProjectImage Component with SVG placeholders
-const ProjectImage = memo(({ 
-  src, 
-  alt, 
-  onLoad, 
-  onError, 
-  isHovered, 
-  imageLoaded,
-  className = "" 
-}) => {
-  const [imageState, setImageState] = useState({
-    src: src,
-    hasError: false,
-    naturalAspectRatio: 4/3
-  });
-
-  const handleError = useCallback((e) => {
-    console.warn(`Failed to load image: ${src}`);
-    // Generate SVG placeholder as fallback
-    const placeholder = generateSVGPlaceholder(alt, 'purple');
-    setImageState(prev => ({
-      ...prev,
-      hasError: true,
-      src: placeholder
-    }));
-    onError?.(e);
-  }, [src, alt, onError]);
-
-  const handleLoad = useCallback((e) => {
-    const img = e.target;
-    if (img.naturalWidth && img.naturalHeight) {
-      setImageState(prev => ({
-        ...prev,
-        naturalAspectRatio: img.naturalWidth / img.naturalHeight,
-        hasError: false
-      }));
-    }
-    onLoad?.(e);
-  }, [onLoad]);
-
-  if (imageState.hasError) {
-    return (
-      <div className="w-full h-full flex flex-col items-center justify-center bg-gray-800/40 rounded-t-3xl">
-        <Image className="w-12 h-12 text-gray-500 mb-2" />
-        <span className="text-gray-400 text-sm">Project Preview</span>
-      </div>
-    );
-  }
-
-  return (
-    <div 
-      className="w-full h-full flex items-center justify-center bg-gray-900/20 relative"
-      style={{ paddingBottom: `${(1 / imageState.naturalAspectRatio) * 100}%` }}
-    >
-      <div className="absolute inset-0 flex items-center justify-center">
-        <img
-          src={imageState.src}
-          alt={alt}
-          loading="lazy"
-          decoding="async"
-          className={`w-full h-full object-contain transform transition-all duration-700 ${className} ${
-            imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-110'
-          } ${isHovered ? 'scale-105' : 'scale-100'}`}
-          onLoad={handleLoad}
-          onError={handleError}
-        />
-        
-        {!imageLoaded && !imageState.hasError && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-800/40 rounded-t-3xl">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-500 border-t-transparent"></div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-});
-
-ProjectImage.displayName = 'ProjectImage';
-
-// Rest of the components remain the same as previous working version...
-const TechnologyTags = memo(({ 
-  technologies, 
-  visibleCount = 4, 
-  variant = "default",
-  className = "" 
-}) => {
-  const [visibleTechnologies, remainingTechCount] = useMemo(() => {
-    const visible = technologies.slice(0, visibleCount);
-    const remaining = Math.max(0, technologies.length - visibleCount);
-    return [visible, remaining];
-  }, [technologies, visibleCount]);
-
-  const tagClasses = {
-    default: "px-3 py-1.5 bg-black/80 backdrop-blur-lg rounded-full text-xs text-white/90 border border-white/10 font-medium shadow-lg",
-    minimal: "px-3 py-1.5 bg-white/5 rounded-full text-xs text-gray-300 border border-white/5 hover:bg-white/10 hover:border-white/10 hover:text-white transition-all duration-300 font-medium"
-  };
-
-  return (
-    <div className={`flex flex-wrap gap-2 ${className}`}>
-      {visibleTechnologies.map((tech, index) => (
-        <span
-          key={`${tech}-${index}`}
-          className={tagClasses[variant]}
-        >
-          {tech}
-        </span>
-      ))}
-      {remainingTechCount > 0 && (
-        <span className={tagClasses[variant]}>
-          +{remainingTechCount}
-        </span>
-      )}
-    </div>
-  );
-});
-
-TechnologyTags.displayName = 'TechnologyTags';
-
-const FullImageModal = memo(({ 
-  image, 
-  title, 
-  onClose, 
-  imageLoaded,
-  onImageLoad 
-}) => {
-  const stopPropagation = useCallback((e) => {
-    e.stopPropagation();
-  }, []);
-
-  const handleBackdropClick = useCallback((e) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  }, [onClose]);
+// Enhanced media queries hook (same as Home.jsx)
+const useMediaQueries = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [breakpoint, setBreakpoint] = useState('mobile');
 
   useEffect(() => {
-    const handleEscape = (e) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
+    if (typeof window === 'undefined') return;
+
+    let animationFrameId;
+
+    const updateBreakpoint = () => {
+      const width = window.innerWidth;
+      const mobile = width < 768;
+      const tablet = width >= 768 && width < 1024;
+      
+      setIsMobile(mobile);
+      setIsTablet(tablet);
+      
+      if (mobile) setBreakpoint('mobile');
+      else if (tablet) setBreakpoint('tablet');
+      else setBreakpoint('desktop');
     };
 
-    document.addEventListener('keydown', handleEscape);
-    document.body.style.overflow = 'hidden';
-
+    const checkReducedMotion = () => 
+      setPrefersReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    
+    const throttledResize = () => {
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      animationFrameId = requestAnimationFrame(updateBreakpoint);
+    };
+    
+    updateBreakpoint();
+    checkReducedMotion();
+    
+    window.addEventListener('resize', throttledResize, { passive: true });
+    
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    mediaQuery.addEventListener('change', checkReducedMotion);
+    
     return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'unset';
+      window.removeEventListener('resize', throttledResize);
+      mediaQuery.removeEventListener('change', checkReducedMotion);
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
     };
-  }, [onClose]);
-
-  return (
-    <div 
-      className="fixed inset-0 bg-black/98 backdrop-blur-lg z-50 flex items-center justify-center p-2 sm:p-4 portfolio-fade-in"
-      onClick={handleBackdropClick}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="modal-title"
-    >
-      <div className="relative w-full h-full max-w-6xl max-h-[95vh] flex flex-col items-center justify-center">
-        <div className="relative w-full max-w-4xl flex justify-end mb-2 sm:mb-4 z-30">
-          <button 
-            className="p-3 bg-black/90 hover:bg-red-500/90 rounded-full text-white transition-all duration-300 border border-white/20 shadow-2xl hover:scale-110 hover:shadow-red-500/25 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-white/50"
-            onClick={onClose}
-            aria-label="Close preview"
-          >
-            <X className="w-5 h-5 sm:w-6 sm:h-6" />
-          </button>
-        </div>
-        
-        <div className="relative w-full max-w-4xl flex-1 flex items-center justify-center">
-          <div className="relative w-full h-full flex items-center justify-center">
-            <img
-              src={image}
-              alt={`Full view of ${title}`}
-              className="max-w-full max-h-full object-contain rounded-xl sm:rounded-2xl shadow-2xl portfolio-scale-in"
-              onClick={stopPropagation}
-              onLoad={onImageLoad}
-              style={{ 
-                width: 'auto', 
-                height: 'auto',
-                maxWidth: '95vw',
-                maxHeight: '70vh'
-              }}
-            />
-            
-            {!imageLoaded && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-900/50 rounded-xl sm:rounded-2xl">
-                <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent"></div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="relative w-full max-w-4xl mt-3 sm:mt-4 z-20">
-          <div className="bg-black/80 backdrop-blur-xl rounded-xl p-3 sm:p-4 border border-white/20 text-center portfolio-slide-up">
-            <h3 id="modal-title" className="text-white text-base sm:text-lg font-bold mb-1">{title}</h3>
-            <p className="text-gray-300 text-xs sm:text-sm">Click outside or press ESC to close</p>
-          </div>
-        </div>
-      </div>
-
-      <div 
-        className="fixed bottom-0 left-0 right-0 sm:hidden z-40 portfolio-slide-up"
-        onClick={onClose}
-      >
-        <div className="bg-gradient-to-t from-black/95 to-transparent pt-8 pb-4 flex justify-center">
-          <div className="text-white text-sm bg-black/70 px-6 py-3 rounded-full border border-white/30 shadow-lg">
-            👆 Tap to close
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-});
-
-FullImageModal.displayName = 'FullImageModal';
-
-// Enhanced CardProject Component without buttons
-const CardProject = memo(({ 
-  Img, 
-  Title, 
-  Description, 
-  id, 
-  technologies = [], 
-  prototypeLink, 
-  behanceLink,
-  scrollTargetId,
-  onViewPosterClick
-}) => {
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [showFullImage, setShowFullImage] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const [ref, isInView] = useInView();
-
-  const handleImageLoad = useCallback(() => {
-    setImageLoaded(true);
   }, []);
 
-  const handleImageError = useCallback(() => {
-    setImageLoaded(true); // Still mark as loaded to hide spinner
-  }, []);
+  return { isMobile, isTablet, prefersReducedMotion, breakpoint };
+};
 
-  const stopPropagation = useCallback((e) => {
-    e.stopPropagation();
-  }, []);
-
-  const handleViewFullImage = useCallback((e) => {
-    e?.preventDefault();
-    e?.stopPropagation();
-    setShowFullImage(true);
-  }, []);
-
-  const handleCloseFullImage = useCallback((e) => {
-    e?.stopPropagation();
-    setShowFullImage(false);
-  }, []);
-
-  const handleMouseEnter = useCallback(() => setIsHovered(true), []);
-  const handleMouseLeave = useCallback(() => setIsHovered(false), []);
-
-  // Direct click on image opens full view
-  const handleImageClick = useCallback((e) => {
-    e?.preventDefault();
-    e?.stopPropagation();
-    handleViewFullImage();
-  }, [handleViewFullImage]);
-
-  return (
-    <>
-      {showFullImage && Img && (
-        <FullImageModal
-          image={Img}
-          title={Title}
-          onClose={handleCloseFullImage}
-          imageLoaded={imageLoaded}
-          onImageLoad={handleImageLoad}
-        />
-      )}
-
-      <div 
-        ref={ref}
-        className="group relative w-full cursor-pointer transform transition-all duration-500 hover:scale-[1.02] will-change-transform"
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-      >
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-gray-900/50 to-gray-800/30 shadow-2xl transition-all duration-500 hover:shadow-purple-500/20 border border-white/10 backdrop-blur-sm">
-          
-          {/* Image Container - Clickable to open full view */}
-          <div 
-            className="relative overflow-hidden rounded-t-3xl bg-gray-900/20 cursor-pointer"
-            onClick={handleImageClick}
-          >
-            <ProjectImage
-              src={Img}
-              alt={Title}
-              isHovered={isHovered}
-              imageLoaded={imageLoaded}
-              onLoad={handleImageLoad}
-              onError={handleImageError}
-            />
-            
-            {/* Overlays */}
-            <div className={`absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent transition-opacity duration-500 rounded-t-3xl ${
-              isHovered ? 'opacity-60' : 'opacity-80'
-            }`} />
-            
-            <div className={`absolute inset-0 bg-purple-500/0 transition-all duration-500 rounded-t-3xl ${
-              isHovered ? 'bg-purple-500/10' : ''
-            }`} />
-
-            {/* Project Type Badge */}
-            <div className="absolute top-3 left-3 z-20 transform transition-transform duration-300 hover:scale-105">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-black/90 backdrop-blur-md rounded-full border border-purple-500/30 text-sm font-medium shadow-lg">
-                <Sparkles className="w-3 h-3 text-purple-400 animate-pulse" />
-                <span className="text-white/95">Design Project</span>
-              </div>
-            </div>
-
-            {/* Action Buttons - Only external links remain */}
-            <div className={`absolute top-3 right-3 z-20 transform transition-all duration-500 ${
-              isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
-            }`}>
-              <div className="flex gap-2">
-                {/* Eye button removed */}
-                
-                {prototypeLink && (
-                  <a
-                    href={prototypeLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2.5 bg-black/90 backdrop-blur-md rounded-xl border border-white/20 text-white hover:bg-blue-600 hover:scale-110 hover:border-blue-400 transition-all duration-300 shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                    onClick={stopPropagation}
-                    title="Open prototype"
-                    aria-label="Open prototype in Figma"
-                  >
-                    <Figma className="w-4 h-4" />
-                  </a>
-                )}
-
-                {behanceLink && (
-                  <a
-                    href={behanceLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2.5 bg-black/90 backdrop-blur-md rounded-xl border border-white/20 text-white hover:bg-blue-500 hover:scale-110 hover:border-blue-300 transition-all duration-300 shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                    onClick={stopPropagation}
-                    title="View on Behance"
-                    aria-label="View project on Behance"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
-                )}
-              </div>
-            </div>
-
-            {/* Technologies Tags */}
-            {technologies.length > 0 && (
-              <div className={`absolute bottom-3 left-3 right-3 z-20 transform transition-all duration-500 delay-100 ${
-                isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
-              }`}>
-                <TechnologyTags technologies={technologies} variant="default" />
-              </div>
-            )}
-          </div>
-          
-          {/* Card Content - Button section removed */}
-          <div className="p-5 space-y-4">
-            <div className="space-y-3">
-              <h3 className="text-xl font-bold text-white leading-tight line-clamp-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-400 transition-all duration-500">
-                {Title}
-              </h3>
-              
-              <p className="text-gray-300/90 text-sm leading-relaxed line-clamp-3">
-                {Description}
-              </p>
-            </div>
-
-            {technologies.length > 0 && (
-              <TechnologyTags technologies={technologies} variant="minimal" />
-            )}
-            
-            {/* Removed button section completely */}
-            <div className="flex items-center justify-between pt-2">
-              <div className="flex items-center gap-2">
-                {behanceLink && (
-                  <a
-                    href={behanceLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2.5 bg-white/5 rounded-xl border border-white/10 text-gray-400 hover:bg-blue-500 hover:text-white hover:scale-110 hover:border-blue-400 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                    onClick={stopPropagation}
-                    title="Behance"
-                    aria-label="View on Behance"
-                  >
-                    <Palette className="w-4 h-4" />
-                  </a>
-                )}
-              </div>
-              
-              {/* Empty space where button used to be */}
-              <div className="flex-1"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-});
-
-const ToggleButton = memo(({ onClick, isShowingMore, loading = false }) => (
-  <button
-    onClick={onClick}
-    disabled={loading}
-    className="px-8 py-4 text-white text-base font-semibold transition-all duration-500 ease-out flex items-center gap-3 bg-gradient-to-r from-purple-600/20 to-pink-600/20 hover:from-purple-600/40 hover:to-pink-600/40 rounded-2xl border border-purple-500/30 hover:border-purple-400/50 backdrop-blur-sm hover:scale-105 hover:shadow-xl hover:shadow-purple-500/20 group relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-purple-500/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-    aria-expanded={isShowingMore}
-  >
-    <span className="relative z-10 flex items-center gap-3">
-      {loading ? (
-        <>
-          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-          Loading...
-        </>
-      ) : (
-        <>
-          {isShowingMore ? "Show Less" : "Show More Projects"}
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className={`transition-all duration-500 ${isShowingMore ? "rotate-180 group-hover:-translate-y-1" : "group-hover:translate-y-1"}`}
-          >
-            <polyline points={isShowingMore ? "18 15 12 9 6 15" : "6 9 12 15 18 9"}></polyline>
-          </svg>
-        </>
-      )}
-    </span>
-    <span className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-pink-600/10 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left rounded-2xl"></span>
-  </button>
-));
-
-ToggleButton.displayName = 'ToggleButton';
-
-function TabPanel({ children, value, index, ...other }) {
+// TabPanel Component
+function TabPanel(props) {
+  const { children, value, index, ...other } = props;
   return (
     <div
       role="tabpanel"
       hidden={value !== index}
-      id={`full-width-tabpanel-${index}`}
-      aria-labelledby={`full-width-tab-${index}`}
+      id={`portfolio-tabpanel-${index}`}
+      aria-labelledby={`portfolio-tab-${index}`}
       {...other}
     >
-      {value === index && (
-        <Box sx={{ p: { xs: 2, sm: 3 } }}>
-          <Typography component="div">{children}</Typography>
-        </Box>
-      )}
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
     </div>
   );
 }
 
-TabPanel.propTypes = {
-  children: PropTypes.node,
-  index: PropTypes.number.isRequired,
-  value: PropTypes.number.isRequired,
-};
-
 function a11yProps(index) {
   return {
-    id: `full-width-tab-${index}`,
-    "aria-controls": `full-width-tabpanel-${index}`,
+    id: `portfolio-tab-${index}`,
+    'aria-controls': `portfolio-tabpanel-${index}`,
   };
 }
 
-const PortfolioLoading = memo(() => (
-  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014]">
-    <div className="text-center">
-      <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-500 border-t-transparent mx-auto mb-4"></div>
-      <p className="text-gray-300 text-lg">Loading portfolio...</p>
+// Enhanced Animated Image Modal Component with Home.jsx effects
+const ImageModal = memo(({ image, title, isOpen, onClose }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const modalRef = useRef();
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => setIsVisible(true), 50);
+    } else {
+      setIsVisible(false);
+      setTimeout(() => {
+        document.body.style.overflow = 'unset';
+      }, 500);
+    }
+  }, [isOpen]);
+
+  const handleBackdropClick = useCallback((e) => {
+    if (modalRef.current && !modalRef.current.contains(e.target)) {
+      onClose();
+    }
+  }, [onClose]);
+
+  if (!isOpen || !image) return null;
+
+  return (
+    <div 
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-500 backdrop-blur-sm ${
+        isVisible ? 'opacity-100 bg-black/90' : 'opacity-0 bg-black/0'
+      }`}
+      onClick={handleBackdropClick}
+    >
+      {/* Animated Background Glow */}
+      <div className={`absolute inset-0 transition-all duration-700 ${
+        isVisible ? 'opacity-40' : 'opacity-0'
+      }`}>
+        <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-[#6366f1] rounded-full blur-3xl opacity-20 animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#a855f7] rounded-full blur-3xl opacity-10 animate-pulse delay-1000"></div>
+      </div>
+      
+      <div 
+        ref={modalRef}
+        className={`relative max-w-6xl max-h-full w-full transform transition-all duration-500 ${
+          isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Enhanced Close Button with Home.jsx styling */}
+        <button
+          onClick={onClose}
+          className="group absolute -top-16 right-0 z-10 p-3 rounded-xl bg-black/50 backdrop-blur-sm border border-white/20 transition-all duration-300 hover:scale-110 hover:bg-black/70 hover:shadow-lg mobile-touch"
+          aria-label="Close modal"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-xl blur opacity-15 group-hover:opacity-25 transition duration-200"></div>
+          <X className="relative w-6 h-6 text-white/80 group-hover:text-white transition-colors" />
+        </button>
+        
+        {/* Enhanced Image Container with Home.jsx effects */}
+        <div className="relative bg-gradient-to-br from-slate-900/90 to-slate-800/90 rounded-2xl overflow-hidden shadow-2xl border border-white/10 backdrop-blur-xl transform transition-all duration-700 hover:shadow-2xl performance-optimized">
+          <img
+            src={image}
+            alt={`Full size: ${title}`}
+            className="w-full h-auto max-h-[80vh] object-contain transform transition-all duration-1000 hover:scale-105"
+            draggable={false}
+          />
+
+          {/* Enhanced Animated Title with gradient effects */}
+          {title && (
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-6 transform transition-all duration-500 group">
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent animate-pulse">
+                {title}
+              </h3>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+});
+
+ImageModal.displayName = 'ImageModal';
+
+// Enhanced Status Badge Component (from Home.jsx)
+const PortfolioBadge = memo(() => (
+  <div className="inline-block animate-float mx-auto" data-aos="zoom-in" data-aos-delay="200">
+    <div className="relative group">
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-full blur opacity-20 group-hover:opacity-30 transition duration-500"></div>
+      <div className="relative px-4 py-2 rounded-full bg-black/40 backdrop-blur-xl border border-white/10">
+        <span className="bg-gradient-to-r from-[#6366f1] to-[#a855f7] text-transparent bg-clip-text text-sm font-medium flex items-center">
+          <Sparkles className="w-4 h-4 mr-2 text-blue-400" />
+          Creative Portfolio
+        </span>
+      </div>
     </div>
   </div>
 ));
 
-PortfolioLoading.displayName = 'PortfolioLoading';
+// Enhanced CTA Button Component (from Home.jsx)
+const PortfolioCTAButton = memo(({ href, text, icon: Icon }) => (
+  <a href={href} className="block">
+    <button className="group relative w-[140px] mobile-touch active:scale-95">
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-[#4f52c9] to-[#8644c5] rounded-xl opacity-40 blur group-hover:opacity-70 transition-all duration-500"></div>
+      <div className="relative h-10 bg-[#030014] backdrop-blur-xl rounded-lg border border-white/10 leading-none overflow-hidden">
+        <div className="absolute inset-0 scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300 bg-gradient-to-r from-[#4f52c9]/20 to-[#8644c5]/20"></div>
+        <span className="absolute inset-0 flex items-center justify-center gap-1.5 text-xs group-hover:gap-2 transition-all duration-200">
+          <span className="bg-gradient-to-r from-gray-200 to-white bg-clip-text text-transparent font-medium z-10">
+            {text}
+          </span>
+          <Icon className={`w-3 h-3 text-gray-200 ${text === 'Contact' ? 'group-hover:translate-x-0.5' : 'group-hover:rotate-45'} transform transition-all duration-200 z-10`} />
+        </span>
+      </div>
+    </button>
+  </a>
+));
 
-  // Sample Projects Data with proper image paths
-const sampleProjects = [
-  {
-    id: 1,
-    Img: "/images/project1.png", // or .png
-    Title: "Brand Identity Design",
-    Description: "Complete brand identity design including logo, color palette, and typography for a modern tech startup.",
-    technologies: ["Photoshop", "Illustrator", "Typography", "Branding"],
-    scrollTargetId: "project-detail-1"
-  },
-  {
-    id: 2,
-    Img: "/images/project2.png", // or .png
-    Title: "Mobile App UI/UX", 
-    Description: "User interface and experience design for a fitness tracking mobile application with intuitive navigation.",
-    technologies: ["Figma", "UI Design", "Prototyping", "Wireframing"],
-    scrollTargetId: "project-detail-2"
-  },
-  {
-    id: 3,
-    Img: "/images/project3.jpg", // or .png
-    Title: "Marketing Campaign",
-    Description: "Complete marketing campaign design including social media graphics, banners, and promotional materials.",
-    technologies: ["Illustrator", "Photoshop", "Marketing", "Social Media"],
-    scrollTargetId: "project-detail-3"
-  },
-  {
-    id: 4,
-    Img: "/images/project4.jpg", // or .png
-    Title: "Website Redesign", 
-    Description: "Modern website redesign focusing on improved user experience and responsive design across all devices.",
-    technologies: ["Figma", "Web Design", "Responsive", "UI/UX"],
-    scrollTargetId: "project-detail-4"
-  },
-  {
-    id: 5,
-    Img: "/images/project5.jpg", // or .png
-    Title: "Product Packaging",
-    Description: "Sustainable product packaging design that combines aesthetics with environmental consciousness.",
-    technologies: ["Illustrator", "Packaging", "3D Mockup", "Print"],
-    scrollTargetId: "project-detail-5"
-  },
-  {
-    id: 6,
-    Img: "/images/project6.jpg", // or .png
-    Title: "Social Media Kit", 
-    Description: "Comprehensive social media design kit with templates for posts, stories, and cover images.",
-    technologies: ["Photoshop", "Social Media", "Templates", "Graphics"],
-    scrollTargetId: "project-detail-6"
-  }
-];;
-
-// Main Portfolio Component
-const FullWidthTabs = memo(() => {
+// Main Portfolio Component with Home.jsx effects
+const Portfolio = memo(() => {
   const theme = useTheme();
   const [value, setValue] = useState(0);
   const [showAllProjects, setShowAllProjects] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  const scrollHistoryRef = useRef(new Set());
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
+  const { isMobile, isTablet, prefersReducedMotion } = useMediaQueries();
   const { projects, loading, error } = useProjects();
-  const swipeHandlers = useSwipe(
-    useCallback(() => setValue(prev => Math.min(prev + 1, 1)), []),
-    useCallback(() => setValue(prev => Math.max(prev - 1, 0)), [])
-  );
-
-  const initialItems = useMemo(() => isMobile ? 4 : 6, [isMobile]);
-
-  const checkMobile = useCallback(() => setIsMobile(window.innerWidth < 768), []);
-  const checkReducedMotion = useCallback(() => setPrefersReducedMotion(
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  ), []);
-
-  const debouncedResize = useDebounce(checkMobile, 100);
 
   useEffect(() => {
-    checkMobile();
-    checkReducedMotion();
-    
-    window.addEventListener('resize', debouncedResize);
-    
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    mediaQuery.addEventListener('change', checkReducedMotion);
+    if (prefersReducedMotion) return;
 
-    return () => {
-      window.removeEventListener('resize', debouncedResize);
-      mediaQuery.removeEventListener('change', checkReducedMotion);
+    let timeoutId;
+
+    const initAOS = () => {
+      AOS.init({
+        once: true,
+        offset: isMobile ? 10 : 50,
+        duration: isMobile ? 300 : 800,
+        easing: 'ease-out',
+        disable: isMobile ? false : 'mobile',
+      });
     };
-  }, [checkMobile, checkReducedMotion, debouncedResize]);
+
+    timeoutId = setTimeout(initAOS, 50);
+    
+    return () => {
+      clearTimeout(timeoutId);
+      AOS.refresh();
+    };
+  }, [isMobile, prefersReducedMotion]);
 
   useEffect(() => {
-    AOS.init({
-      once: true,
-      offset: isMobile ? 30 : 50,
-      duration: prefersReducedMotion ? 0 : (isMobile ? 600 : 800),
-      easing: 'ease-out-cubic',
-      disable: prefersReducedMotion
-    });
-
-    return () => AOS.refresh();
-  }, [isMobile, prefersReducedMotion]);
+    setIsLoaded(true);
+  }, []);
 
   const handleChange = useCallback((event, newValue) => {
     setValue(newValue);
@@ -769,44 +250,44 @@ const FullWidthTabs = memo(() => {
     setShowAllProjects(prev => !prev);
   }, []);
 
-  const handleViewPosterClick = useCallback((targetId) => {
-    if (scrollHistoryRef.current.has(targetId)) {
-      return;
+  const handleImageClick = useCallback((image, title) => {
+    if (image) {
+      setSelectedImage({ image, title });
     }
+  }, []);
 
-    scrollHistoryRef.current.add(targetId);
+  const closeImageModal = useCallback(() => {
+    setSelectedImage(null);
+  }, []);
 
-    const targetElement = document.getElementById(targetId);
-    if (targetElement) {
-      const offset = 80;
-      const targetPosition = targetElement.offsetTop - offset;
-      
-      window.scrollTo({
-        top: targetPosition,
-        behavior: prefersReducedMotion ? 'auto' : 'smooth'
-      });
-
-      targetElement.classList.add('highlight-section');
-      setTimeout(() => {
-        targetElement.classList.remove('highlight-section');
-      }, 2000);
-    }
-  }, [prefersReducedMotion]);
-
+  const initialItems = useMemo(() => isMobile ? 4 : 6, [isMobile]);
   const displayedProjects = useMemo(() => 
     showAllProjects ? projects : projects.slice(0, initialItems),
     [showAllProjects, projects, initialItems]
   );
 
-  const getAnimationDelay = useCallback((index) => {
-    return prefersReducedMotion ? 0 : 100 + (index * 100);
-  }, [prefersReducedMotion]);
-
-  const getAnimationType = useCallback((index) => {
-    if (prefersReducedMotion) return "fade-up";
-    const types = ["fade-up-right", "fade-up", "fade-up-left"];
-    return types[index % 3];
-  }, [prefersReducedMotion]);
+  // Enhanced background elements (from Home.jsx)
+  const backgroundElements = useMemo(() => (
+    <div className="absolute inset-0 overflow-hidden">
+      {/* Reduced background elements on mobile */}
+      {!isMobile && (
+        <>
+          <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-[#6366f1] rounded-full blur-3xl opacity-10 animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#a855f7] rounded-full blur-3xl opacity-5 animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 w-56 h-56 bg-[#8b5cf6] rounded-full blur-2xl opacity-5 animate-pulse delay-500"></div>
+        </>
+      )}
+      
+      {/* Simplified grid for mobile */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="w-full h-full" style={{
+          backgroundImage: `linear-gradient(#6366f1 1px, transparent 1px), linear-gradient(90deg, #6366f1 1px, transparent 1px)`,
+          backgroundSize: isMobile ? '20px 20px' : '40px 40px',
+          animation: !prefersReducedMotion ? 'grid-move 20s linear infinite' : 'none'
+        }}></div>
+      </div>
+    </div>
+  ), [isMobile, prefersReducedMotion]);
 
   if (loading) {
     return <PortfolioLoading />;
@@ -815,17 +296,17 @@ const FullWidthTabs = memo(() => {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014]">
-        <div className="text-center p-8 max-w-md mx-auto">
-          <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <X className="w-8 h-8 text-white" />
+        <div className="text-center p-8 max-w-md bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 transform transition-all duration-500 hover:scale-105">
+          <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/30 animate-pulse">
+            <X className="w-8 h-8 text-red-400" />
           </div>
-          <h3 className="text-xl font-bold text-white mb-2">Loading Error</h3>
-          <p className="text-gray-300 mb-6">{error}</p>
+          <h3 className="text-xl font-bold text-white mb-2 animate-pulse">Failed to load</h3>
+          <p className="text-gray-300 mb-4">{error}</p>
           <button 
             onClick={() => window.location.reload()}
-            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors duration-300"
+            className="px-6 py-3 bg-gradient-to-r from-[#6366f1] to-[#a855f7] hover:from-[#4f52c9] hover:to-[#8644c5] text-white rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg mobile-touch"
           >
-            Reload Page
+            Try Again
           </button>
         </div>
       </div>
@@ -834,211 +315,121 @@ const FullWidthTabs = memo(() => {
 
   return (
     <PortfolioErrorBoundary>
-      <div className="min-h-screen py-8 lg:py-16 text-white overflow-hidden bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014] relative" id="Portofolio">
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-[#6366f1] rounded-full blur-3xl opacity-10 animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#a855f7] rounded-full blur-3xl opacity-5 animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 left-1/2 w-56 h-56 bg-[#8b5cf6] rounded-full blur-2xl opacity-5 animate-pulse delay-500"></div>
-          
-          <div className="absolute inset-0 opacity-10">
-            <div className="w-full h-full portfolio-grid-move"></div>
-          </div>
-        </div>
+      <div className={`min-h-screen py-8 lg:py-16 bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014] relative overflow-hidden transition-all duration-500 ${isLoaded ? "opacity-100" : "opacity-0"}`} id="portfolio">
+        {backgroundElements}
 
-        <div className="relative z-10 md:px-[5%] px-[4%] w-full sm:mt-0 mt-[2rem]">
-          <div className="text-center pb-8" data-aos="fade-up" data-aos-duration="1000">
-            <h2 className="inline-block text-3xl md:text-5xl font-bold text-center mx-auto text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-purple-600 mb-4">
-              Design Portfolio
+        <div className="relative z-10 container mx-auto px-4 sm:px-6">
+          {/* Enhanced Animated Header with Home.jsx styling */}
+          <div className="text-center mb-12" data-aos="fade-down" data-aos-duration="1000">
+            <PortfolioBadge />
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mt-4">
+              <span className="relative inline-block">
+                <span className="absolute -inset-1 bg-gradient-to-r from-[#6366f1] to-[#a855f7] blur-lg sm:blur-xl opacity-20"></span>
+                <span className="relative bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
+                  Design
+                </span>
+              </span>
+              <br />
+              <span className="relative inline-block mt-1">
+                <span className="absolute -inset-1 bg-gradient-to-r from-[#6366f1] to-[#a855f7] blur-lg sm:blur-xl opacity-20"></span>
+                <span className="relative bg-gradient-to-r from-[#6366f1] to-[#a855f7] bg-clip-text text-transparent">
+                  Portfolio
+                </span>
+              </span>
             </h2>
-            <p className="text-gray-300 max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
-              Explore my design journey through carefully crafted projects. Each project showcases my passion for creating beautiful and functional design experiences.
+            <p className="text-gray-300 text-lg max-w-2xl mx-auto mt-4 transform transition-all duration-500 hover:scale-105">
+              Professional design projects with creative excellence and innovative solutions
             </p>
           </div>
 
-          <Box sx={{ width: "100%" }} {...swipeHandlers}>
-            <AppBar
-              position="static"
-              elevation={0}
-              sx={{
-                bgcolor: "transparent",
-                border: "1px solid rgba(255, 255, 255, 0.15)",
-                borderRadius: "24px",
-                position: "relative",
-                overflow: "hidden",
-                "&::before": {
-                  content: '""',
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  background: "linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%)",
-                  backdropFilter: isMobile ? "blur(8px)" : "blur(12px)",
-                  zIndex: 0,
-                },
-              }}
-              className="md:px-4"
-            >
-              <Tabs
-                value={value}
-                onChange={handleChange}
-                textColor="secondary"
-                indicatorColor="secondary"
-                variant="fullWidth"
-                sx={{
-                  minHeight: "70px",
-                  "& .MuiTab-root": {
-                    fontSize: { xs: "0.9rem", md: "1rem" },
-                    fontWeight: "700",
-                    color: "#cbd5e1",
-                    textTransform: "none",
-                    transition: prefersReducedMotion ? "none" : "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
-                    padding: "20px 0",
-                    zIndex: 1,
-                    margin: "8px",
-                    borderRadius: "16px",
-                    "&:hover": prefersReducedMotion ? {} : { 
-                      color: "#fff", 
-                      backgroundColor: "rgba(139, 92, 246, 0.15)", 
-                      transform: "translateY(-3px)",
-                      boxShadow: "0 10px 30px rgba(139, 92, 246, 0.2)"
-                    },
-                    "&.Mui-selected": { 
-                      color: "#fff", 
-                      background: "linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(236, 72, 153, 0.3))",
-                      boxShadow: "0 8px 25px rgba(139, 92, 246, 0.3)"
-                    },
-                  },
-                  "& .MuiTabs-indicator": { height: 0 },
-                  "& .MuiTabs-flexContainer": { gap: "8px" },
-                }}
-              >
-                <Tab 
-                  icon={<Palette className="mb-1 w-5 h-5 transition-all duration-500" />}
-                  label="Design Projects" 
-                  {...a11yProps(0)} 
-                />
-              </Tabs>
-            </AppBar>
-
-            <Swiper
-              slidesPerView={1}
-              onSlideChange={(swiper) => setValue(swiper.activeIndex)}
-              initialSlide={value}
-              speed={prefersReducedMotion ? 0 : 500}
-            >
-              <SwiperSlide>
-                <TabPanel value={value} index={0} dir={theme.direction}>
-                  <div className="container mx-auto flex justify-center items-center overflow-hidden">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 md:gap-8">
-                      {displayedProjects.map((project, index) => (
-                        <div 
-                          key={project.id || index} 
-                          data-aos={getAnimationType(index)}
-                          data-aos-duration={prefersReducedMotion ? 0 : 800}
-                          data-aos-delay={getAnimationDelay(index)}
-                          className="flex justify-center"
-                        >
-                          <CardProject 
-                            Img={project.Img} 
-                            Title={project.Title} 
-                            Description={project.Description} 
-                            id={project.id}
-                            technologies={project.technologies}
-                            scrollTargetId={project.scrollTargetId}
-                            onViewPosterClick={handleViewPosterClick}
-                          />
-                        </div>
-                      ))}
-                    </div>
+          <Box sx={{ width: "100%" }}>
+            {/* Enhanced Projects Grid with Home.jsx animations */}
+            <TabPanel value={value} index={0} dir={theme.direction}>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
+                {displayedProjects.map((project, index) => (
+                  <div 
+                    key={project.id}
+                    data-aos={prefersReducedMotion ? "fade-up" : "fade-up"}
+                    data-aos-duration={prefersReducedMotion ? 0 : 800}
+                    data-aos-delay={prefersReducedMotion ? 0 : (index % 3) * 100}
+                    className="transform transition-all duration-500 hover:-translate-y-2 performance-optimized"
+                  >
+                    <CardProject 
+                      {...project}
+                      onImageClick={handleImageClick}
+                    />
                   </div>
-                  {projects.length > initialItems && (
-                    <div 
-                      className="flex justify-center mt-12"
-                      data-aos="fade-up"
-                      data-aos-delay="300"
-                      data-aos-duration={prefersReducedMotion ? 0 : 800}
-                    >
-                      <ToggleButton 
-                        onClick={toggleShowMore} 
-                        isShowingMore={showAllProjects} 
-                        loading={loading}
-                      />
-                    </div>
-                  )}
-                </TabPanel>
-              </SwiperSlide>
-            </Swiper>
+                ))}
+              </div>
+
+              {/* Enhanced Animated Show More Button */}
+              {projects.length > initialItems && (
+                <div className="flex justify-center mt-12" data-aos="fade-up" data-aos-delay="300">
+                  <ToggleButton 
+                    onClick={toggleShowMore}
+                    isShowingMore={showAllProjects}
+                    loading={loading}
+                  />
+                </div>
+              )}
+
+              {/* Additional CTA Buttons */}
+              <div className="flex flex-row gap-3 justify-center mt-8" data-aos="fade-up" data-aos-delay="500">
+                <PortfolioCTAButton href="#Contact" text="Get in Touch" icon={Mail} />
+                <PortfolioCTAButton href="#Home" text="Back to Home" icon={ExternalLink} />
+              </div>
+            </TabPanel>
           </Box>
         </div>
 
-        <style>{`
-          .portfolio-fade-in {
-            animation: portfolioFadeIn 0.3s ease-out;
-          }
-          
-          .portfolio-scale-in {
-            animation: portfolioScaleIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-          }
-          
-          .portfolio-slide-up {
-            animation: portfolioSlideUp 0.5s ease-out;
-          }
-          
-          .portfolio-grid-move {
-            background-image: linear-gradient(#6366f1 1px, transparent 1px), linear-gradient(90deg, #6366f1 1px, transparent 1px);
-            background-size: 40px 40px;
-            animation: portfolioGridMove 20s linear infinite;
-          }
-
-          .highlight-section {
-            animation: highlightPulse 2s ease-in-out;
-          }
-          
-          @keyframes portfolioFadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
-          
-          @keyframes portfolioScaleIn {
-            from { transform: scale(0.9); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-          }
-          
-          @keyframes portfolioSlideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-          }
-          
-          @keyframes portfolioGridMove {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(40px, 40px); }
-          }
-
-          @keyframes highlightPulse {
-            0% { background: rgba(139, 92, 246, 0); }
-            50% { background: rgba(139, 92, 246, 0.1); }
-            100% { background: rgba(139, 92, 246, 0); }
-          }
-          
-          @media (prefers-reduced-motion: reduce) {
-            .portfolio-fade-in,
-            .portfolio-scale-in,
-            .portfolio-slide-up,
-            .portfolio-grid-move,
-            .highlight-section,
-            .transition-all,
-            .transform {
-              animation: none !important;
-              transition: none !important;
-            }
-          }
-        `}</style>
+        {/* Enhanced Image Modal */}
+        <ImageModal
+          image={selectedImage?.image}
+          title={selectedImage?.title}
+          isOpen={!!selectedImage}
+          onClose={closeImageModal}
+        />
       </div>
+
+      {/* CSS animations from Home.jsx */}
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+        @keyframes grid-move {
+          0% { transform: translate(0, 0); }
+          100% { transform: translate(40px, 40px); }
+        }
+        .animate-float {
+          animation: float 3s ease-in-out infinite;
+        }
+        .mobile-touch:active {
+          transform: scale(0.95);
+        }
+        .performance-optimized {
+          transform: translateZ(0);
+          backface-visibility: hidden;
+          perspective: 1000px;
+        }
+        
+        @media (prefers-reduced-motion: reduce) {
+          .animate-float,
+          .animate-pulse,
+          .animate-bounce {
+            animation: none !important;
+          }
+          * {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+          }
+        }
+      `}</style>
     </PortfolioErrorBoundary>
   );
 });
 
-FullWidthTabs.displayName = 'FullWidthTabs';
+Portfolio.displayName = 'Portfolio';
 
-export default FullWidthTabs;
+export default Portfolio;

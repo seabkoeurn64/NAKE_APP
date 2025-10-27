@@ -17,7 +17,7 @@ const debounce = (func, wait) => {
   };
 };
 
-// Enhanced Typewriter Component with performance improvements
+// Enhanced Typewriter Component with better performance
 const TypewriterEffect = memo(({ text, speed = 150, onComplete }) => {
   const [displayText, setDisplayText] = useState('');
   
@@ -28,35 +28,27 @@ const TypewriterEffect = memo(({ text, speed = 150, onComplete }) => {
     }
 
     let index = 0;
-    let animationFrame;
-    let lastTime = 0;
+    let timeoutId;
 
-    const animate = (currentTime) => {
-      if (!lastTime) lastTime = currentTime;
-      const delta = currentTime - lastTime;
-
-      if (delta >= speed) {
-        if (index <= text.length) {
-          setDisplayText(text.slice(0, index));
-          index++;
-          
-          if (index > text.length && onComplete) {
-            onComplete();
-            return;
-          }
-        } else {
+    const type = () => {
+      if (index <= text.length) {
+        setDisplayText(text.slice(0, index));
+        index++;
+        
+        if (index > text.length && onComplete) {
+          onComplete();
           return;
         }
-        lastTime = currentTime;
+        
+        timeoutId = setTimeout(type, speed);
       }
-      animationFrame = requestAnimationFrame(animate);
     };
 
-    animationFrame = requestAnimationFrame(animate);
+    timeoutId = setTimeout(type, speed);
     
     return () => {
-      if (animationFrame) {
-        cancelAnimationFrame(animationFrame);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
       }
     };
   }, [text, speed, onComplete]);
@@ -259,22 +251,26 @@ const WelcomeScreen = ({ onLoadingComplete }) => {
     if (prefersReducedMotion) return;
 
     const initAOS = () => {
-      AOS.init({
-        duration: 800,
-        once: false,
-        mirror: false,
-        offset: 50,
-        throttleDelay: 99,
-        startEvent: 'DOMContentLoaded',
-        disable: isMobile ? false : 'phone'
-      });
+      if (typeof AOS !== 'undefined') {
+        AOS.init({
+          duration: 800,
+          once: false,
+          mirror: false,
+          offset: 50,
+          throttleDelay: 99,
+          startEvent: 'DOMContentLoaded',
+          disable: isMobile ? false : 'phone'
+        });
+      }
     };
 
     const timer = setTimeout(initAOS, 100);
     
     return () => {
       clearTimeout(timer);
-      AOS.refresh();
+      if (typeof AOS !== 'undefined') {
+        AOS.refresh();
+      }
     };
   }, [isMobile, prefersReducedMotion]);
 
