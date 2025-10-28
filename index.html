@@ -4,296 +4,63 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-    
-    <!-- ✅ Primary Meta Tags -->
+
     <title>Koeurn - Graphic Designer</title>
     <meta name="description" content="Professional portfolio of Koeurn - Creative Graphic Designer specializing in poster design, logo design, branding materials, and user-centered design solutions.">
     <meta name="author" content="Koeurn">
     <meta name="keywords" content="graphic designer, UI designer, UX designer, portfolio, branding, logo design, poster design, Cambodia designer">
-    
-    <!-- ✅ Open Graph / Facebook -->
+
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://www.koeurn.my.id/">
     <meta property="og:title" content="Koeurn - Creative Graphic Designer">
     <meta property="og:description" content="Professional portfolio of Koeurn - Creative Graphic Designer specializing in beautiful, intuitive designs and user-centered solutions.">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
     <meta property="og:site_name" content="Koeurn Portfolio">
-    
-    <!-- ✅ Twitter -->
+
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://www.koeurn.my.id/">
     <meta property="twitter:title" content="Koeurn - Creative Graphic Designer">
     <meta property="twitter:description" content="Professional portfolio of Koeurn - Creative Graphic Designer">
-    <meta property="twitter:creator" content="@koeurn">
-
-    <!-- ✅ Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta property="twitter:creator" content="@koeurn"> <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="theme-color" content="#030014">
 
-    <!-- ✅ Preconnect for Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://assets-v2.lottiefiles.com">
-    
-    <!-- ✅ Google Fonts -->
+
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- ✅ Critical CSS - Inlined for fastest rendering -->
     <style>
-      /* ✅ Reset and Base Styles */
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
+      /* Reset and Base Styles */
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      :root { --primary-bg: #030014; --accent-purple: #8b5cf6; --accent-indigo: #6366f1; --accent-pink: #a855f7; }
+      html { scroll-behavior: smooth; }
+      body { font-family: 'Poppins', system-ui, -apple-system, sans-serif; background: var(--primary-bg); color: #ffffff; overflow-x: hidden; line-height: 1.6; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+      img { max-width: 100%; height: auto; display: block; }
+      button, a { min-height: 44px; min-width: 44px; touch-action: manipulation; }
 
-      :root {
-        --primary-bg: #030014;
-        --accent-purple: #8b5cf6;
-        --accent-indigo: #6366f1;
-        --accent-pink: #a855f7;
-      }
-
-      html {
-        scroll-behavior: smooth;
-      }
-
-      body {
-        font-family: 'Poppins', system-ui, -apple-system, sans-serif;
-        background: var(--primary-bg);
-        color: #ffffff;
-        overflow-x: hidden;
-        line-height: 1.6;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-      }
-
-      /* Ensure responsive images */
-      img {
-        max-width: 100%;
-        height: auto;
-        display: block;
-      }
-
-      /* Mobile-friendly touch targets */
-      button, 
-      a {
-        min-height: 44px;
-        min-width: 44px;
-        touch-action: manipulation;
-      }
-
-      /* ✅ Enhanced Loading Container */
-      #loading-fallback {
-        position: fixed;
-        inset: 0;
-        background: radial-gradient(ellipse at center, #0f0c29 0%, #302b63 50%, #24243e 100%);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        font-family: 'Poppins', system-ui, sans-serif;
-        z-index: 9999;
-        overflow: hidden;
-        transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-      }
-
-      /* Enhanced spinner */
-      .loading-spinner {
-        width: 60px;
-        height: 60px;
-        border: 3px solid rgba(255, 255, 255, 0.1);
-        border-top: 3px solid var(--accent-purple);
-        border-right: 3px solid var(--accent-indigo);
-        border-radius: 50%;
-        animation: spin 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
-        margin-bottom: 1.5rem;
-        position: relative;
-        box-shadow: 
-          0 0 20px rgba(139, 92, 246, 0.4),
-          inset 0 0 20px rgba(99, 102, 241, 0.1);
-      }
-
-      .loading-spinner::after {
-        content: '';
-        position: absolute;
-        top: -3px;
-        left: -3px;
-        right: -3px;
-        bottom: -3px;
-        border-radius: 50%;
-        border: 1px solid transparent;
-        border-top: 1px solid var(--accent-pink);
-        animation: spin 2s linear infinite reverse;
-        opacity: 0.6;
-      }
-
-      @keyframes spin {
-        0% { 
-          transform: rotate(0deg);
-          border-top-color: var(--accent-purple);
-        }
-        50% {
-          border-top-color: var(--accent-indigo);
-        }
-        100% { 
-          transform: rotate(360deg);
-          border-top-color: var(--accent-pink);
-        }
-      }
-
-      /* Enhanced loading text */
-      .loading-text {
-        font-size: clamp(1rem, 4vw, 1.1rem);
-        font-weight: 500;
-        letter-spacing: 1.5px;
-        background: linear-gradient(135deg, #e2e8f0, #c7d2fe);
-        background-clip: text;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        animation: pulse 2s ease-in-out infinite;
-        text-align: center;
-        line-height: 1.6;
-        padding: 0 1rem;
-      }
-
-      .loading-subtext {
-        font-size: clamp(0.75rem, 3vw, 0.85rem);
-        opacity: 0.7;
-        margin-top: 0.5rem;
-        animation: fadeInOut 2s ease-in-out infinite;
-        padding: 0 1rem;
-        text-align: center;
-      }
-
-      @keyframes pulse {
-        0%, 100% { opacity: 0.8; }
-        50% { opacity: 1; }
-      }
-
-      @keyframes fadeInOut {
-        0%, 100% { opacity: 0.5; }
-        50% { opacity: 0.8; }
-      }
-
-      /* Background particles */
-      .loading-particles {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        z-index: -1;
-      }
-
-      .particle {
-        position: absolute;
-        background: radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%);
-        border-radius: 50%;
-        animation: floatParticle 6s ease-in-out infinite;
-      }
-
-      @keyframes floatParticle {
-        0%, 100% { 
-          transform: translate(0, 0) scale(1);
-          opacity: 0.3;
-        }
-        33% { 
-          transform: translate(30px, -20px) scale(1.1);
-          opacity: 0.5;
-        }
-        66% { 
-          transform: translate(-20px, 15px) scale(0.9);
-          opacity: 0.4;
-        }
-      }
-
-      /* Performance optimizations */
-      #root {
-        isolation: isolate;
-      }
-
-      /* Mobile optimizations */
-      @media (max-width: 768px) {
-        .loading-spinner {
-          width: 50px;
-          height: 50px;
-        }
-        
-        /* Reduce animation intensity on mobile */
-        .particle {
-          animation-duration: 8s;
-        }
-      }
-
-      /* Reduced motion support */
-      @media (prefers-reduced-motion: reduce) {
-        * {
-          animation-duration: 0.01ms !important;
-          animation-iteration-count: 1 !important;
-          transition-duration: 0.01ms !important;
-        }
-        
-        .loading-spinner {
-          animation: none;
-          border: 3px solid var(--accent-purple);
-        }
-        
-        html {
-          scroll-behavior: auto;
-        }
-        
-        .particle {
-          animation: none;
-          opacity: 0.2;
-        }
-        
-        .loading-text,
-        .loading-subtext {
-          animation: none;
-        }
-      }
-
-      /* Focus styles for accessibility */
-      button:focus-visible,
-      a:focus-visible {
-        outline: 2px solid var(--accent-purple);
-        outline-offset: 2px;
-      }
-
-      /* High contrast support */
-      @media (prefers-contrast: high) {
-        .loading-spinner {
-          border-color: #ffffff;
-        }
-        
-        .loading-text {
-          background: none;
-          -webkit-text-fill-color: #ffffff;
-          color: #ffffff;
-        }
-      }
-
-      /* Print styles */
-      @media print {
-        #loading-fallback {
-          display: none !important;
-        }
-      }
-
-      /* Hide loader when React mounts */
-      .loading-hidden {
-        opacity: 0;
-        pointer-events: none;
-      }
+      /* Enhanced Loading Container */
+      #loading-fallback { position: fixed; inset: 0; background: radial-gradient(ellipse at center, #0f0c29 0%, #302b63 50%, #24243e 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; font-family: 'Poppins', system-ui, sans-serif; z-index: 9999; overflow: hidden; transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+      .loading-spinner { width: 60px; height: 60px; border: 3px solid rgba(255, 255, 255, 0.1); border-top: 3px solid var(--accent-purple); border-right: 3px solid var(--accent-indigo); border-radius: 50%; animation: spin 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite; margin-bottom: 1.5rem; position: relative; box-shadow: 0 0 20px rgba(139, 92, 246, 0.4), inset 0 0 20px rgba(99, 102, 241, 0.1); }
+      .loading-spinner::after { content: ''; position: absolute; top: -3px; left: -3px; right: -3px; bottom: -3px; border-radius: 50%; border: 1px solid transparent; border-top: 1px solid var(--accent-pink); animation: spin 2s linear infinite reverse; opacity: 0.6; }
+      @keyframes spin { 0% { transform: rotate(0deg); border-top-color: var(--accent-purple); } 50% { border-top-color: var(--accent-indigo); } 100% { transform: rotate(360deg); border-top-color: var(--accent-pink); } }
+      .loading-text { font-size: clamp(1rem, 4vw, 1.1rem); font-weight: 500; letter-spacing: 1.5px; background: linear-gradient(135deg, #e2e8f0, #c7d2fe); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: pulse 2s ease-in-out infinite; text-align: center; line-height: 1.6; padding: 0 1rem; }
+      .loading-subtext { font-size: clamp(0.75rem, 3vw, 0.85rem); opacity: 0.7; margin-top: 0.5rem; animation: fadeInOut 2s ease-in-out infinite; padding: 0 1rem; text-align: center; }
+      @keyframes pulse { 0%, 100% { opacity: 0.8; } 50% { opacity: 1; } }
+      @keyframes fadeInOut { 0%, 100% { opacity: 0.5; } 50% { opacity: 0.8; } }
+      .loading-particles { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: -1; }
+      .particle { position: absolute; background: radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%); border-radius: 50%; animation: floatParticle 6s ease-in-out infinite; }
+      @keyframes floatParticle { 0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; } 33% { transform: translate(30px, -20px) scale(1.1); opacity: 0.5; } 66% { transform: translate(-20px, 15px) scale(0.9); opacity: 0.4; } }
+      #root { isolation: isolate; }
+      @media (max-width: 768px) { .loading-spinner { width: 50px; height: 50px; } .particle { animation-duration: 8s; } }
+      @media (prefers-reduced-motion: reduce) { * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; } .loading-spinner { animation: none; border: 3px solid var(--accent-purple); } html { scroll-behavior: auto; } .particle { animation: none; opacity: 0.2; } .loading-text, .loading-subtext { animation: none; } }
+      button:focus-visible, a:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
+      @media (prefers-contrast: high) { .loading-spinner { border-color: #ffffff; } .loading-text { background: none; -webkit-text-fill-color: #ffffff; color: #ffffff; } }
+      @media print { #loading-fallback { display: none !important; } }
+      .loading-hidden { opacity: 0; pointer-events: none; }
     </style>
   </head>
 
   <body>
-    <!-- Enhanced Loading Fallback -->
     <div id="loading-fallback">
       <div class="loading-particles" id="particles-container"></div>
       <div class="loading-spinner"></div>
@@ -303,44 +70,11 @@
 
     <div id="root"></div>
 
-    <!-- ✅ Noscript fallback -->
     <noscript>
-      <div style="
-        position: fixed;
-        inset: 0;
-        background: #030014;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-family: system-ui, sans-serif;
-        text-align: center;
-        padding: 2rem;
-        z-index: 10000;
-      ">
-        <div style="
-          background: rgba(255, 255, 255, 0.05);
-          backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 1.5rem;
-          padding: 3rem 2rem;
-          max-width: 500px;
-          width: 100%;
-        ">
-          <h1 style="
-            color: #6366f1; 
-            margin-bottom: 1rem;
-            font-size: 1.875rem;
-            font-weight: bold;
-          ">
-            JavaScript Required
-          </h1>
-          <p style="
-            margin-bottom: 2rem; 
-            color: #94a3b8;
-            line-height: 1.6;
-            font-size: 1rem;
-          ">
+      <div style="position: fixed; inset: 0; background: #030014; display: flex; align-items: center; justify-content: center; color: white; font-family: system-ui, sans-serif; text-align: center; padding: 2rem; z-index: 10000;">
+        <div style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.5rem; padding: 3rem 2rem; max-width: 500px; width: 100%;">
+          <h1 style="color: #6366f1; margin-bottom: 1rem; font-size: 1.875rem; font-weight: bold;">JavaScript Required</h1>
+          <p style="margin-bottom: 2rem; color: #94a3b8; line-height: 1.6; font-size: 1rem;">
             This portfolio requires JavaScript to function properly. Please enable JavaScript in your browser settings to view the content.
           </p>
         </div>
@@ -350,137 +84,111 @@
     <script type="module" src="/src/main.jsx"></script>
 
     <script>
-      // ✅ OPTIMIZED: Performance-focused loading handler
       (function() {
         'use strict';
-        
         const loader = document.getElementById('loading-fallback');
         let particlesCreated = false;
         let hideTimeout;
-        
+
         // Optimized particle creation
         function createParticles() {
           if (particlesCreated) return;
-          
           const container = document.getElementById('particles-container');
           if (!container) return;
-          
           const isMobile = window.innerWidth < 768;
           const particleCount = isMobile ? 4 : 8;
           const fragment = document.createDocumentFragment();
-          
           for (let i = 0; i < particleCount; i++) {
             const particle = document.createElement('div');
             particle.className = 'particle';
-            
             const size = Math.random() * 40 + 20;
             const posX = Math.random() * 100;
             const posY = Math.random() * 100;
             const delay = Math.random() * 3;
-            
-            particle.style.cssText = `
-              width: ${size}px;
-              height: ${size}px;
-              left: ${posX}%;
-              top: ${posY}%;
-              animation-delay: ${delay}s;
-              opacity: ${Math.random() * 0.3 + 0.1};
-            `;
-            
+            particle.style.cssText = `width: ${size}px; height: ${size}px; left: ${posX}%; top: ${posY}%; animation-delay: ${delay}s; opacity: ${Math.random() * 0.3 + 0.1};`;
             fragment.appendChild(particle);
           }
-          
           container.appendChild(fragment);
           particlesCreated = true;
         }
-        
-        // Hide loading screen with performance optimization
+
+        // Hide loading screen smoothly
         function hideLoader() {
           if (!loader || loader.classList.contains('loading-hidden')) return;
-          
           clearTimeout(hideTimeout);
-          
-          // Use requestAnimationFrame for smooth animation
           requestAnimationFrame(() => {
             loader.classList.add('loading-hidden');
-            
-            // Remove from DOM after animation
-            setTimeout(() => {
-              if (loader.parentNode) {
-                loader.parentNode.removeChild(loader);
-              }
-            }, 800);
+            setTimeout(() => { // Remove from DOM after transition
+              if (loader.parentNode) { loader.parentNode.removeChild(loader); }
+            }, 800); // Matches CSS transition duration
           });
         }
-        
-        // Check if React has already mounted
+
+        // Check if React root is populated
         function checkReactMounted() {
           const root = document.getElementById('root');
-          if (root && root.children.length > 0) {
-            hideLoader();
-            return true;
-          }
-          return false;
+          // Check if root exists and has child elements (React has rendered something)
+          return root && root.children.length > 0;
         }
-        
-        // Initialize particles with debounce
+
+        // Initialize particles if motion is preferred
         function initParticles() {
-          if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', createParticles, { once: true });
-          } else {
-            // Small delay to avoid blocking main thread
-            setTimeout(createParticles, 100);
-          }
+           if (shouldReduceMotion()) return; // Skip if reduced motion is enabled
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', createParticles, { once: true });
+            } else {
+                // Small delay to prevent blocking initial render
+                setTimeout(createParticles, 100);
+            }
         }
-        
-        // Check for reduced motion preference
+
+        // Check reduced motion preference
         function shouldReduceMotion() {
           return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         }
-        
-        // Initialize
+
+        // Main initialization logic
         function init() {
-          // Skip animations if reduced motion
-          if (!shouldReduceMotion()) {
-            initParticles();
-          }
-          
-          // Check if React is already mounted (fast connections)
-          if (checkReactMounted()) {
-            return;
-          }
-          
-          // Listen for React mount
-          const observer = new MutationObserver((mutations) => {
-            for (const mutation of mutations) {
-              if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                for (const node of mutation.addedNodes) {
-                  if (node.nodeType === 1) { // Element node
-                    hideLoader();
-                    observer.disconnect();
-                    return;
-                  }
-                }
-              }
+            initParticles(); // Attempt to init particles (respects reduced motion)
+
+            if (checkReactMounted()) { // Hide immediately if React already rendered
+                hideLoader();
+                return;
             }
-          });
-          
-          const root = document.getElementById('root');
-          if (root) {
-            observer.observe(root, { childList: true, subtree: true });
-          }
-          
-          // Fallback: hide loader after 3 seconds max
-          hideTimeout = setTimeout(hideLoader, 3000);
+
+            // Observe the root element for changes (React mounting)
+            const root = document.getElementById('root');
+            if (!root) return; // Should not happen, but safety check
+
+            const observer = new MutationObserver((mutations) => {
+                // Check mutations for added nodes indicating React mount
+                for (const mutation of mutations) {
+                    if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                        for (const node of mutation.addedNodes) {
+                             if (node.nodeType === 1) { // Check if it's an element node
+                                hideLoader();
+                                observer.disconnect(); // Stop observing once mounted
+                                return;
+                            }
+                        }
+                    }
+                }
+            });
+
+            observer.observe(root, { childList: true }); // Observe only direct children
+
+            // Fallback: Hide loader after a max timeout
+            hideTimeout = setTimeout(hideLoader, 3000);
         }
-        
-        // Start initialization
+
+        // Start initialization based on document state
         if (document.readyState === 'loading') {
           document.addEventListener('DOMContentLoaded', init);
         } else {
-          init();
+          init(); // Already loaded, init directly
         }
-        
+
       })();
     </script>
   </body>

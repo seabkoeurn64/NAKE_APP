@@ -18,10 +18,12 @@
     "type-check": "tsc --noEmit || echo 'TypeScript not configured'"
   },
   "dependencies": {
-    "@lottiefiles/dotlottie-react": "^0.17.5",
+    "@lottiefiles/dotlottie-react": "^0.17.6",
+    "@lottiefiles/react-lottie-player": "^3.6.0",
     "@vercel/speed-insights": "^1.2.0",
     "aos": "^2.3.4",
     "framer-motion": "^10.18.0",
+    "lottie-react": "^2.4.1",
     "lucide-react": "^0.288.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -37,12 +39,12 @@
     "eslint-plugin-react-refresh": "^0.4.4",
     "gh-pages": "^6.3.0",
     "postcss": "^8.5.6",
-    "rollup-plugin-visualizer": "^6.0.5",
     "rimraf": "^5.0.1",
+    "rollup-plugin-visualizer": "^6.0.5",
     "tailwindcss": "^3.4.18",
     "terser": "^5.44.0",
-    "vite": "^4.5.0",
-    "typescript": "^5.3.0"
+    "typescript": "^5.3.0",
+    "vite": "^4.5.0"
   },
   "browserslist": {
     "production": [
