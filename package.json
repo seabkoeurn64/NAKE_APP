@@ -1,45 +1,34 @@
 {
-  "name": "designer-portfolio",
+  "name": "koeurn-portfolio",
+  "description": "Professional portfolio of Koeurn - Creative Graphic Designer specializing in poster design, logo design, and branding materials",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
-  "homepage": "https://seabkoeurn64.github.io/nake-app",
+  "homepage": "https://koeurn.my.id",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "vite build",
-    "preview": "vite preview",
-    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview --host",
+    "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint . --fix",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "analyze": "vite build --mode analyze",
+    "clean": "rimraf dist node_modules/.vite",
+    "type-check": "tsc --noEmit || echo 'TypeScript not configured'"
   },
   "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
     "@lottiefiles/dotlottie-react": "^0.17.5",
-    "@mui/icons-material": "^7.3.4",
-    "@mui/material": "^7.3.4",
-    "@supabase/supabase-js": "^2.75.0",
     "@vercel/speed-insights": "^1.2.0",
     "aos": "^2.3.4",
-    "axios": "^1.12.2",
     "framer-motion": "^10.18.0",
-    "lottie-react": "^2.4.1",
-    "lottie-web": "^5.13.0",
     "lucide-react": "^0.288.0",
-    "prop-types": "^15.8.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-helmet-async": "^2.0.5",
-    "react-icons": "^5.5.0",
-    "react-intersection-observer": "^9.16.0",
-    "react-router-dom": "^7.9.4",
-    "sweetalert2": "^11.26.2",
-    "swiper": "^12.0.2",
     "web-vitals": "^5.1.0"
   },
   "devDependencies": {
-    "@types/react": "^18.2.37",
-    "@types/react-dom": "^18.2.15",
+    "@tailwindcss/forms": "^0.5.10",
     "@vitejs/plugin-react": "^4.1.0",
     "autoprefixer": "^10.4.21",
     "eslint": "^8.53.0",
@@ -49,10 +38,47 @@
     "gh-pages": "^6.3.0",
     "postcss": "^8.5.6",
     "rollup-plugin-visualizer": "^6.0.5",
-    "sharp": "^0.34.4",
+    "rimraf": "^5.0.1",
     "tailwindcss": "^3.4.18",
     "terser": "^5.44.0",
     "vite": "^4.5.0",
-    "vite-bundle-analyzer": "^1.2.3"
-  }
+    "typescript": "^5.3.0"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all",
+      "last 2 versions",
+      "since 2018"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "keywords": [
+    "portfolio",
+    "graphic-design",
+    "react",
+    "vite",
+    "tailwindcss",
+    "animation",
+    "responsive"
+  ],
+  "author": {
+    "name": "Koeurn",
+    "email": "your-email@koeurn.my.id",
+    "url": "https://koeurn.my.id"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seabkoeurn64/portfolio.git"
+  },
+  "license": "MIT"
 }

@@ -16,8 +16,6 @@
     <meta property="og:url" content="https://www.koeurn.my.id/">
     <meta property="og:title" content="Koeurn - Creative Graphic Designer">
     <meta property="og:description" content="Professional portfolio of Koeurn - Creative Graphic Designer specializing in beautiful, intuitive designs and user-centered solutions.">
-    <!-- ✅ REMOVED: Problematic OG image that causes 404 -->
-    <!-- <meta property="og:image" content="/images/og-image-1200x630.webp"> -->
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:site_name" content="Koeurn Portfolio">
@@ -27,8 +25,6 @@
     <meta property="twitter:url" content="https://www.koeurn.my.id/">
     <meta property="twitter:title" content="Koeurn - Creative Graphic Designer">
     <meta property="twitter:description" content="Professional portfolio of Koeurn - Creative Graphic Designer">
-    <!-- ✅ REMOVED: Problematic Twitter image that causes 404 -->
-    <!-- <meta property="twitter:image" content="/images/twitter-image-1200x600.webp"> -->
     <meta property="twitter:creator" content="@koeurn">
 
     <!-- ✅ Favicon -->
@@ -43,12 +39,20 @@
     <!-- ✅ Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
+    <!-- ✅ Critical CSS - Inlined for fastest rendering -->
     <style>
-      /* ✅ Critical CSS - Inlined for fastest rendering */
+      /* ✅ Reset and Base Styles */
       * {
         box-sizing: border-box;
         margin: 0;
         padding: 0;
+      }
+
+      :root {
+        --primary-bg: #030014;
+        --accent-purple: #8b5cf6;
+        --accent-indigo: #6366f1;
+        --accent-pink: #a855f7;
       }
 
       html {
@@ -57,7 +61,7 @@
 
       body {
         font-family: 'Poppins', system-ui, -apple-system, sans-serif;
-        background: #030014;
+        background: var(--primary-bg);
         color: #ffffff;
         overflow-x: hidden;
         line-height: 1.6;
@@ -101,8 +105,8 @@
         width: 60px;
         height: 60px;
         border: 3px solid rgba(255, 255, 255, 0.1);
-        border-top: 3px solid #8b5cf6;
-        border-right: 3px solid #6366f1;
+        border-top: 3px solid var(--accent-purple);
+        border-right: 3px solid var(--accent-indigo);
         border-radius: 50%;
         animation: spin 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
         margin-bottom: 1.5rem;
@@ -121,7 +125,7 @@
         bottom: -3px;
         border-radius: 50%;
         border: 1px solid transparent;
-        border-top: 1px solid #a855f7;
+        border-top: 1px solid var(--accent-pink);
         animation: spin 2s linear infinite reverse;
         opacity: 0.6;
       }
@@ -129,14 +133,14 @@
       @keyframes spin {
         0% { 
           transform: rotate(0deg);
-          border-top-color: #8b5cf6;
+          border-top-color: var(--accent-purple);
         }
         50% {
-          border-top-color: #6366f1;
+          border-top-color: var(--accent-indigo);
         }
         100% { 
           transform: rotate(360deg);
-          border-top-color: #a855f7;
+          border-top-color: var(--accent-pink);
         }
       }
 
@@ -235,7 +239,7 @@
         
         .loading-spinner {
           animation: none;
-          border: 3px solid #8b5cf6;
+          border: 3px solid var(--accent-purple);
         }
         
         html {
@@ -246,12 +250,17 @@
           animation: none;
           opacity: 0.2;
         }
+        
+        .loading-text,
+        .loading-subtext {
+          animation: none;
+        }
       }
 
       /* Focus styles for accessibility */
       button:focus-visible,
       a:focus-visible {
-        outline: 2px solid #8b5cf6;
+        outline: 2px solid var(--accent-purple);
         outline-offset: 2px;
       }
 
@@ -274,6 +283,12 @@
           display: none !important;
         }
       }
+
+      /* Hide loader when React mounts */
+      .loading-hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
     </style>
   </head>
 
@@ -282,29 +297,77 @@
     <div id="loading-fallback">
       <div class="loading-particles" id="particles-container"></div>
       <div class="loading-spinner"></div>
-      <p class="loading-text">Loading <strong>Portfolio</strong>...</p>
+      <p class="loading-text" role="status" aria-live="polite">Loading <strong>Portfolio</strong>...</p>
       <p class="loading-subtext">Crafted with passion</p>
     </div>
 
     <div id="root"></div>
 
-    <!-- ✅ SIMPLIFIED: Remove complex loading script -->
+    <!-- ✅ Noscript fallback -->
+    <noscript>
+      <div style="
+        position: fixed;
+        inset: 0;
+        background: #030014;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-family: system-ui, sans-serif;
+        text-align: center;
+        padding: 2rem;
+        z-index: 10000;
+      ">
+        <div style="
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 1.5rem;
+          padding: 3rem 2rem;
+          max-width: 500px;
+          width: 100%;
+        ">
+          <h1 style="
+            color: #6366f1; 
+            margin-bottom: 1rem;
+            font-size: 1.875rem;
+            font-weight: bold;
+          ">
+            JavaScript Required
+          </h1>
+          <p style="
+            margin-bottom: 2rem; 
+            color: #94a3b8;
+            line-height: 1.6;
+            font-size: 1rem;
+          ">
+            This portfolio requires JavaScript to function properly. Please enable JavaScript in your browser settings to view the content.
+          </p>
+        </div>
+      </div>
+    </noscript>
+
     <script type="module" src="/src/main.jsx"></script>
 
     <script>
-      // ✅ SIMPLIFIED: Basic loading handler
+      // ✅ OPTIMIZED: Performance-focused loading handler
       (function() {
         'use strict';
         
         const loader = document.getElementById('loading-fallback');
+        let particlesCreated = false;
+        let hideTimeout;
         
-        // Simple particle creation
+        // Optimized particle creation
         function createParticles() {
+          if (particlesCreated) return;
+          
           const container = document.getElementById('particles-container');
           if (!container) return;
           
           const isMobile = window.innerWidth < 768;
           const particleCount = isMobile ? 4 : 8;
+          const fragment = document.createDocumentFragment();
           
           for (let i = 0; i < particleCount; i++) {
             const particle = document.createElement('div');
@@ -315,40 +378,108 @@
             const posY = Math.random() * 100;
             const delay = Math.random() * 3;
             
-            particle.style.width = `${size}px`;
-            particle.style.height = `${size}px`;
-            particle.style.left = `${posX}%`;
-            particle.style.top = `${posY}%`;
-            particle.style.animationDelay = `${delay}s`;
-            particle.style.opacity = Math.random() * 0.3 + 0.1;
+            particle.style.cssText = `
+              width: ${size}px;
+              height: ${size}px;
+              left: ${posX}%;
+              top: ${posY}%;
+              animation-delay: ${delay}s;
+              opacity: ${Math.random() * 0.3 + 0.1};
+            `;
             
-            container.appendChild(particle);
+            fragment.appendChild(particle);
+          }
+          
+          container.appendChild(fragment);
+          particlesCreated = true;
+        }
+        
+        // Hide loading screen with performance optimization
+        function hideLoader() {
+          if (!loader || loader.classList.contains('loading-hidden')) return;
+          
+          clearTimeout(hideTimeout);
+          
+          // Use requestAnimationFrame for smooth animation
+          requestAnimationFrame(() => {
+            loader.classList.add('loading-hidden');
+            
+            // Remove from DOM after animation
+            setTimeout(() => {
+              if (loader.parentNode) {
+                loader.parentNode.removeChild(loader);
+              }
+            }, 800);
+          });
+        }
+        
+        // Check if React has already mounted
+        function checkReactMounted() {
+          const root = document.getElementById('root');
+          if (root && root.children.length > 0) {
+            hideLoader();
+            return true;
+          }
+          return false;
+        }
+        
+        // Initialize particles with debounce
+        function initParticles() {
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', createParticles, { once: true });
+          } else {
+            // Small delay to avoid blocking main thread
+            setTimeout(createParticles, 100);
           }
         }
         
-        // Hide loading screen
-        function hideLoader() {
-          if (!loader) return;
-          
-          setTimeout(() => {
-            loader.style.opacity = '0';
-            setTimeout(() => {
-              loader.style.display = 'none';
-            }, 600);
-          }, 800); // Show for minimum 800ms for better UX
+        // Check for reduced motion preference
+        function shouldReduceMotion() {
+          return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         }
         
         // Initialize
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', createParticles);
-        } else {
-          createParticles();
+        function init() {
+          // Skip animations if reduced motion
+          if (!shouldReduceMotion()) {
+            initParticles();
+          }
+          
+          // Check if React is already mounted (fast connections)
+          if (checkReactMounted()) {
+            return;
+          }
+          
+          // Listen for React mount
+          const observer = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+              if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                for (const node of mutation.addedNodes) {
+                  if (node.nodeType === 1) { // Element node
+                    hideLoader();
+                    observer.disconnect();
+                    return;
+                  }
+                }
+              }
+            }
+          });
+          
+          const root = document.getElementById('root');
+          if (root) {
+            observer.observe(root, { childList: true, subtree: true });
+          }
+          
+          // Fallback: hide loader after 3 seconds max
+          hideTimeout = setTimeout(hideLoader, 3000);
         }
         
-        window.addEventListener('load', hideLoader);
-        
-        // Fallback: hide loader after 3 seconds max
-        setTimeout(hideLoader, 3000);
+        // Start initialization
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', init);
+        } else {
+          init();
+        }
         
       })();
     </script>

@@ -1,4 +1,4 @@
-// src/Pages/Home.jsx - WITH NEW BACKGROUND DESIGN
+// src/Pages/Home.jsx - PERFORMANCE OPTIMIZED
 import React, { useState, useEffect, useCallback, memo, useMemo, useRef } from "react"
 import { Github, Linkedin, Mail, ExternalLink, Instagram, Sparkles } from "lucide-react"
 import { DotLottieReact } from '@lottiefiles/dotlottie-react'
@@ -128,64 +128,44 @@ const useTypingEffect = (words, typingSpeed, erasingSpeed, pauseDuration) => {
   return text;
 };
 
-// ✅ NEW: Home Background Component
+// ✅ OPTIMIZED: Home Background Component
 const HomeBackground = memo(({ prefersReducedMotion, isMobile }) => {
+  // Reduced number of elements for better performance
+  const floatingShapes = useMemo(() => {
+    const baseShapes = [
+      { class: "top-20 left-10 w-64 h-64 bg-purple-500/10", delay: "0s" },
+      { class: "top-40 right-20 w-48 h-48 bg-pink-500/10", delay: "1s" },
+      { class: "bottom-32 left-1/4 w-56 h-56 bg-blue-500/10", delay: "0.5s" },
+    ];
+    return isMobile ? baseShapes.slice(0, 2) : baseShapes;
+  }, [isMobile]);
+
   return (
     <div className="absolute inset-0 overflow-hidden">
-      {/* Main gradient background */}
+      {/* Static gradient background */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#1a1039]" />
       
-      {/* Animated gradient overlay */}
-      <div 
-        className="absolute inset-0 opacity-20"
-        style={!prefersReducedMotion ? {
-          background: 'linear-gradient(45deg, #6366f1, #8b5cf6, #a855f7, #ec4899)',
-          backgroundSize: '400% 400%',
-          animation: 'homeGradient 8s ease infinite'
-        } : {}}
-      />
+      {/* Reduced floating shapes */}
+      {floatingShapes.map((shape, index) => (
+        <div
+          key={`float-${index}`}
+          className={`absolute ${shape.class} rounded-full blur-3xl performance-layer`}
+          style={!prefersReducedMotion ? { 
+            animation: `homeFloatSimple 8s ease-in-out infinite ${shape.delay}` 
+          } : {}}
+        />
+      ))}
       
-      {/* Floating design elements */}
-      <div className="absolute top-20 left-10 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl" 
-           style={!prefersReducedMotion ? { animation: 'homeFloat 6s ease-in-out infinite' } : {}} />
-      <div className="absolute top-40 right-20 w-48 h-48 bg-pink-500/10 rounded-full blur-2xl" 
-           style={!prefersReducedMotion ? { animation: 'homeFloat 8s ease-in-out infinite 1s' } : {}} />
-      <div className="absolute bottom-32 left-1/4 w-56 h-56 bg-blue-500/10 rounded-full blur-3xl" 
-           style={!prefersReducedMotion ? { animation: 'homeFloat 7s ease-in-out infinite 0.5s' } : {}} />
-      <div className="absolute bottom-20 right-32 w-40 h-40 bg-indigo-500/10 rounded-full blur-2xl" 
-           style={!prefersReducedMotion ? { animation: 'homeFloat 9s ease-in-out infinite 1.5s' } : {}} />
-      
-      {/* Design tool shapes */}
-      <div className="absolute top-1/3 left-20 w-16 h-16 bg-white/5 rounded-lg blur-sm rotate-12" 
-           style={!prefersReducedMotion ? { animation: 'homeDesign 4s ease-in-out infinite' } : {}} />
-      <div className="absolute bottom-1/3 right-24 w-12 h-12 bg-purple-400/10 rounded-lg blur-sm -rotate-12" 
-           style={!prefersReducedMotion ? { animation: 'homeDesign 5s ease-in-out infinite 0.8s' } : {}} />
-      <div className="absolute top-1/2 right-40 w-10 h-10 bg-pink-400/10 rounded-full blur-sm" 
-           style={!prefersReducedMotion ? { animation: 'homeDesign 3.5s ease-in-out infinite 1.2s' } : {}} />
-      
-      {/* Creative elements */}
-      <div className="absolute top-1/4 left-1/2 w-px h-32 bg-gradient-to-b from-purple-500/20 to-transparent" />
-      <div className="absolute bottom-1/4 right-1/2 w-px h-24 bg-gradient-to-t from-pink-500/20 to-transparent" />
-      
-      {/* Grid pattern */}
+      {/* Static grid pattern without animation */}
       <div className="absolute inset-0 opacity-5">
         <div 
           className="w-full h-full"
-          style={!prefersReducedMotion ? {
+          style={{
             backgroundImage: 'linear-gradient(#6366f1 1px, transparent 1px), linear-gradient(90deg, #6366f1 1px, transparent 1px)',
             backgroundSize: isMobile ? '30px 30px' : '50px 50px',
-            animation: 'homeGridMove 25s linear infinite'
-          } : {}}
+          }}
         />
       </div>
-      
-      {/* Sparkle effects */}
-      <div className="absolute top-1/4 left-1/3 w-2 h-2 bg-white rounded-full opacity-60" 
-           style={!prefersReducedMotion ? { animation: 'homeSparkle 3s ease-in-out infinite' } : {}} />
-      <div className="absolute top-1/3 right-1/4 w-1.5 h-1.5 bg-purple-300 rounded-full opacity-70" 
-           style={!prefersReducedMotion ? { animation: 'homeSparkle 4s ease-in-out infinite 0.7s' } : {}} />
-      <div className="absolute bottom-1/4 left-1/2 w-1 h-1 bg-blue-300 rounded-full opacity-80" 
-           style={!prefersReducedMotion ? { animation: 'homeSparkle 3.5s ease-in-out infinite 1.2s' } : {}} />
     </div>
   );
 });
@@ -267,64 +247,62 @@ const MobileSocialLinks = memo(() => (
   </div>
 ));
 
-// ✅ Fixed Lottie Component
+// ✅ OPTIMIZED: Lottie Component
 const LottieComponent = memo(({ 
   config, 
   className, 
   onLoad, 
   onError,
-  isMobile,
-  isTablet
+  isMobile 
 }) => {
   const [lottieError, setLottieError] = useState(false);
   const [isInView, setIsInView] = useState(false);
   const containerRef = useRef();
-
-  const handleError = useCallback(() => {
-    setLottieError(true);
-    onError?.();
-  }, [onError]);
-
-  const handleLoad = useCallback(() => {
-    onLoad?.();
-  }, [onLoad]);
+  const observerRef = useRef();
 
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const observer = new IntersectionObserver(
+    observerRef.current = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsInView(true);
-          observer.disconnect();
+        } else {
+          // Keep mounted but pause when far out of view
+          setIsInView(entry.boundingClientRect.top < window.innerHeight * 2);
         }
       },
-      { threshold: 0.1 }
+      { 
+        rootMargin: isMobile ? '100px' : '200px',
+        threshold: 0 
+      }
     );
 
-    observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, []);
+    observerRef.current.observe(containerRef.current);
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [isMobile]);
 
   if (lottieError) {
     return (
       <div className="flex items-center justify-center w-full h-full">
-        <div className="text-center text-gray-400">
-          <Sparkles className="w-12 h-12 mx-auto mb-2 opacity-50" />
-          <p className="text-sm">Creative Designs</p>
-        </div>
+        <Sparkles className="w-12 h-12 mx-auto opacity-50 text-gray-400" />
       </div>
     );
   }
 
   return (
-    <div ref={containerRef} className={className}>
+    <div ref={containerRef} className={`performance-layer ${className}`}>
       {isInView && (
         <DotLottieReact
           {...config}
-          onLoad={handleLoad}
-          onError={handleError}
-          crossOrigin="anonymous"
+          autoplay={true}
+          loop={true}
+          onError={() => setLottieError(true)}
         />
       )}
     </div>
@@ -493,12 +471,11 @@ const Home = () => {
 
   return (
     <ErrorBoundary>
-      {/* ✅ UPDATED: New background design */}
       <section 
         id="home" 
         className="min-h-screen overflow-hidden relative scroll-mt-16 py-8 sm:py-12 lg:py-16"
       >
-        {/* ✅ NEW: Enhanced Background */}
+        {/* ✅ OPTIMIZED: Enhanced Background */}
         <HomeBackground prefersReducedMotion={prefersReducedMotion} isMobile={isMobile} />
 
         <div className={`relative z-10 transition-all duration-500 ${isLoaded ? "opacity-100" : "opacity-0"}`}>
@@ -604,7 +581,6 @@ const Home = () => {
                           onLoad={handleLottieLoad}
                           onError={handleLottieError}
                           isMobile={isMobile}
-                          isTablet={isTablet}
                         />
                       </div>
                     </div>
@@ -630,39 +606,13 @@ const Home = () => {
           </div>
         </div>
 
-        {/* ✅ UPDATED: Enhanced CSS animations */}
+        {/* ✅ OPTIMIZED: Enhanced CSS animations */}
         <style>{`
-          @keyframes homeGradient {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
+          @keyframes homeFloatSimple {
+            0%, 100% { transform: translateY(0px) scale(1); opacity: 0.3; }
+            50% { transform: translateY(-20px) scale(1.1); opacity: 0.6; }
           }
           
-          @keyframes homeFloat {
-            0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); }
-            33% { transform: translateY(-20px) rotate(120deg) scale(1.1); }
-            66% { transform: translateY(10px) rotate(240deg) scale(0.9); }
-          }
-          
-          @keyframes homeDesign {
-            0%, 100% { transform: translateY(0px) rotate(12deg) scale(1); opacity: 0.3; }
-            50% { transform: translateY(-15px) rotate(12deg) scale(1.2); opacity: 0.7; }
-          }
-          
-          @keyframes homeGridMove {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(50px, 50px); }
-          }
-          
-          @keyframes homeSparkle {
-            0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
-            50% { opacity: 1; transform: scale(1) rotate(180deg); }
-          }
-
-          @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-15px) rotate(180deg); }
-          }
-
           @keyframes blink {
             0%, 100% { opacity: 1; }
             50% { opacity: 0; }
@@ -691,21 +641,12 @@ const Home = () => {
             backface-visibility: hidden;
             perspective: 1000px;
           }
+          .performance-layer {
+            will-change: transform, opacity;
+            transform: translate3d(0, 0, 0);
+          }
           
           @media (prefers-reduced-motion: reduce) {
-            .home-float-slow,
-            .home-gradient-slow,
-            .home-grid-move,
-            .home-design,
-            .home-sparkle,
-            .animate-float,
-            .animate-blink,
-            .animate-pulse-slow,
-            .animate-spin,
-            .animate-pulse,
-            .animate-bounce {
-              animation: none !important;
-            }
             * {
               animation-duration: 0.01ms !important;
               animation-iteration-count: 1 !important;

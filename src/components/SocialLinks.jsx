@@ -1,11 +1,11 @@
-import React, { memo, useMemo } from "react";
+import React, { memo } from "react";
 import { Linkedin, Instagram, Youtube, Github, MessageCircle } from "lucide-react";
 
 // Memoized social data to prevent re-renders
 const socials = [
   {
     name: "LinkedIn",
-    icon: <Linkedin className="w-5 h-5 sm:w-6 sm:h-6" />,
+    icon: Linkedin,
     url: "https://linkedin.com/in/ekizr",
     handle: "@koeurn65",
     color: "from-blue-500 to-blue-600",
@@ -14,7 +14,7 @@ const socials = [
   },
   {
     name: "Instagram",
-    icon: <Instagram className="w-5 h-5 sm:w-6 sm:h-6" />,
+    icon: Instagram,
     url: "https://instagram.com/koeurn65",
     handle: "@koeurn65",
     color: "from-pink-500 to-purple-500",
@@ -23,7 +23,7 @@ const socials = [
   },
   {
     name: "YouTube",
-    icon: <Youtube className="w-5 h-5 sm:w-6 sm:h-6" />,
+    icon: Youtube,
     url: "https://youtube.com/@koeurn65",
     handle: "@koeurn65",
     color: "from-red-500 to-red-600",
@@ -32,7 +32,7 @@ const socials = [
   },
   {
     name: "GitHub",
-    icon: <Github className="w-5 h-5 sm:w-6 sm:h-6" />,
+    icon: Github,
     url: "https://github.com/seabkoeurn64",
     handle: "@seabkoeurn64",
     color: "from-gray-600 to-gray-700",
@@ -41,7 +41,7 @@ const socials = [
   },
   {
     name: "TikTok",
-    icon: <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6" />,
+    icon: MessageCircle,
     url: "https://tiktok.com/@123kr123",
     handle: "@123kr123",
     color: "from-black to-gray-800",
@@ -50,8 +50,8 @@ const socials = [
   },
   {
     name: "Telegram",
-    icon: (
-      <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="currentColor" viewBox="0 0 24 24">
+    icon: (props) => (
+      <svg {...props} fill="currentColor" viewBox="0 0 24 24">
         <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.157l-1.895 8.386c-.125.534-.462.657-.924.41l-2.55-1.876-1.233 1.184c-.136.136-.25.25-.512.25l.183-2.587 4.734-4.27c.206-.185-.045-.287-.318-.1l-5.846 3.68-2.524-.788c-.545-.17-.556-.544.114-.806l9.724-3.73c.453-.18.85.112.7.747z"/>
       </svg>
     ),
@@ -64,6 +64,8 @@ const socials = [
 ];
 
 const SocialLinkItem = memo(({ social, index }) => {
+  const IconComponent = social.icon;
+  
   const handleClick = (e) => {
     // Optional: Add analytics tracking here
     console.log(`Clicked ${social.name} link`);
@@ -100,7 +102,6 @@ const SocialLinkItem = memo(({ social, index }) => {
           ${social.color}
         `}
         style={{ 
-          background: 'var(--social-gradient, transparent)',
           filter: 'blur(8px)',
           transform: 'scale(1.1)'
         }}
@@ -117,7 +118,7 @@ const SocialLinkItem = memo(({ social, index }) => {
             group-focus:scale-110 group-focus:shadow-lg
           `}
         >
-          {social.icon}
+          <IconComponent className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
         </div>
         
         {/* Text Content */}
@@ -144,6 +145,7 @@ const SocialLinkItem = memo(({ social, index }) => {
         `}
         style={{
           mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+          WebkitMaskComposite: 'xor',
           maskComposite: 'exclude',
           padding: '1px'
         }}
@@ -167,11 +169,12 @@ const SocialLinks = () => {
       aria-label="Social media links"
     >
       {socials.map((social, index) => (
-        <SocialLinkItem 
-          key={`${social.name}-${index}`} 
-          social={social} 
-          index={getStaggerDelay(index)} 
-        />
+        <div key={`${social.name}-${index}`} role="listitem">
+          <SocialLinkItem 
+            social={social} 
+            index={getStaggerDelay(index)} 
+          />
+        </div>
       ))}
     </div>
   );

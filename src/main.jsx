@@ -1,10 +1,13 @@
-// src/main.jsx - CLEANED & OPTIMIZED VERSION
+// src/main.jsx - PERFORMANCE OPTIMIZED
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
 
-// Enhanced error handler with better UX
+// ✅ Performance monitoring
+const startTime = performance.now();
+
+// ✅ Enhanced error handler with better UX
 const handleRenderError = (error) => {
   console.error('Failed to render React app:', error);
   
@@ -21,7 +24,7 @@ const handleRenderError = (error) => {
         font-family: system-ui, -apple-system, sans-serif;
         text-align: center;
         padding: 2rem;
-      ">
+      " role="alert" aria-live="assertive">
         <div style="
           background: rgba(255, 255, 255, 0.05);
           backdrop-filter: blur(20px);
@@ -78,7 +81,9 @@ const handleRenderError = (error) => {
                 font-weight: 500;
                 transition: all 0.2s ease;
                 min-height: 44px;
+                min-width: 120px;
               "
+              aria-label="Refresh the page"
             >
               🔄 Refresh Page
             </button>
@@ -96,7 +101,9 @@ const handleRenderError = (error) => {
                 font-weight: 500;
                 transition: all 0.2s ease;
                 min-height: 44px;
+                min-width: 120px;
               "
+              aria-label="Go to home page"
             >
               🏠 Go Home
             </button>
@@ -107,10 +114,44 @@ const handleRenderError = (error) => {
   }
 };
 
-// Performance monitoring
-const startTime = performance.now();
+// ✅ Optimized loading state
+const showLoadingState = () => {
+  const rootElement = document.getElementById("root");
+  if (!rootElement) return;
 
-// Initialize the application
+  rootElement.innerHTML = `
+    <div style="
+      min-height: 100vh;
+      background: #030014;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-family: system-ui, -apple-system, sans-serif;
+    " aria-busy="true" aria-label="Loading portfolio">
+      <div style="text-align: center;">
+        <div style="
+          width: 40px;
+          height: 40px;
+          border: 3px solid #6366f1;
+          border-top: 3px solid transparent;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin: 0 auto 1rem;
+        "></div>
+        <p style="color: #94a3b8; font-size: 0.875rem;">Loading portfolio...</p>
+      </div>
+    </div>
+    <style>
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  `;
+};
+
+// ✅ Initialize the application
 const initializeApp = () => {
   try {
     const rootElement = document.getElementById("root");
@@ -119,51 +160,29 @@ const initializeApp = () => {
       throw new Error("Root element '#root' not found in the DOM");
     }
 
-    // Clear any existing content and add loading state
-    rootElement.innerHTML = `
-      <div style="
-        min-height: 100vh;
-        background: #030014;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-family: system-ui, -apple-system, sans-serif;
-      ">
-        <div style="text-align: center;">
-          <div style="
-            width: 40px;
-            height: 40px;
-            border: 3px solid #6366f1;
-            border-top: 3px solid transparent;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 1rem;
-          "></div>
-          <p style="color: #94a3b8; font-size: 0.875rem;">Loading portfolio...</p>
-        </div>
-      </div>
-      <style>
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      </style>
-    `;
+    // Show loading state immediately
+    showLoadingState();
     
-    // Create React root and render
+    // Create React root and render with error boundary
     const root = ReactDOM.createRoot(rootElement);
     
-    console.log('🚀 Starting React application...');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🚀 Starting React application...');
+    }
     
-    root.render(
-      <React.StrictMode>
-        <App />
-      </React.StrictMode>
-    );
-    
-    const endTime = performance.now();
-    console.log(`✅ React app rendered successfully in ${(endTime - startTime).toFixed(2)}ms`);
+    // Use requestAnimationFrame for smoother initialization
+    requestAnimationFrame(() => {
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>
+      );
+      
+      const endTime = performance.now();
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`✅ React app rendered successfully in ${(endTime - startTime).toFixed(2)}ms`);
+      }
+    });
     
   } catch (error) {
     const endTime = performance.now();
@@ -172,25 +191,54 @@ const initializeApp = () => {
   }
 };
 
+// ✅ Optimized application start
+const startApp = () => {
+  // Use microtask for better performance
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp, { once: true });
+  } else {
+    // Use setTimeout to yield to browser for better performance
+    setTimeout(initializeApp, 0);
+  }
+};
+
 // Start the application
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializeApp);
-} else {
-  initializeApp();
-}
+startApp();
 
-// Global error handling for better debugging
-window.addEventListener('error', (event) => {
+// ✅ Global error handling for better debugging
+const handleGlobalError = (event) => {
   console.error('Global error caught:', event.error);
-});
+};
 
-window.addEventListener('unhandledrejection', (event) => {
+const handleUnhandledRejection = (event) => {
   console.error('Unhandled promise rejection:', event.reason);
-});
+  event.preventDefault(); // Prevent browser default error handling
+};
 
-// Performance monitoring
+// Add error listeners with better cleanup
+window.addEventListener('error', handleGlobalError);
+window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+// ✅ Performance monitoring
 window.addEventListener('load', () => {
   const loadTime = performance.now();
-  console.log('🎉 Portfolio website loaded successfully!');
-  console.log(`📊 Total load time: ${loadTime.toFixed(2)}ms`);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🎉 Portfolio website loaded successfully!');
+    console.log(`📊 Total load time: ${loadTime.toFixed(2)}ms`);
+  }
+  
+  // Remove error listeners after successful load to reduce memory usage
+  window.removeEventListener('error', handleGlobalError);
+  window.removeEventListener('unhandledrejection', handleUnhandledRejection);
 });
+
+// ✅ Cleanup function for hot module replacement (HMR)
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    const rootElement = document.getElementById('root');
+    if (rootElement) {
+      const root = ReactDOM.createRoot(rootElement);
+      root.unmount();
+    }
+  });
+}

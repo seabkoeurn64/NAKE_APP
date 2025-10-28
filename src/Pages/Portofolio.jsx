@@ -1,12 +1,19 @@
-// src/Pages/Portofolio.jsx - WITH NEW BACKGROUND DESIGN
+// src/Pages/Portofolio.jsx - PERFORMANCE OPTIMIZED
 import React, { memo, useCallback, useState, useEffect, useRef, useMemo } from 'react';
 
-// ✅ SIMPLIFIED: Using WebP directly since you have all WebP files
+// ✅ Constants
+const ANIMATION_CONFIG = {
+  INITIAL_LOAD_COUNT: 6,
+  LOAD_MORE_COUNT: 3,
+  INTERSECTION_THRESHOLD: 0.1,
+  ROOT_MARGIN: '50px'
+};
+
+// ✅ Optimized Image Hook
 const useOptimizedImage = (src) => {
   const [optimizedSrc, setOptimizedSrc] = useState(src);
 
   useEffect(() => {
-    // Since all images are WebP, use them directly
     setOptimizedSrc(src);
   }, [src]);
 
@@ -29,8 +36,8 @@ const useIntersectionObserver = (options = {}) => {
     const observer = new IntersectionObserver(([entry]) => {
       setIsIntersecting(entry.isIntersecting);
     }, {
-      threshold: 0.1,
-      rootMargin: '50px',
+      threshold: ANIMATION_CONFIG.INTERSECTION_THRESHOLD,
+      rootMargin: ANIMATION_CONFIG.ROOT_MARGIN,
       ...options
     });
 
@@ -98,7 +105,7 @@ const ImageModal = memo(({ imageUrl, title, isOpen, onClose }) => {
   return (
     <div 
       ref={modalRef}
-      className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 performance-layer"
       onClick={handleBackdropClick}
       onKeyDown={handleKeyDown}
       tabIndex={-1}
@@ -135,9 +142,9 @@ const ImageModal = memo(({ imageUrl, title, isOpen, onClose }) => {
 
 ImageModal.displayName = 'ImageModal';
 
-// ✅ Shimmer loading component
+// ✅ Optimized Shimmer loading component
 const ShimmerLoader = memo(() => (
-  <div className="absolute inset-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 animate-pulse">
+  <div className="absolute inset-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800">
     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-slate-600/20 to-transparent animate-shimmer" />
   </div>
 ));
@@ -145,7 +152,7 @@ const ShimmerLoader = memo(() => (
 ShimmerLoader.displayName = 'ShimmerLoader';
 
 // ✅ Optimized Project Card Component with WebP Support
-const ProjectCard = memo(({ project, index, onImageClick }) => {
+const ProjectCard = memo(({ project, index, onImageClick, prefersReducedMotion }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [cardRef, isCardVisible] = useIntersectionObserver();
@@ -183,7 +190,7 @@ const ProjectCard = memo(({ project, index, onImageClick }) => {
   return (
     <article 
       ref={cardRef}
-      className="group relative bg-slate-800/40 backdrop-blur-sm rounded-2xl border border-slate-700/30 overflow-hidden hover:border-purple-500/50 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20 active:scale-95 transform-gpu will-change-transform"
+      className="group relative bg-slate-800/40 backdrop-blur-sm rounded-2xl border border-slate-700/30 overflow-hidden hover:border-purple-500/50 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20 active:scale-95 transform-gpu will-change-transform performance-layer"
       style={{ 
         animationDelay: `${index * 50}ms`,
         animationFillMode: 'both'
@@ -259,99 +266,157 @@ const PROJECTS_DATA = [
     id: 1,
     title: "E-Commerce Platform",
     description: "Full-stack e-commerce solution with modern technologies, payment processing, and admin dashboard.",
-    image: "/images/project1.webp" // ✅ Using WebP directly
+    image: "/images/project1.webp"
   },
   {
     id: 2,
     title: "Mobile Fitness App",
     description: "Cross-platform mobile application for fitness tracking, workout plans, and progress monitoring.",
-    image: "/images/project2.webp" // ✅ Using WebP directly
+    image: "/images/project2.webp"
   },
   {
     id: 3,
     title: "AI Content Generator",
     description: "AI-powered content generation tool with natural language processing and customizable templates.",
-    image: "/images/project3.webp" // ✅ Using WebP directly
+    image: "/images/project3.webp"
   },
   {
     id: 4,
     title: "Task Management",
     description: "Collaborative task management app with real-time updates and team collaboration features.",
-    image: "/images/project4.webp" // ✅ Using WebP directly
+    image: "/images/project4.webp"
   },
   {
     id: 5,
     title: "Weather Dashboard",
     description: "Responsive weather application with location-based forecasts and interactive maps.",
-    image: "/images/project5.webp" // ✅ Using WebP directly
+    image: "/images/project5.webp"
   },
   {
     id: 6,
     title: "Social Analytics",
     description: "Dashboard for analyzing social media performance with real-time metrics and reporting.",
-    image: "/images/project6.webp" // ✅ Using WebP directly
+    image: "/images/project6.webp"
   },
   {
     id: 7,
     title: "Social Analytics",
     description: "Dashboard for analyzing social media performance with real-time metrics and reporting.",
-    image: "/images/project7.webp" // ✅ Using WebP directly
+    image: "/images/project7.webp"
   }
 ];
 
-// ✅ NEW: Background Elements Component
-const PortfolioBackground = memo(() => {
-  const [isReducedMotion, setIsReducedMotion] = useState(false);
+// ✅ Custom Hook for Media Queries
+const useMediaQueries = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const resizeTimeout = useRef();
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setIsReducedMotion(mediaQuery.matches);
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    const checkReducedMotion = () => {
+      setPrefersReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    };
+
+    const initialize = () => {
+      checkMobile();
+      checkReducedMotion();
+      setMounted(true);
+    };
+
+    initialize();
+
+    const handleResize = () => {
+      clearTimeout(resizeTimeout.current);
+      resizeTimeout.current = setTimeout(checkMobile, 100);
+    };
+
+    window.addEventListener('resize', handleResize, { passive: true });
+    
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    mediaQuery.addEventListener('change', checkReducedMotion);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      mediaQuery.removeEventListener('change', checkReducedMotion);
+      clearTimeout(resizeTimeout.current);
+    };
   }, []);
+
+  return { isMobile, prefersReducedMotion, mounted };
+};
+
+// ✅ Optimized Background Component
+const PortfolioBackground = memo(({ prefersReducedMotion, isMobile }) => {
+  // Reduced number of elements for better performance
+  const floatingShapes = [
+    { class: "top-20 left-10 w-64 h-64 bg-purple-500/10", delay: "0s" },
+    { class: "top-40 right-20 w-48 h-48 bg-pink-500/10", delay: "1s" },
+    ...(isMobile ? [] : [
+      { class: "bottom-32 left-1/4 w-56 h-56 bg-blue-500/10", delay: "0.5s" },
+      { class: "bottom-20 right-32 w-40 h-40 bg-indigo-500/10", delay: "1.5s" }
+    ])
+  ];
+
+  const sparkleEffects = [
+    { class: "top-1/4 left-1/3 w-2 h-2 bg-white", delay: "0s" },
+    ...(isMobile ? [] : [
+      { class: "top-1/3 right-1/4 w-1.5 h-1.5 bg-purple-300", delay: "0.7s" },
+      { class: "bottom-1/4 left-1/2 w-1 h-1 bg-blue-300", delay: "1.2s" }
+    ])
+  ];
 
   return (
     <div className="absolute inset-0 overflow-hidden">
       {/* Main gradient background */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#1a1039]" />
       
-      {/* Animated gradient overlay */}
-      <div 
-        className="absolute inset-0 opacity-20"
-        style={!isReducedMotion ? {
-          background: 'linear-gradient(45deg, #6366f1, #8b5cf6, #a855f7, #ec4899)',
-          backgroundSize: '400% 400%',
-          animation: 'portfolioGradient 8s ease infinite'
-        } : {}}
-      />
+      {/* Animated gradient overlay - conditionally rendered */}
+      {!prefersReducedMotion && (
+        <div 
+          className="absolute inset-0 opacity-20 performance-layer"
+          style={{
+            background: 'linear-gradient(45deg, #6366f1, #8b5cf6, #a855f7, #ec4899)',
+            backgroundSize: '400% 400%',
+            animation: 'portfolioGradient 8s ease infinite'
+          }}
+        />
+      )}
       
-      {/* Floating shapes */}
-      <div className="absolute top-20 left-10 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl" 
-           style={{ animation: 'portfolioFloat 6s ease-in-out infinite' }} />
-      <div className="absolute top-40 right-20 w-48 h-48 bg-pink-500/10 rounded-full blur-2xl" 
-           style={{ animation: 'portfolioFloat 8s ease-in-out infinite 1s' }} />
-      <div className="absolute bottom-32 left-1/4 w-56 h-56 bg-blue-500/10 rounded-full blur-3xl" 
-           style={{ animation: 'portfolioFloat 7s ease-in-out infinite 0.5s' }} />
-      <div className="absolute bottom-20 right-32 w-40 h-40 bg-indigo-500/10 rounded-full blur-2xl" 
-           style={{ animation: 'portfolioFloat 9s ease-in-out infinite 1.5s' }} />
+      {/* Optimized floating shapes */}
+      {floatingShapes.map((shape, index) => (
+        <div
+          key={`float-${index}`}
+          className={`absolute ${shape.class} rounded-full blur-3xl performance-layer`}
+          style={!prefersReducedMotion ? { 
+            animation: `portfolioFloatSimple 8s ease-in-out infinite ${shape.delay}` 
+          } : {}}
+        />
+      ))}
       
-      {/* Grid pattern */}
+      {/* Static grid pattern without animation */}
       <div className="absolute inset-0 opacity-5">
         <div 
           className="w-full h-full"
-          style={!isReducedMotion ? {
+          style={{
             backgroundImage: 'linear-gradient(#6366f1 1px, transparent 1px), linear-gradient(90deg, #6366f1 1px, transparent 1px)',
-            backgroundSize: '50px 50px',
-            animation: 'portfolioGridMove 20s linear infinite'
-          } : {}}
+            backgroundSize: isMobile ? '30px 30px' : '50px 50px',
+          }}
         />
       </div>
       
-      {/* Sparkle effects */}
-      <div className="absolute top-1/4 left-1/3 w-2 h-2 bg-white rounded-full opacity-60" 
-           style={{ animation: 'portfolioSparkle 3s ease-in-out infinite' }} />
-      <div className="absolute top-1/3 right-1/4 w-1.5 h-1.5 bg-purple-300 rounded-full opacity-70" 
-           style={{ animation: 'portfolioSparkle 4s ease-in-out infinite 0.7s' }} />
-      <div className="absolute bottom-1/4 left-1/2 w-1 h-1 bg-blue-300 rounded-full opacity-80" 
-           style={{ animation: 'portfolioSparkle 3.5s ease-in-out infinite 1.2s' }} />
+      {/* Reduced sparkle effects */}
+      {!prefersReducedMotion && sparkleEffects.map((sparkle, index) => (
+        <div
+          key={`sparkle-${index}`}
+          className={`absolute ${sparkle.class} rounded-full opacity-60 performance-layer`}
+          style={{ animation: `portfolioSparkleSimple 4s ease-in-out infinite ${sparkle.delay}` }}
+        />
+      ))}
     </div>
   );
 });
@@ -360,11 +425,15 @@ PortfolioBackground.displayName = 'PortfolioBackground';
 
 // ✅ Main Portfolio Component
 const Portofolio = memo(() => {
-  const [visibleCount, setVisibleCount] = useState(6);
+  const [visibleCount, setVisibleCount] = useState(ANIMATION_CONFIG.INITIAL_LOAD_COUNT);
   const [modalImage, setModalImage] = useState({ url: '', title: '' });
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const sectionRef = useRef(null);
   const loadMoreRef = useRef(null);
+  const observerRef = useRef();
+  
+  const { isMobile, prefersReducedMotion, mounted } = useMediaQueries();
 
   // Memoized displayed projects
   const displayedProjects = useMemo(() => 
@@ -396,25 +465,38 @@ const Portofolio = memo(() => {
     };
   }, []);
 
-  // Intersection Observer for load more button
+  // Optimized Intersection Observer for load more
   useEffect(() => {
-    if (!hasMoreProjects || !loadMoreRef.current) return;
+    if (!hasMoreProjects || !loadMoreRef.current || loadingMore) return;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          handleShowMore();
-        }
-      },
-      { threshold: 0.5, rootMargin: '100px' }
-    );
+    const handleIntersection = ([entry]) => {
+      if (entry.isIntersecting && !loadingMore) {
+        handleShowMore();
+      }
+    };
 
-    observer.observe(loadMoreRef.current);
-    return () => observer.disconnect();
-  }, [hasMoreProjects]);
+    observerRef.current = new IntersectionObserver(handleIntersection, {
+      threshold: 0.5,
+      rootMargin: '100px'
+    });
+
+    observerRef.current.observe(loadMoreRef.current);
+    
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [hasMoreProjects, loadingMore]);
 
   const handleShowMore = useCallback(() => {
-    setVisibleCount(prev => Math.min(prev + 3, PROJECTS_DATA.length));
+    setLoadingMore(true);
+    setVisibleCount(prev => {
+      const newCount = Math.min(prev + ANIMATION_CONFIG.LOAD_MORE_COUNT, PROJECTS_DATA.length);
+      // Reset loading state after a short delay
+      setTimeout(() => setLoadingMore(false), 300);
+      return newCount;
+    });
   }, []);
 
   const handleImageClick = useCallback((imageUrl, title) => {
@@ -429,6 +511,34 @@ const Portofolio = memo(() => {
     }, 300);
   }, []);
 
+  // Memoized project cards
+  const renderedProjectCards = useMemo(() => 
+    displayedProjects.map((project, index) => (
+      <ProjectCard
+        key={project.id}
+        project={project}
+        index={index}
+        onImageClick={handleImageClick}
+        prefersReducedMotion={prefersReducedMotion}
+      />
+    )),
+    [displayedProjects, handleImageClick, prefersReducedMotion]
+  );
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014]">
+        <div className="text-center">
+          <div className="relative">
+            <div className="w-12 h-12 border-3 border-[#6366f1] border-t-transparent rounded-full" style={!prefersReducedMotion ? { animation: 'spin 1s linear infinite' } : {}}></div>
+            <div className="absolute top-0 left-0 w-12 h-12 border-3 border-[#a855f7] border-b-transparent rounded-full" style={!prefersReducedMotion ? { animation: 'spin 1s linear infinite', opacity: '0.5' } : {}}></div>
+          </div>
+          <p className="mt-3 text-gray-300 text-sm">Loading portfolio...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <section 
@@ -436,8 +546,8 @@ const Portofolio = memo(() => {
         id="portfolio" 
         className="min-h-screen py-12 sm:py-16 lg:py-20 relative overflow-hidden scroll-mt-20"
       >
-        {/* ✅ NEW: Enhanced Background */}
-        <PortfolioBackground />
+        {/* ✅ OPTIMIZED: Enhanced Background */}
+        <PortfolioBackground prefersReducedMotion={prefersReducedMotion} isMobile={isMobile} />
         
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           {/* Header */}
@@ -455,14 +565,7 @@ const Portofolio = memo(() => {
 
           {/* Projects Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8 lg:gap-10 max-w-7xl mx-auto">
-            {displayedProjects.map((project, index) => (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                index={index}
-                onImageClick={handleImageClick}
-              />
-            ))}
+            {renderedProjectCards}
           </div>
 
           {/* Load More Button */}
@@ -470,11 +573,16 @@ const Portofolio = memo(() => {
             <div ref={loadMoreRef} className="text-center mt-16 sm:mt-20 lg:mt-24">
               <button
                 onClick={handleShowMore}
-                className="group relative px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-2xl font-semibold text-base transition-all duration-500 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-[#030014] transform-gpu will-change-transform overflow-hidden"
+                disabled={loadingMore}
+                className="group relative px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-2xl font-semibold text-base transition-all duration-500 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-[#030014] transform-gpu will-change-transform overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed performance-layer"
               >
                 {/* Button shine effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 transition-all duration-1000 group-hover:translate-x-full" />
-                <span className="relative z-10">Load More Projects</span>
+                {!prefersReducedMotion && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 transition-all duration-1000 group-hover:translate-x-full" />
+                )}
+                <span className="relative z-10">
+                  {loadingMore ? 'Loading...' : 'Load More Projects'}
+                </span>
               </button>
             </div>
           )}
@@ -496,20 +604,14 @@ const Portofolio = memo(() => {
             50% { background-position: 100% 50%; }
           }
           
-          @keyframes portfolioFloat {
-            0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); }
-            33% { transform: translateY(-20px) rotate(120deg) scale(1.1); }
-            66% { transform: translateY(10px) rotate(240deg) scale(0.9); }
+          @keyframes portfolioFloatSimple {
+            0%, 100% { transform: translateY(0px) scale(1); opacity: 0.3; }
+            50% { transform: translateY(-20px) scale(1.1); opacity: 0.6; }
           }
           
-          @keyframes portfolioGridMove {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(50px, 50px); }
-          }
-          
-          @keyframes portfolioSparkle {
-            0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
-            50% { opacity: 1; transform: scale(1) rotate(180deg); }
+          @keyframes portfolioSparkleSimple {
+            0%, 100% { opacity: 0; transform: scale(0); }
+            50% { opacity: 1; transform: scale(1); }
           }
 
           @keyframes fade-in {
@@ -521,23 +623,29 @@ const Portofolio = memo(() => {
             0% { transform: translateX(-100%); }
             100% { transform: translateX(100%); }
           }
+
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
           
           .animate-shimmer {
             animation: shimmer 2s infinite;
           }
 
-          .will-change-transform {
-            will-change: transform;
+          .performance-layer {
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            perspective: 1000px;
+            will-change: transform, opacity;
           }
 
           /* Reduced motion support */
           @media (prefers-reduced-motion: reduce) {
-            .portfolio-float-slow,
-            .portfolio-gradient-slow,
-            .portfolio-grid-move,
-            .portfolio-sparkle,
-            .animate-shimmer {
-              animation: none !important;
+            * {
+              animation-duration: 0.01ms !important;
+              animation-iteration-count: 1 !important;
+              transition-duration: 0.01ms !important;
             }
           }
         `}
