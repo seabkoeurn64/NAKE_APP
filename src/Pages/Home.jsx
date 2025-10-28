@@ -1,4 +1,4 @@
-// src/Pages/Home.jsx - FIXED PADDING FOR NAVBAR
+// src/Pages/Home.jsx - WITH NEW BACKGROUND DESIGN
 import React, { useState, useEffect, useCallback, memo, useMemo, useRef } from "react"
 import { Github, Linkedin, Mail, ExternalLink, Instagram, Sparkles } from "lucide-react"
 import { DotLottieReact } from '@lottiefiles/dotlottie-react'
@@ -127,6 +127,68 @@ const useTypingEffect = (words, typingSpeed, erasingSpeed, pauseDuration) => {
 
   return text;
 };
+
+// ✅ NEW: Home Background Component
+const HomeBackground = memo(({ prefersReducedMotion, isMobile }) => {
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      {/* Main gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#1a1039]" />
+      
+      {/* Animated gradient overlay */}
+      <div 
+        className="absolute inset-0 opacity-20"
+        style={!prefersReducedMotion ? {
+          background: 'linear-gradient(45deg, #6366f1, #8b5cf6, #a855f7, #ec4899)',
+          backgroundSize: '400% 400%',
+          animation: 'homeGradient 8s ease infinite'
+        } : {}}
+      />
+      
+      {/* Floating design elements */}
+      <div className="absolute top-20 left-10 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl" 
+           style={!prefersReducedMotion ? { animation: 'homeFloat 6s ease-in-out infinite' } : {}} />
+      <div className="absolute top-40 right-20 w-48 h-48 bg-pink-500/10 rounded-full blur-2xl" 
+           style={!prefersReducedMotion ? { animation: 'homeFloat 8s ease-in-out infinite 1s' } : {}} />
+      <div className="absolute bottom-32 left-1/4 w-56 h-56 bg-blue-500/10 rounded-full blur-3xl" 
+           style={!prefersReducedMotion ? { animation: 'homeFloat 7s ease-in-out infinite 0.5s' } : {}} />
+      <div className="absolute bottom-20 right-32 w-40 h-40 bg-indigo-500/10 rounded-full blur-2xl" 
+           style={!prefersReducedMotion ? { animation: 'homeFloat 9s ease-in-out infinite 1.5s' } : {}} />
+      
+      {/* Design tool shapes */}
+      <div className="absolute top-1/3 left-20 w-16 h-16 bg-white/5 rounded-lg blur-sm rotate-12" 
+           style={!prefersReducedMotion ? { animation: 'homeDesign 4s ease-in-out infinite' } : {}} />
+      <div className="absolute bottom-1/3 right-24 w-12 h-12 bg-purple-400/10 rounded-lg blur-sm -rotate-12" 
+           style={!prefersReducedMotion ? { animation: 'homeDesign 5s ease-in-out infinite 0.8s' } : {}} />
+      <div className="absolute top-1/2 right-40 w-10 h-10 bg-pink-400/10 rounded-full blur-sm" 
+           style={!prefersReducedMotion ? { animation: 'homeDesign 3.5s ease-in-out infinite 1.2s' } : {}} />
+      
+      {/* Creative elements */}
+      <div className="absolute top-1/4 left-1/2 w-px h-32 bg-gradient-to-b from-purple-500/20 to-transparent" />
+      <div className="absolute bottom-1/4 right-1/2 w-px h-24 bg-gradient-to-t from-pink-500/20 to-transparent" />
+      
+      {/* Grid pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div 
+          className="w-full h-full"
+          style={!prefersReducedMotion ? {
+            backgroundImage: 'linear-gradient(#6366f1 1px, transparent 1px), linear-gradient(90deg, #6366f1 1px, transparent 1px)',
+            backgroundSize: isMobile ? '30px 30px' : '50px 50px',
+            animation: 'homeGridMove 25s linear infinite'
+          } : {}}
+        />
+      </div>
+      
+      {/* Sparkle effects */}
+      <div className="absolute top-1/4 left-1/3 w-2 h-2 bg-white rounded-full opacity-60" 
+           style={!prefersReducedMotion ? { animation: 'homeSparkle 3s ease-in-out infinite' } : {}} />
+      <div className="absolute top-1/3 right-1/4 w-1.5 h-1.5 bg-purple-300 rounded-full opacity-70" 
+           style={!prefersReducedMotion ? { animation: 'homeSparkle 4s ease-in-out infinite 0.7s' } : {}} />
+      <div className="absolute bottom-1/4 left-1/2 w-1 h-1 bg-blue-300 rounded-full opacity-80" 
+           style={!prefersReducedMotion ? { animation: 'homeSparkle 3.5s ease-in-out infinite 1.2s' } : {}} />
+    </div>
+  );
+});
 
 // ✅ Memoized Components
 const StatusBadge = memo(() => (
@@ -429,36 +491,15 @@ const Home = () => {
     setLottieError(true);
   }, []);
 
-  // Optimized background elements for mobile
-  const backgroundElements = useMemo(() => (
-    <div className="absolute inset-0 overflow-hidden">
-      {!isMobile && (
-        <>
-          <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-[#6366f1] rounded-full blur-3xl opacity-10 animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#a855f7] rounded-full blur-3xl opacity-5 animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 left-1/2 w-56 h-56 bg-[#8b5cf6] rounded-full blur-2xl opacity-5 animate-pulse delay-500"></div>
-        </>
-      )}
-      
-      {/* Simplified grid for mobile */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="w-full h-full" style={{
-          backgroundImage: `linear-gradient(#6366f1 1px, transparent 1px), linear-gradient(90deg, #6366f1 1px, transparent 1px)`,
-          backgroundSize: isMobile ? '20px 20px' : '40px 40px',
-          animation: shouldAnimate ? 'grid-move 20s linear infinite' : 'none'
-        }}></div>
-      </div>
-    </div>
-  ), [isMobile, shouldAnimate]);
-
   return (
     <ErrorBoundary>
-      {/* ✅ FIXED: Added proper padding and scroll margin for navbar */}
+      {/* ✅ UPDATED: New background design */}
       <section 
-        id="Home" 
-        className="min-h-screen bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014] overflow-hidden relative scroll-mt-16 py-8 sm:py-12 lg:py-16"
+        id="home" 
+        className="min-h-screen overflow-hidden relative scroll-mt-16 py-8 sm:py-12 lg:py-16"
       >
-        {backgroundElements}
+        {/* ✅ NEW: Enhanced Background */}
+        <HomeBackground prefersReducedMotion={prefersReducedMotion} isMobile={isMobile} />
 
         <div className={`relative z-10 transition-all duration-500 ${isLoaded ? "opacity-100" : "opacity-0"}`}>
           <div className="container mx-auto min-h-screen flex items-center justify-center px-4 sm:px-[5%] lg:px-[10%]">
@@ -518,8 +559,8 @@ const Home = () => {
                     data-aos-duration={prefersReducedMotion ? 0 : 800}
                     data-aos-delay="700"
                   >
-                    <CTAButton href="#Portfolio" text="Projects" icon={ExternalLink} />
-                    <CTAButton href="#Contact" text="Contact" icon={Mail} />
+                    <CTAButton href="#portfolio" text="Projects" icon={ExternalLink} />
+                    <CTAButton href="#contact" text="Contact" icon={Mail} />
                   </div>
 
                   {/* Desktop Social Links */}
@@ -589,20 +630,49 @@ const Home = () => {
           </div>
         </div>
 
-        {/* CSS animations */}
+        {/* ✅ UPDATED: Enhanced CSS animations */}
         <style>{`
+          @keyframes homeGradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+          }
+          
+          @keyframes homeFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); }
+            33% { transform: translateY(-20px) rotate(120deg) scale(1.1); }
+            66% { transform: translateY(10px) rotate(240deg) scale(0.9); }
+          }
+          
+          @keyframes homeDesign {
+            0%, 100% { transform: translateY(0px) rotate(12deg) scale(1); opacity: 0.3; }
+            50% { transform: translateY(-15px) rotate(12deg) scale(1.2); opacity: 0.7; }
+          }
+          
+          @keyframes homeGridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+          }
+          
+          @keyframes homeSparkle {
+            0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+            50% { opacity: 1; transform: scale(1) rotate(180deg); }
+          }
+
           @keyframes float {
             0%, 100% { transform: translateY(0px) rotate(0deg); }
             50% { transform: translateY(-15px) rotate(180deg); }
           }
-          @keyframes grid-move {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(40px, 40px); }
-          }
+
           @keyframes blink {
             0%, 100% { opacity: 1; }
             50% { opacity: 0; }
           }
+
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+          }
+
           .scale-102 { transform: scale(1.02); }
           .scale-110 { transform: scale(1.1); }
           .scale-125 { transform: scale(1.25); }
@@ -623,6 +693,11 @@ const Home = () => {
           }
           
           @media (prefers-reduced-motion: reduce) {
+            .home-float-slow,
+            .home-gradient-slow,
+            .home-grid-move,
+            .home-design,
+            .home-sparkle,
             .animate-float,
             .animate-blink,
             .animate-pulse-slow,

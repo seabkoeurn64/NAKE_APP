@@ -1,4 +1,4 @@
-// src/Pages/About.jsx - FIXED FOR NAVBAR
+// src/Pages/About.jsx - FIXED CALCULATIONS
 import React, { useEffect, memo, useMemo, useState, useCallback, useRef } from "react";
 import { Code, Award, Globe, ArrowUpRight, Sparkles, UserCheck, Download, Eye, Star, Zap, Heart } from "lucide-react";
 
@@ -16,7 +16,7 @@ const STATS_CONFIG = {
   }
 };
 
-// Memoized Components
+// Memoized Components (keep the same as before...)
 const Header = memo(() => (
   <div className="text-center mb-8 lg:mb-12 px-4">
     <div className="inline-block relative group mb-4">
@@ -31,10 +31,13 @@ const Header = memo(() => (
   </div>
 ));
 
+// ProfileImage Component (keep the same as before...)
 const ProfileImage = memo(() => {
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+
+  const imageSrc = "/images/koeurn-profile.webp";
 
   const handleMouseEnter = useCallback(() => setIsHovered(true), []);
   const handleMouseLeave = useCallback(() => setIsHovered(false), []);
@@ -73,10 +76,9 @@ const ProfileImage = memo(() => {
               }}
             >
               <div className="w-full h-full rounded-2xl bg-[#030014] relative overflow-hidden">
-                {/* Image with enhanced hover effects and error handling */}
                 {!imageError ? (
                   <img
-                    src="/images/Cover.png"
+                    src={imageSrc}
                     alt="Koeurn - Graphic Designer"
                     className={`w-full h-full object-cover transform transition-all duration-700 group-hover:scale-110 ${
                       imageLoaded ? 'opacity-100' : 'opacity-0'
@@ -240,7 +242,7 @@ const StatCard = memo(({ icon: Icon, color, value, label, description, index }) 
   );
 });
 
-// Optimized button components
+// Optimized button components (keep the same as before...)
 const DownloadCVButton = memo(({ onClick }) => (
   <button 
     onClick={onClick}
@@ -279,6 +281,29 @@ const ViewWorkButton = memo(({ onClick }) => (
 const AboutPage = () => {
   const [mounted, setMounted] = useState(false);
   const [isReducedMotion, setIsReducedMotion] = useState(false);
+  const [statsData, setStatsData] = useState([
+    {
+      icon: Code,
+      color: "from-[#6366f1] to-[#8b5cf6]",
+      value: 0,
+      label: "Projects",
+      description: "Successful designs"
+    },
+    {
+      icon: Award,
+      color: "from-[#a855f7] to-[#ec4899]",
+      value: 0,
+      label: "Certificates",
+      description: "Achievements earned"
+    },
+    {
+      icon: Globe,
+      color: "from-[#8b5cf6] to-[#6366f1]",
+      value: 0,
+      label: "Years Exp",
+      description: "Design excellence"
+    },
+  ]);
   const scrollThrottleRef = useRef();
 
   useEffect(() => {
@@ -306,81 +331,120 @@ const AboutPage = () => {
     };
   }, []);
 
-  // Memoized calculations
-  const { totalProjects, totalCertificates, YearExperience } = useMemo(() => {
-    if (!mounted) return { totalProjects: 0, totalCertificates: 0, YearExperience: 0 };
-    
-    try {
-      let storedProjects = [];
-      let storedCertificates = [];
-      
-      try {
-        storedProjects = JSON.parse(localStorage.getItem("projects") || "[]");
-        storedCertificates = JSON.parse(localStorage.getItem("certificates") || "[]");
-      } catch (storageError) {
-        console.warn("LocalStorage access failed:", storageError);
-        storedProjects = [];
-        storedCertificates = [];
-      }
-      
-      // Experience calculation
-      let experience = 0;
-      try {
-        const startDate = new Date("2024-11-06");
-        const today = new Date();
-        experience = today.getFullYear() - startDate.getFullYear();
-        
-        if (today.getMonth() < startDate.getMonth() || 
-            (today.getMonth() === startDate.getMonth() && today.getDate() < startDate.getDate())) {
-          experience--;
-        }
-      } catch (dateError) {
-        console.warn("Date calculation failed, using fallback experience:", dateError);
-        experience = 1;
-      }
+  // ✅ FIXED: Real-time stats calculation
+  useEffect(() => {
+    if (!mounted) return;
 
-      return {
-        totalProjects: storedProjects?.length || 6,
-        totalCertificates: storedCertificates?.length || 3,
-        YearExperience: Math.max(experience, 1)
-      };
-    } catch (error) {
-      console.error("Error calculating stats:", error);
-      return {
-        totalProjects: 6,
-        totalCertificates: 3,
-        YearExperience: 1
-      };
-    }
+    const calculateStats = () => {
+      try {
+        let storedProjects = [];
+        let storedCertificates = [];
+        
+        try {
+          storedProjects = JSON.parse(localStorage.getItem("projects") || "[]");
+          storedCertificates = JSON.parse(localStorage.getItem("certificates") || "[]");
+        } catch (storageError) {
+          console.warn("LocalStorage access failed:", storageError);
+          storedProjects = [];
+          storedCertificates = [];
+        }
+        
+        // ✅ FIXED: Proper project count - only count valid projects
+        const validProjects = Array.isArray(storedProjects) 
+          ? storedProjects.filter(project => 
+              project && 
+              typeof project === 'object' && 
+              !project._isPlaceholder // Exclude placeholder projects
+            )
+          : [];
+        
+        const totalProjects = validProjects.length;
+
+        // ✅ FIXED: Proper certificate count
+        const validCertificates = Array.isArray(storedCertificates) 
+          ? storedCertificates.filter(cert => 
+              cert && 
+              typeof cert === 'object'
+            )
+          : [];
+        
+        const totalCertificates = validCertificates.length;
+
+        // ✅ FIXED: Experience calculation with correct date
+        let experience = 0;
+        try {
+          const startDate = new Date("2025-05-05");
+          const today = new Date();
+          experience = today.getFullYear() - startDate.getFullYear();
+          
+          if (today.getMonth() < startDate.getMonth() || 
+              (today.getMonth() === startDate.getMonth() && today.getDate() < startDate.getDate())) {
+            experience--;
+          }
+          
+          experience = Math.max(experience, 0);
+        } catch (dateError) {
+          console.warn("Date calculation failed:", dateError);
+          experience = 0;
+        }
+
+        // Update stats data
+        setStatsData([
+          {
+            icon: Code,
+            color: "from-[#6366f1] to-[#8b5cf6]",
+            value: totalProjects,
+            label: "Projects",
+            description: "Successful designs"
+          },
+          {
+            icon: Award,
+            color: "from-[#a855f7] to-[#ec4899]",
+            value: totalCertificates,
+            label: "Certificates",
+            description: "Achievements earned"
+          },
+          {
+            icon: Globe,
+            color: "from-[#8b5cf6] to-[#6366f1]",
+            value: experience,
+            label: "Years Exp",
+            description: "Design excellence"
+          },
+        ]);
+
+        console.log('Stats updated:', {
+          projects: totalProjects,
+          certificates: totalCertificates,
+          experience: experience
+        });
+
+      } catch (error) {
+        console.error("Error calculating stats:", error);
+      }
+    };
+
+    // Calculate initial stats
+    calculateStats();
+
+    // ✅ FIXED: Listen for storage changes to update stats in real-time
+    const handleStorageChange = () => {
+      calculateStats();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // ✅ FIXED: Also check for changes periodically (for same-tab updates)
+    const interval = setInterval(calculateStats, 2000); // Check every 2 seconds
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
   }, [mounted]);
 
-  // Memoized stats data
-  const statsData = useMemo(() => [
-    {
-      icon: Code,
-      color: "from-[#6366f1] to-[#8b5cf6]",
-      value: totalProjects,
-      label: "Projects",
-      description: "Successful designs"
-    },
-    {
-      icon: Award,
-      color: "from-[#a855f7] to-[#ec4899]",
-      value: totalCertificates,
-      label: "Certificates",
-      description: "Achievements earned"
-    },
-    {
-      icon: Globe,
-      color: "from-[#8b5cf6] to-[#6366f1]",
-      value: YearExperience,
-      label: "Years Exp",
-      description: "Design excellence"
-    },
-  ], [totalProjects, totalCertificates, YearExperience]);
-
   const handleViewWork = useCallback(() => {
-    const portfolioSection = document.getElementById('Portfolio');
+    const portfolioSection = document.getElementById('portfolio');
     if (portfolioSection) {
       portfolioSection.scrollIntoView({ 
         behavior: 'smooth',
@@ -435,9 +499,8 @@ const AboutPage = () => {
   }
 
   return (
-    // ✅ FIXED: Added proper section structure and navbar padding
     <section 
-      id="About" 
+      id="about"
       className="min-h-screen py-8 lg:py-16 text-white overflow-hidden bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#030014] relative scroll-mt-16"
     >
       {backgroundElements}
@@ -496,7 +559,7 @@ const AboutPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
               {statsData.map((stat, index) => (
                 <StatCard 
-                  key={`stat-${index}`} 
+                  key={`stat-${index}-${stat.value}`} 
                   {...stat}
                   index={index}
                 />
@@ -529,7 +592,6 @@ const AboutPage = () => {
         </div>
       </div>
 
-      {/* ✅ FIXED: Move inline styles to regular style tag to avoid jsx prop warning */}
       <style>
         {`
           @keyframes aboutFloat {

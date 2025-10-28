@@ -1,5 +1,21 @@
-// src/Pages/Portofolio.jsx - FIXED VERSION (NO WARNINGS)
+// src/Pages/Portofolio.jsx - WITH NEW BACKGROUND DESIGN
 import React, { memo, useCallback, useState, useEffect, useRef, useMemo } from 'react';
+
+// ✅ SIMPLIFIED: Using WebP directly since you have all WebP files
+const useOptimizedImage = (src) => {
+  const [optimizedSrc, setOptimizedSrc] = useState(src);
+
+  useEffect(() => {
+    // Since all images are WebP, use them directly
+    setOptimizedSrc(src);
+  }, [src]);
+
+  const handleWebPError = useCallback(() => {
+    console.warn('WebP image failed to load:', src);
+  }, [src]);
+
+  return { optimizedSrc, handleWebPError };
+};
 
 // ✅ Custom hook for intersection observer
 const useIntersectionObserver = (options = {}) => {
@@ -29,15 +45,16 @@ const useIntersectionObserver = (options = {}) => {
 const useImagePreloader = (src, priority = false) => {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const { optimizedSrc } = useOptimizedImage(src);
 
   useEffect(() => {
-    if (!src || !priority) return;
+    if (!optimizedSrc || !priority) return;
 
     const img = new Image();
-    img.src = src;
+    img.src = optimizedSrc;
     img.onload = () => setLoaded(true);
     img.onerror = () => setError(true);
-  }, [src, priority]);
+  }, [optimizedSrc, priority]);
 
   return { loaded, error };
 };
@@ -45,6 +62,7 @@ const useImagePreloader = (src, priority = false) => {
 // ✅ Optimized Image Modal Component
 const ImageModal = memo(({ imageUrl, title, isOpen, onClose }) => {
   const modalRef = useRef(null);
+  const { optimizedSrc, handleWebPError } = useOptimizedImage(imageUrl);
 
   const handleBackdropClick = useCallback((e) => {
     if (e.target === e.currentTarget) {
@@ -100,10 +118,11 @@ const ImageModal = memo(({ imageUrl, title, isOpen, onClose }) => {
         </button>
         
         <img
-          src={imageUrl}
+          src={optimizedSrc}
           alt={title}
           className="w-full h-auto max-h-[70vh] sm:max-h-[80vh] object-contain rounded-lg transform-gpu"
           loading="eager"
+          onError={handleWebPError}
         />
         
         <div className="text-white text-center mt-3 sm:mt-4">
@@ -125,12 +144,13 @@ const ShimmerLoader = memo(() => (
 
 ShimmerLoader.displayName = 'ShimmerLoader';
 
-// ✅ Optimized Project Card Component - FIXED fetchPriority warning
+// ✅ Optimized Project Card Component with WebP Support
 const ProjectCard = memo(({ project, index, onImageClick }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [cardRef, isCardVisible] = useIntersectionObserver();
   const { loaded: preloaded } = useImagePreloader(project.image, index < 3);
+  const { optimizedSrc, handleWebPError } = useOptimizedImage(project.image);
 
   const handleImageLoad = useCallback(() => {
     setImageLoaded(true);
@@ -141,6 +161,11 @@ const ProjectCard = memo(({ project, index, onImageClick }) => {
     setImageLoaded(true);
   }, []);
 
+  const handleCombinedError = useCallback((e) => {
+    handleWebPError();
+    handleImageError(e);
+  }, [handleWebPError, handleImageError]);
+
   const handleImageClick = useCallback(() => {
     onImageClick(project.image, project.title);
   }, [onImageClick, project.image, project.title]);
@@ -149,16 +174,16 @@ const ProjectCard = memo(({ project, index, onImageClick }) => {
   useEffect(() => {
     if (isCardVisible && !imageLoaded && !imageError) {
       const img = new Image();
-      img.src = project.image;
+      img.src = optimizedSrc;
       img.onload = handleImageLoad;
-      img.onerror = handleImageError;
+      img.onerror = handleCombinedError;
     }
-  }, [isCardVisible, project.image, imageLoaded, imageError, handleImageLoad, handleImageError]);
+  }, [isCardVisible, optimizedSrc, imageLoaded, imageError, handleImageLoad, handleCombinedError]);
 
   return (
     <article 
       ref={cardRef}
-      className="group relative bg-slate-800/40 backdrop-blur-sm rounded-2xl border border-slate-700/30 overflow-hidden hover:border-blue-500/50 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/10 active:scale-95 transform-gpu will-change-transform"
+      className="group relative bg-slate-800/40 backdrop-blur-sm rounded-2xl border border-slate-700/30 overflow-hidden hover:border-purple-500/50 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20 active:scale-95 transform-gpu will-change-transform"
       style={{ 
         animationDelay: `${index * 50}ms`,
         animationFillMode: 'both'
@@ -187,12 +212,11 @@ const ProjectCard = memo(({ project, index, onImageClick }) => {
             </div>
           </div>
         ) : (
-          // ✅ FIXED: Remove fetchPriority prop - use loading attribute instead
           <img
-            src={project.image}
+            src={optimizedSrc}
             alt={project.title}
             onLoad={handleImageLoad}
-            onError={handleImageError}
+            onError={handleCombinedError}
             className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 transform-gpu will-change-transform ${
               imageLoaded ? 'opacity-100' : 'opacity-0'
             }`}
@@ -215,7 +239,7 @@ const ProjectCard = memo(({ project, index, onImageClick }) => {
       {/* Content */}
       <div className="p-4 sm:p-6 lg:p-8 space-y-3 sm:space-y-4">
         <div className="space-y-2 sm:space-y-3">
-          <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white line-clamp-2 group-hover:text-blue-400 transition-colors duration-300">
+          <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white line-clamp-2 group-hover:text-purple-400 transition-colors duration-300">
             {project.title}
           </h3>
           <p className="text-slate-300 text-sm sm:text-base leading-relaxed line-clamp-3 group-hover:text-slate-200 transition-colors duration-300">
@@ -229,47 +253,112 @@ const ProjectCard = memo(({ project, index, onImageClick }) => {
 
 ProjectCard.displayName = 'ProjectCard';
 
-// ✅ Projects Data with Images
+// ✅ Projects Data with WebP Images
 const PROJECTS_DATA = [
   {
     id: 1,
     title: "E-Commerce Platform",
     description: "Full-stack e-commerce solution with modern technologies, payment processing, and admin dashboard.",
-    image: "/images/project1.png"
+    image: "/images/project1.webp" // ✅ Using WebP directly
   },
   {
     id: 2,
     title: "Mobile Fitness App",
     description: "Cross-platform mobile application for fitness tracking, workout plans, and progress monitoring.",
-    image: "/images/project2.png"
+    image: "/images/project2.webp" // ✅ Using WebP directly
   },
   {
     id: 3,
     title: "AI Content Generator",
     description: "AI-powered content generation tool with natural language processing and customizable templates.",
-    image: "/images/project3.jpg"
+    image: "/images/project3.webp" // ✅ Using WebP directly
   },
   {
     id: 4,
     title: "Task Management",
     description: "Collaborative task management app with real-time updates and team collaboration features.",
-    image: "/images/project4.jpg"
+    image: "/images/project4.webp" // ✅ Using WebP directly
   },
   {
     id: 5,
     title: "Weather Dashboard",
     description: "Responsive weather application with location-based forecasts and interactive maps.",
-    image: "/images/project5.jpg"
+    image: "/images/project5.webp" // ✅ Using WebP directly
   },
   {
     id: 6,
     title: "Social Analytics",
     description: "Dashboard for analyzing social media performance with real-time metrics and reporting.",
-    image: "/images/project6.jpg"
+    image: "/images/project6.webp" // ✅ Using WebP directly
+  },
+  {
+    id: 7,
+    title: "Social Analytics",
+    description: "Dashboard for analyzing social media performance with real-time metrics and reporting.",
+    image: "/images/project7.webp" // ✅ Using WebP directly
   }
 ];
 
-// ✅ Main Portfolio Component - FIXED jsx warning
+// ✅ NEW: Background Elements Component
+const PortfolioBackground = memo(() => {
+  const [isReducedMotion, setIsReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setIsReducedMotion(mediaQuery.matches);
+  }, []);
+
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      {/* Main gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#030014] via-[#0f0a28] to-[#1a1039]" />
+      
+      {/* Animated gradient overlay */}
+      <div 
+        className="absolute inset-0 opacity-20"
+        style={!isReducedMotion ? {
+          background: 'linear-gradient(45deg, #6366f1, #8b5cf6, #a855f7, #ec4899)',
+          backgroundSize: '400% 400%',
+          animation: 'portfolioGradient 8s ease infinite'
+        } : {}}
+      />
+      
+      {/* Floating shapes */}
+      <div className="absolute top-20 left-10 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl" 
+           style={{ animation: 'portfolioFloat 6s ease-in-out infinite' }} />
+      <div className="absolute top-40 right-20 w-48 h-48 bg-pink-500/10 rounded-full blur-2xl" 
+           style={{ animation: 'portfolioFloat 8s ease-in-out infinite 1s' }} />
+      <div className="absolute bottom-32 left-1/4 w-56 h-56 bg-blue-500/10 rounded-full blur-3xl" 
+           style={{ animation: 'portfolioFloat 7s ease-in-out infinite 0.5s' }} />
+      <div className="absolute bottom-20 right-32 w-40 h-40 bg-indigo-500/10 rounded-full blur-2xl" 
+           style={{ animation: 'portfolioFloat 9s ease-in-out infinite 1.5s' }} />
+      
+      {/* Grid pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div 
+          className="w-full h-full"
+          style={!isReducedMotion ? {
+            backgroundImage: 'linear-gradient(#6366f1 1px, transparent 1px), linear-gradient(90deg, #6366f1 1px, transparent 1px)',
+            backgroundSize: '50px 50px',
+            animation: 'portfolioGridMove 20s linear infinite'
+          } : {}}
+        />
+      </div>
+      
+      {/* Sparkle effects */}
+      <div className="absolute top-1/4 left-1/3 w-2 h-2 bg-white rounded-full opacity-60" 
+           style={{ animation: 'portfolioSparkle 3s ease-in-out infinite' }} />
+      <div className="absolute top-1/3 right-1/4 w-1.5 h-1.5 bg-purple-300 rounded-full opacity-70" 
+           style={{ animation: 'portfolioSparkle 4s ease-in-out infinite 0.7s' }} />
+      <div className="absolute bottom-1/4 left-1/2 w-1 h-1 bg-blue-300 rounded-full opacity-80" 
+           style={{ animation: 'portfolioSparkle 3.5s ease-in-out infinite 1.2s' }} />
+    </div>
+  );
+});
+
+PortfolioBackground.displayName = 'PortfolioBackground';
+
+// ✅ Main Portfolio Component
 const Portofolio = memo(() => {
   const [visibleCount, setVisibleCount] = useState(6);
   const [modalImage, setModalImage] = useState({ url: '', title: '' });
@@ -345,26 +434,27 @@ const Portofolio = memo(() => {
       <section 
         ref={sectionRef}
         id="portfolio" 
-        className="min-h-screen py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden scroll-mt-20"
+        className="min-h-screen py-12 sm:py-16 lg:py-20 relative overflow-hidden scroll-mt-20"
       >
-        {/* Background Effects */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5" />
-        <div className="absolute top-1/4 -left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-pulse-slow" />
-        <div className="absolute bottom-1/4 -right-10 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl animate-pulse-slow" />
+        {/* ✅ NEW: Enhanced Background */}
+        <PortfolioBackground />
         
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           {/* Header */}
           <div className="text-center mb-12 sm:mb-16 lg:mb-20">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6">
-              My <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">Portfolio</span>
-            </h2>
-            <p className="text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed px-4">
-              A collection of projects that showcase my skills in modern web development and problem-solving.
+            <div className="inline-block relative group mb-6">
+              <div className="absolute -inset-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full opacity-10 blur-xl group-hover:opacity-20 transition-opacity duration-500" />
+              <h2 className="relative text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6">
+                My <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-rose-500">Portfolio</span>
+              </h2>
+            </div>
+            <p className="text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed px-4 font-light">
+              A collection of creative projects that showcase innovative design solutions and technical expertise.
             </p>
           </div>
 
           {/* Projects Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8 lg:gap-10 max-w-7xl mx-auto">
             {displayedProjects.map((project, index) => (
               <ProjectCard
                 key={project.id}
@@ -377,12 +467,14 @@ const Portofolio = memo(() => {
 
           {/* Load More Button */}
           {hasMoreProjects && (
-            <div ref={loadMoreRef} className="text-center mt-12 sm:mt-16 lg:mt-20">
+            <div ref={loadMoreRef} className="text-center mt-16 sm:mt-20 lg:mt-24">
               <button
                 onClick={handleShowMore}
-                className="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold text-sm sm:text-base transition-all duration-300 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 transform-gpu will-change-transform"
+                className="group relative px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-2xl font-semibold text-base transition-all duration-500 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-[#030014] transform-gpu will-change-transform overflow-hidden"
               >
-                Load More Projects
+                {/* Button shine effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 transition-all duration-1000 group-hover:translate-x-full" />
+                <span className="relative z-10">Load More Projects</span>
               </button>
             </div>
           )}
@@ -397,38 +489,56 @@ const Portofolio = memo(() => {
         onClose={handleCloseModal}
       />
 
-      {/* ✅ FIXED: Move inline styles to CSS classes to avoid jsx prop warning */}
       <style>
         {`
+          @keyframes portfolioGradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+          }
+          
+          @keyframes portfolioFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); }
+            33% { transform: translateY(-20px) rotate(120deg) scale(1.1); }
+            66% { transform: translateY(10px) rotate(240deg) scale(0.9); }
+          }
+          
+          @keyframes portfolioGridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+          }
+          
+          @keyframes portfolioSparkle {
+            0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+            50% { opacity: 1; transform: scale(1) rotate(180deg); }
+          }
+
           @keyframes fade-in {
             from { opacity: 0; }
             to { opacity: 1; }
           }
-          @keyframes scale-in {
-            from { transform: scale(0.9); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-          }
-          @keyframes pulse-slow {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 0.6; }
-          }
-          @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-          }
+
           @keyframes shimmer {
             0% { transform: translateX(-100%); }
             100% { transform: translateX(100%); }
           }
+          
           .animate-shimmer {
             animation: shimmer 2s infinite;
           }
-          .animate-pulse-slow {
-            animation: pulse-slow 4s ease-in-out infinite;
-          }
+
           .will-change-transform {
             will-change: transform;
+          }
+
+          /* Reduced motion support */
+          @media (prefers-reduced-motion: reduce) {
+            .portfolio-float-slow,
+            .portfolio-gradient-slow,
+            .portfolio-grid-move,
+            .portfolio-sparkle,
+            .animate-shimmer {
+              animation: none !important;
+            }
           }
         `}
       </style>
@@ -436,8 +546,6 @@ const Portofolio = memo(() => {
   );
 });
 
-// ✅ Performance optimizations
 Portofolio.displayName = 'Portofolio';
 
-// ✅ MUST HAVE DEFAULT EXPORT
 export default Portofolio;

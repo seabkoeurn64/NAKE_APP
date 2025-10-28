@@ -1,4 +1,4 @@
-// ENHANCED Navbar.jsx - OPTIMIZED FOR PERFORMANCE & RESPONSIVENESS
+// ENHANCED Navbar.jsx - WITH NEW BACKGROUND DESIGN
 import React, { useState, useEffect, useCallback, memo, useMemo, useRef } from "react";
 import { Menu, X } from "lucide-react";
 
@@ -123,6 +123,59 @@ const useMobileDetection = () => {
 
   return isMobile;
 };
+
+// ✅ NEW: Navbar Background Component
+const NavbarBackground = memo(({ scrolled, isOpen }) => {
+  return (
+    <div className="absolute inset-0 overflow-hidden -z-10">
+      {/* Main gradient background */}
+      <div className={`absolute inset-0 transition-all duration-500 ${
+        scrolled || isOpen 
+          ? "bg-[#030014]/95 backdrop-blur-xl" 
+          : "bg-transparent backdrop-blur-none"
+      }`} />
+      
+      {/* Animated gradient overlay */}
+      <div 
+        className="absolute inset-0 opacity-20"
+        style={{
+          background: 'linear-gradient(45deg, #6366f1, #8b5cf6, #a855f7, #ec4899)',
+          backgroundSize: '400% 400%',
+          animation: 'navbarGradient 8s ease infinite'
+        }}
+      />
+      
+      {/* Floating navigation elements */}
+      <div className="absolute top-0 left-10 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl" 
+           style={{ animation: 'navbarFloat 6s ease-in-out infinite' }} />
+      <div className="absolute top-0 right-20 w-24 h-24 bg-pink-500/10 rounded-full blur-xl" 
+           style={{ animation: 'navbarFloat 8s ease-in-out infinite 1s' }} />
+      
+      {/* Navigation line elements */}
+      <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent" />
+      
+      {/* Grid pattern overlay */}
+      <div className="absolute inset-0 opacity-5">
+        <div 
+          className="w-full h-full"
+          style={{
+            backgroundImage: 'linear-gradient(#6366f1 1px, transparent 1px), linear-gradient(90deg, #6366f1 1px, transparent 1px)',
+            backgroundSize: '30px 30px',
+            animation: 'navbarGridMove 20s linear infinite'
+          }}
+        />
+      </div>
+      
+      {/* Sparkle effects */}
+      <div className="absolute top-2 left-1/4 w-1 h-1 bg-white rounded-full opacity-60" 
+           style={{ animation: 'navbarSparkle 3s ease-in-out infinite' }} />
+      <div className="absolute top-3 right-1/3 w-0.5 h-0.5 bg-purple-300 rounded-full opacity-70" 
+           style={{ animation: 'navbarSparkle 4s ease-in-out infinite 0.7s' }} />
+    </div>
+  );
+});
+
+NavbarBackground.displayName = 'NavbarBackground';
 
 // ✅ Optimized Desktop NavItem Component
 const DesktopNavItem = memo(({ item, activeSection, scrollToSection }) => {
@@ -354,7 +407,19 @@ const Navbar = () => {
                 role="menu"
                 aria-hidden={!isOpen}
             >
-                <div className="px-2 py-3 space-y-1">
+                {/* Mobile Menu Background */}
+                <div className="absolute inset-0 overflow-hidden -z-10">
+                  <div className="absolute inset-0 bg-[#030014]/95 backdrop-blur-xl" />
+                  <div 
+                    className="absolute inset-0 opacity-10"
+                    style={{
+                      background: 'linear-gradient(45deg, #6366f1, #8b5cf6, #a855f7, #ec4899)',
+                      backgroundSize: '400% 400%',
+                    }}
+                  />
+                </div>
+                
+                <div className="px-2 py-3 space-y-1 relative z-10">
                     {navItems.map((item, index) => (
                         <MobileNavItem 
                             key={item.label} 
@@ -382,17 +447,24 @@ const Navbar = () => {
             role="navigation"
             aria-label="Main navigation"
         >
-            <div className="mx-auto px-4 sm:px-6 lg:px-8">
+            {/* ✅ NEW: Enhanced Navbar Background */}
+            <NavbarBackground scrolled={scrolled} isOpen={isOpen} />
+            
+            <div className="mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 <div className="flex items-center justify-between h-16">
                     {/* Logo */}
                     <div className="flex-shrink-0">
                         <a
                             href="#Home"
                             onClick={(e) => scrollToSection(e, "#Home")}
-                            className="text-xl font-bold bg-gradient-to-r from-[#a855f7] to-[#6366f1] bg-clip-text text-transparent transition-all duration-300 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 rounded-lg px-2 py-1 transform-gpu will-change-transform"
+                            className="group relative text-xl font-bold transition-all duration-300 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 rounded-lg px-2 py-1 transform-gpu will-change-transform"
                             aria-label="Go to homepage"
                         >
-                            Portfolio
+                            {/* Logo background effect */}
+                            <div className="absolute -inset-2 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-lg blur opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+                            <span className="relative bg-gradient-to-r from-[#a855f7] to-[#6366f1] bg-clip-text text-transparent">
+                                Portfolio
+                            </span>
                         </a>
                     </div>
         
@@ -403,19 +475,22 @@ const Navbar = () => {
                     <div className="md:hidden">
                         <button
                             onClick={toggleMenu}
-                            className={`relative p-2 rounded-lg text-[#e2d3fd] hover:text-white transition-all duration-300 ease-in-out active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 transform-gpu will-change-transform ${
+                            className={`group relative p-2 rounded-lg transition-all duration-300 ease-in-out active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 transform-gpu will-change-transform ${
                                 isOpen 
-                                    ? "bg-[#6366f1]/10 rotate-90 scale-110" 
-                                    : "bg-transparent rotate-0 scale-100 hover:bg-white/5"
+                                    ? "bg-[#6366f1]/10 rotate-90 scale-110 text-white" 
+                                    : "bg-transparent rotate-0 scale-100 text-[#e2d3fd] hover:text-white hover:bg-white/5"
                             }`}
                             aria-label={isOpen ? "Close menu" : "Open menu"}
                             aria-expanded={isOpen}
                             aria-controls="mobile-menu"
                         >
+                            {/* Button background effect */}
+                            <div className="absolute -inset-1 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-lg blur opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+                            
                             {isOpen ? (
-                                <X className="w-5 h-5 transition-transform duration-300" />
+                                <X className="w-5 h-5 transition-transform duration-300 relative z-10" />
                             ) : (
-                                <Menu className="w-5 h-5 transition-transform duration-300" />
+                                <Menu className="w-5 h-5 transition-transform duration-300 relative z-10" />
                             )}
                         </button>
                     </div>
@@ -424,6 +499,40 @@ const Navbar = () => {
         
             {/* Mobile Navigation */}
             {mobileNavigation}
+
+            {/* ✅ NEW: CSS Animations */}
+            <style>{`
+                @keyframes navbarGradient {
+                    0%, 100% { background-position: 0% 50%; }
+                    50% { background-position: 100% 50%; }
+                }
+                
+                @keyframes navbarFloat {
+                    0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); opacity: 0.3; }
+                    33% { transform: translateY(-10px) rotate(120deg) scale(1.05); opacity: 0.5; }
+                    66% { transform: translateY(5px) rotate(240deg) scale(0.95); opacity: 0.4; }
+                }
+                
+                @keyframes navbarGridMove {
+                    0% { transform: translate(0, 0); }
+                    100% { transform: translate(30px, 30px); }
+                }
+                
+                @keyframes navbarSparkle {
+                    0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+                    50% { opacity: 1; transform: scale(1) rotate(180deg); }
+                }
+
+                /* Reduced motion support */
+                @media (prefers-reduced-motion: reduce) {
+                    .navbar-float-slow,
+                    .navbar-gradient-slow,
+                    .navbar-grid-move,
+                    .navbar-sparkle {
+                        animation: none !important;
+                    }
+                }
+            `}</style>
         </nav>
     );
 };

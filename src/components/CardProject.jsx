@@ -1,7 +1,7 @@
-// src/components/CardProject.jsx - FIXED VERSION (Icon visibility on hover)
+// src/components/CardProject.jsx
 import React, { useState, useCallback, memo, useRef, useEffect } from 'react';
 
-// ✅ Custom hook for hover and tap effects
+// ✅ Custom hook for hover/tap effects
 const useHoverScale = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [isTapped, setIsTapped] = useState(false);
@@ -11,44 +11,31 @@ const useHoverScale = () => {
     setIsHovered(false);
     setIsTapped(false);
   }, []);
-  
   const handleMouseDown = useCallback(() => setIsTapped(true), []);
   const handleMouseUp = useCallback(() => setIsTapped(false), []);
 
-  return {
-    isHovered,
-    isTapped,
-    handleMouseEnter,
-    handleMouseLeave,
-    handleMouseDown,
-    handleMouseUp
-  };
+  return { isHovered, isTapped, handleMouseEnter, handleMouseLeave, handleMouseDown, handleMouseUp };
 };
 
-// ✅ Custom hook for image optimization
+// ✅ Custom hook for optimized image loading
 const useOptimizedImage = (src) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [imageSrc, setImageSrc] = useState('');
 
   useEffect(() => {
-    if (!src) {
-      setImageError(true);
-      return;
-    }
+    if (!src) return setImageError(true);
 
-    setImageSrc('');
     setImageLoaded(false);
     setImageError(false);
+    setImageSrc('');
 
     const img = new Image();
     img.src = src;
-
     img.onload = () => {
       setImageSrc(src);
       setImageLoaded(true);
     };
-
     img.onerror = () => {
       setImageError(true);
       setImageLoaded(true);
@@ -63,20 +50,19 @@ const useOptimizedImage = (src) => {
   return { imageSrc, imageLoaded, imageError };
 };
 
-// ✅ Shimmer loading component
+// ✅ Shimmer loader component
 const ShimmerLoader = memo(() => (
   <div className="absolute inset-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 animate-pulse">
     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-slate-600/20 to-transparent animate-shimmer" />
   </div>
 ));
-
 ShimmerLoader.displayName = 'ShimmerLoader';
 
-// ✅ Main CardProject Component - FIXED icon visibility
-const CardProject = memo(({ 
-  Img, 
-  Title, 
-  Description, 
+// ✅ Main CardProject Component
+const CardProject = memo(({
+  Img,
+  Title,
+  Description,
   onImageClick,
   demoUrl,
   githubUrl,
@@ -84,94 +70,70 @@ const CardProject = memo(({
   priority = false
 }) => {
   const cardRef = useRef(null);
-  const {
-    isHovered,
-    isTapped,
-    handleMouseEnter,
-    handleMouseLeave,
-    handleMouseDown,
-    handleMouseUp
-  } = useHoverScale();
-
+  const { isHovered, isTapped, handleMouseEnter, handleMouseLeave, handleMouseDown, handleMouseUp } = useHoverScale();
   const { imageSrc, imageLoaded, imageError } = useOptimizedImage(Img);
 
-  // ✅ Handle image click with ripple effect
+  // ✅ Ripple click effect
   const handleClick = useCallback((e) => {
-    if (onImageClick) {
-      const card = cardRef.current;
-      if (card) {
-        const ripple = document.createElement('span');
-        const rect = card.getBoundingClientRect();
-        const size = Math.max(rect.width, rect.height);
-        const x = e.clientX - rect.left - size / 2;
-        const y = e.clientY - rect.top - size / 2;
+    if (!onImageClick) return;
 
-        ripple.style.cssText = `
-          position: absolute;
-          border-radius: 50%;
-          background: rgba(255, 255, 255, 0.5);
-          transform: scale(0);
-          animation: ripple 600ms linear;
-          width: ${size}px;
-          height: ${size}px;
-          top: ${y}px;
-          left: ${x}px;
-          pointer-events: none;
-          z-index: 10;
-        `;
+    const card = cardRef.current;
+    if (card) {
+      const ripple = document.createElement('span');
+      const rect = card.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      const x = e.clientX - rect.left - size / 2;
+      const y = e.clientY - rect.top - size / 2;
 
-        card.style.position = 'relative';
-        card.style.overflow = 'hidden';
-        card.appendChild(ripple);
+      ripple.style.cssText = `
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.5);
+        transform: scale(0);
+        animation: ripple 600ms linear;
+        width: ${size}px;
+        height: ${size}px;
+        top: ${y}px;
+        left: ${x}px;
+        pointer-events: none;
+        z-index: 10;
+      `;
 
-        setTimeout(() => {
-          if (card.contains(ripple)) {
-            card.removeChild(ripple);
-          }
-        }, 600);
-      }
-      onImageClick();
+      card.style.position = 'relative';
+      card.style.overflow = 'hidden';
+      card.appendChild(ripple);
+
+      setTimeout(() => {
+        if (card.contains(ripple)) card.removeChild(ripple);
+      }, 600);
     }
+
+    onImageClick();
   }, [onImageClick]);
 
-  // ✅ Smooth scroll into view when component mounts
-  useEffect(() => {
-    if (priority && cardRef.current) {
-      const observer = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) {
-            if (Img && !imageLoaded && !imageError) {
-              const img = new Image();
-              img.src = Img;
-            }
-            observer.disconnect();
-          }
-        },
-        { rootMargin: '100px' }
-      );
-
-      observer.observe(cardRef.current);
-      return () => observer.disconnect();
-    }
-  }, [priority, Img, imageLoaded, imageError]);
-
-  // ✅ Keyboard navigation support
-  const handleKeyPress = useCallback((e) => {
+  // ✅ Keyboard support
+  const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       handleClick(e);
     }
   }, [handleClick]);
 
+  // ✅ Lazy preload if priority
+  useEffect(() => {
+    if (priority && Img && !imageLoaded && !imageError) {
+      const img = new Image();
+      img.src = Img;
+    }
+  }, [priority, Img, imageLoaded, imageError]);
+
   return (
     <div
       ref={cardRef}
       className={`
-        group relative bg-slate-800/40 backdrop-blur-sm rounded-2xl 
-        border border-slate-700/30 overflow-hidden
+        group relative bg-slate-800/40 backdrop-blur-sm rounded-2xl border border-slate-700/30 overflow-hidden
         transition-all duration-300 ease-out
-        hover:border-blue-500/50 hover:bg-slate-800/60
-        hover:shadow-2xl hover:shadow-blue-500/10
+        hover:border-blue-500/50 hover:bg-slate-800/60 hover:shadow-2xl hover:shadow-blue-500/10
         active:scale-[0.98]
         ${isHovered ? 'transform-gpu scale-[1.02]' : 'transform-gpu scale-100'}
         ${isTapped ? 'scale-[0.98]' : ''}
@@ -184,22 +146,19 @@ const CardProject = memo(({
       role="article"
       aria-label={`Project: ${Title}`}
     >
-      {/* ✅ Background Gradient Effect */}
+      {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      
-      {/* ✅ Image Container */}
-      <div 
+
+      {/* Image container */}
+      <div
         className="relative aspect-video overflow-hidden cursor-pointer bg-slate-900"
         onClick={handleClick}
-        onKeyDown={handleKeyPress} {/* ✅ FIXED: Changed from onKeyPress to onKeyDown */}
+        onKeyDown={handleKeyDown}
         tabIndex={0}
         role="button"
         aria-label={`View ${Title} project details`}
       >
-        {/* ✅ Loading State */}
         {!imageLoaded && !imageError && <ShimmerLoader />}
-        
-        {/* ✅ Error State */}
         {imageError ? (
           <div className="w-full h-full flex items-center justify-center bg-slate-800/50">
             <div className="text-center text-slate-500">
@@ -208,31 +167,34 @@ const CardProject = memo(({
             </div>
           </div>
         ) : (
-          // ✅ Optimized Image
           imageSrc && (
-            <img
-              src={imageSrc}
-              alt={`${Title} project screenshot`}
-              loading={priority ? "eager" : "lazy"}
-              decoding="async"
-              className={`
-                w-full h-full object-cover transition-all duration-500 ease-out
-                ${imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}
-                group-hover:scale-110
-              `}
-            />
+            <picture>
+              <source srcSet={imageSrc.replace(/\.(png|jpg|jpeg)$/i, '.webp')} type="image/webp" />
+              <source srcSet={imageSrc} type={`image/${imageSrc.endsWith('.png') ? 'png' : 'jpeg'}`} />
+              <img
+                src={imageSrc}
+                alt={`${Title} project screenshot`}
+                loading={priority ? "eager" : "lazy"}
+                decoding="async"
+                width={400}
+                height={225}
+                className={`
+                  w-full h-full object-cover transition-all duration-500 ease-out
+                  ${imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}
+                  group-hover:scale-110
+                `}
+              />
+            </picture>
           )
         )}
 
-        {/* ✅ FIXED: Hover Overlay with Icons - Improved visibility */}
+        {/* Hover overlay */}
         <div className={`
           absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20
           flex items-center justify-center gap-4
           transition-all duration-300 ease-out
           ${isHovered ? 'opacity-100' : 'opacity-0 pointer-events-none'}
         `}>
-          
-          {/* ✅ FIXED: View Details Button (Always visible on hover) */}
           <button
             onClick={handleClick}
             className="
@@ -240,8 +202,7 @@ const CardProject = memo(({
               transform-gpu transition-all duration-200 ease-out
               hover:bg-white hover:scale-105 active:scale-95
               focus:outline-none focus:ring-2 focus:ring-white/50
-              shadow-lg hover:shadow-xl
-              flex items-center gap-2
+              shadow-lg hover:shadow-xl flex items-center gap-2
             "
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -249,23 +210,14 @@ const CardProject = memo(({
             </svg>
             View Details
           </button>
-
-          {/* ✅ FIXED: Action Buttons Container */}
           <div className="flex gap-3">
             {demoUrl && (
               <a
                 href={demoUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="
-                  w-12 h-12 bg-blue-600/90 text-white rounded-xl
-                  transform-gpu transition-all duration-200 ease-out
-                  hover:bg-blue-500 hover:scale-105 active:scale-95
-                  focus:outline-none focus:ring-2 focus:ring-blue-500/50
-                  flex items-center justify-center
-                  shadow-lg hover:shadow-xl
-                "
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
+                className="w-12 h-12 bg-blue-600/90 text-white rounded-xl flex items-center justify-center transform-gpu transition-all duration-200 hover:bg-blue-500 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                 aria-label="View live demo"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -273,21 +225,13 @@ const CardProject = memo(({
                 </svg>
               </a>
             )}
-            
             {githubUrl && (
               <a
                 href={githubUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="
-                  w-12 h-12 bg-slate-800/90 text-white rounded-xl
-                  transform-gpu transition-all duration-200 ease-out
-                  hover:bg-slate-700 hover:scale-105 active:scale-95
-                  focus:outline-none focus:ring-2 focus:ring-slate-500/50
-                  flex items-center justify-center
-                  shadow-lg hover:shadow-xl
-                "
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
+                className="w-12 h-12 bg-slate-800/90 text-white rounded-xl flex items-center justify-center transform-gpu transition-all duration-200 hover:bg-slate-700 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-slate-500/50"
                 aria-label="View source code"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -299,96 +243,44 @@ const CardProject = memo(({
         </div>
       </div>
 
-      {/* ✅ Content Section */}
+      {/* Content */}
       <div className="p-6 relative z-10">
-        {/* ✅ Title */}
-        <h3 className="
-          text-xl font-bold text-white mb-3 
-          transition-colors duration-200
-          group-hover:text-transparent group-hover:bg-clip-text 
-          group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-purple-400
-        ">
+        <h3 className="text-xl font-bold text-white mb-3 transition-colors duration-200
+          group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-purple-400">
           {Title}
         </h3>
-
-        {/* ✅ Description */}
-        <p className="
-          text-slate-300 leading-relaxed mb-6 line-clamp-4
-          transition-colors duration-200 group-hover:text-slate-200
-        ">
+        <p className="text-slate-300 leading-relaxed mb-6 line-clamp-4 transition-colors duration-200 group-hover:text-slate-200">
           {Description}
         </p>
-
-        {/* ✅ Interactive Footer */}
         <div className="flex items-center justify-between pt-4 border-t border-slate-700/30">
           <span className="text-slate-400 text-sm group-hover:text-slate-300 transition-colors">
             Click to view details
           </span>
-          <div className="
-            w-8 h-8 rounded-full bg-slate-700/50 flex items-center justify-center
-            transform-gpu transition-all duration-200 ease-out
-            group-hover:bg-blue-500/20 group-hover:scale-110
-            group-hover:rotate-12
-          ">
-            <svg 
-              className="w-4 h-4 text-slate-400 group-hover:text-blue-400 transition-colors" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
+          <div className="w-8 h-8 rounded-full bg-slate-700/50 flex items-center justify-center transform-gpu transition-all duration-200 ease-out group-hover:bg-blue-500/20 group-hover:scale-110 group-hover:rotate-12">
+            <svg className="w-4 h-4 text-slate-400 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
           </div>
         </div>
       </div>
 
-      {/* ✅ Glow effect */}
-      <div className="
-        absolute inset-0 rounded-2xl pointer-events-none
-        bg-gradient-to-r from-blue-500/0 via-purple-500/0 to-pink-500/0
-        group-hover:from-blue-500/10 group-hover:via-purple-500/5 group-hover:to-pink-500/10
-        transition-all duration-500 ease-out
-        opacity-0 group-hover:opacity-100
-      " />
+      {/* Glow effect */}
+      <div className="absolute inset-0 rounded-2xl pointer-events-none bg-gradient-to-r from-blue-500/0 via-purple-500/0 to-pink-500/0 group-hover:from-blue-500/10 group-hover:via-purple-500/5 group-hover:to-pink-500/10 transition-all duration-500 ease-out opacity-0 group-hover:opacity-100" />
 
-      {/* ✅ FIXED: Move inline styles to proper CSS-in-JS */}
+      {/* Inline styles for ripple + shimmer */}
       <style jsx>{`
-        @keyframes ripple {
-          to {
-            transform: scale(4);
-            opacity: 0;
-          }
-        }
+        @keyframes ripple { to { transform: scale(4); opacity: 0; } }
         .animate-shimmer {
           animation: shimmer 2s infinite linear;
-          background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(255, 255, 255, 0.1),
-            transparent
-          );
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
           background-size: 1000px 100%;
         }
-        @keyframes shimmer {
-          0% {
-            transform: translateX(-100%);
-          }
-          100% {
-            transform: translateX(100%);
-          }
-        }
-        .line-clamp-4 {
-          display: -webkit-box;
-          -webkit-line-clamp: 4;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        .line-clamp-4 { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
       `}</style>
     </div>
   );
 });
 
-// ✅ Display name for better debugging
 CardProject.displayName = 'CardProject';
-
 export default CardProject;
